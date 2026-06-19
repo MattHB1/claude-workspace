@@ -1,9 +1,23 @@
 # Claude Workspace
 
-A deterministic, multi-agent **workspace for Claude Code**. You talk to a single orchestrator
-conversationally; it routes your requests to eight single-responsibility subagents that take a
-software idea from **research -> proposal -> planning -> adversarial review -> implementation ->
-verification** -- with canonical, versioned artefacts as the single source of truth.
+**Claude Workspace turns any folder into a deterministic, multi-agent workspace that audits and
+documents itself.** You work conversationally: it takes your ideas, researches them, and turns them
+into verified implementation plans -- with every plan and every result covered by independent,
+adversarial checks. The output isn't limited to code; it can be whatever the work needs -- a spec,
+docs, a migration, a config, a refactor, a plan.
+
+*Deterministic* describes the workspace, not the model's creativity: it never guesses where things
+live or leans on whatever happens to be left in the chat. Artefacts are explicit files, retrieval is
+by path and `grep` (no fuzzy recall or embeddings), and each artefact has exactly one writer -- so the
+work stays auditable and doesn't drift across a long session. It is *self-documenting* because the
+proposal, task list, verification reports, and decision journal **are** the project record, written
+as the work happens. It is *self-auditing* because adversarial checkers grade every plan and build,
+and only *detect* -- fixes route back to whoever produced the work.
+
+Behind the conversation: one orchestrator skill (`/claude-workspace:workspace`) routes your natural
+requests to eight single-responsibility subagents (research -> proposal -> planning -> adversarial
+check -> implementation -> verification), keeping canonical, versioned artefacts as the single source
+of truth.
 
 This repository is both the (private) plugin **marketplace** (`matt-workspace`) and the plugin
 (`claude-workspace`). Full documentation ships inside the plugin: see the bundled docs index at
