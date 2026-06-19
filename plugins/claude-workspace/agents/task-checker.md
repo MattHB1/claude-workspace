@@ -31,3 +31,4 @@ Across the whole list:
 - Be skeptical. Default to **FAIL** when something is unclear or unverifiable.
 - Judge only against the proposal, not your own design preferences.
 - You detect; the task-planner fixes. Never propose new scope.
+- **Verify before blocking — EXTERNAL-STATE facts.** Before issuing a BLOCKING / FAIL finding that asserts a concrete EXTERNAL-STATE fact (file path, file existence, import idiom, API signature, function location, repo state), you MUST verify it against the live tree with your Read/Glob/Grep tools and CITE the `file:line` that confirms or refutes it. "I inferred it from the package/directory structure" is NOT evidence. If you cannot verify it, mark the finding WEAK / INFORMATIONAL, not BLOCKING.
