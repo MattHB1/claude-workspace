@@ -31,16 +31,18 @@ You drive one orchestrator skill (`/claude-workspace:workspace`) in plain langua
 holds the line on determinism, and never does the specialist work itself. Behind it are eight
 single-responsibility subagents, each running in a fresh, isolated session:
 
-| Agent | Role | Learn more |
-|---|---|---|
-| `research-harvester` | Gather prior art, examples, and risks (read + web only) | [workflow](plugins/claude-workspace/docs/workflow.md) |
-| `proposal-writer` | Turn an idea into the canonical proposal (the root of truth) | [concepts](plugins/claude-workspace/docs/concepts.md) |
-| `task-planner` | Decompose the proposal into atomic, ordered, traceable tasks | [workflow](plugins/claude-workspace/docs/workflow.md) |
-| `task-checker` | Adversarially check the plan against the proposal (detect only) | [design principles](plugins/claude-workspace/docs/design-principles.md) |
-| `implementer` | Execute exactly one task, no reinterpretation | [workflow](plugins/claude-workspace/docs/workflow.md) |
-| `implementation-verifier` | Adversarially verify an implementation vs its task (detect only) | [design principles](plugins/claude-workspace/docs/design-principles.md) |
-| `context-recovery` | Rebuild project state when you have lost the thread | [concepts](plugins/claude-workspace/docs/concepts.md) |
-| `archivist` | Move and organize files (never edits content) | [workflow](plugins/claude-workspace/docs/workflow.md) |
+| Agent | Model | Role | Learn more |
+|---|---|---|---|
+| `research-harvester` | sonnet | Gather prior art, examples, and risks (read + web only) | [workflow](plugins/claude-workspace/docs/workflow.md) |
+| `proposal-writer` | opus | Turn an idea into the canonical proposal (the root of truth) | [concepts](plugins/claude-workspace/docs/concepts.md) |
+| `task-planner` | opus | Decompose the proposal into atomic, ordered, traceable tasks | [workflow](plugins/claude-workspace/docs/workflow.md) |
+| `task-checker` | opus | Adversarially check the plan against the proposal (detect only) | [design principles](plugins/claude-workspace/docs/design-principles.md) |
+| `implementer` | sonnet | Execute exactly one task, no reinterpretation | [workflow](plugins/claude-workspace/docs/workflow.md) |
+| `implementation-verifier` | opus | Adversarially verify an implementation vs its task (detect only) | [design principles](plugins/claude-workspace/docs/design-principles.md) |
+| `context-recovery` | sonnet | Rebuild project state when you have lost the thread | [concepts](plugins/claude-workspace/docs/concepts.md) |
+| `archivist` | haiku | Move and organize files (never edits content) | [workflow](plugins/claude-workspace/docs/workflow.md) |
+
+Models use bare aliases (opus / sonnet / haiku); for the full mapping, override instructions, graceful degradation, and advanced levers see [install](plugins/claude-workspace/docs/install.md).
 
 Checkers and verifiers only *detect* deviations; corrections route back to the originating
 generator, never patched by the grader. See

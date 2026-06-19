@@ -22,16 +22,18 @@ rules that make the routing trustworthy.
 There are exactly eight agents. Each does one thing. The trigger phrases below
 match the orchestrator's routing table.
 
-| You say... | Orchestrator dispatches | Which... |
-|---|---|---|
-| "research / look into / what's known about..." | `claude-workspace:research-harvester` | gathers prior art and risks (read + web only); the orchestrator saves its brief into the active initiative's `research/` |
-| "spec it / write the proposal / define the problem" | `claude-workspace:proposal-writer` | writes the active initiative's `proposal.md` (its root of truth) |
-| "plan it / break it down / make tasks" | `claude-workspace:task-planner` | decomposes the proposal into atomic tasks in `tasks.md` |
-| "check the plan / does the plan match the spec" | `claude-workspace:task-checker` | read-only adversary; checks tasks against the proposal (detect-only); the orchestrator saves its report into `verification/` |
-| "build / implement / do task N" | `claude-workspace:implementer` | implements exactly one task per dispatch in a fresh session; writes the code itself |
-| "verify / does it match the task" | `claude-workspace:implementation-verifier` | read + run-tests only; adversarially checks the build against the task; the orchestrator saves its report into `verification/` |
-| "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | read-only; rebuilds state from the artefacts and memory; the orchestrator persists the result to the active initiative's memory |
-| "tidy / organise / move these files" | `claude-workspace:archivist` | moves and organises files (never edits content); the orchestrator records its map to the project-level `file-structure.md` |
+| You say... | Orchestrator dispatches | Model | Which... |
+|---|---|---|---|
+| "research / look into / what's known about..." | `claude-workspace:research-harvester` | sonnet | gathers prior art and risks (read + web only); the orchestrator saves its brief into the active initiative's `research/` |
+| "spec it / write the proposal / define the problem" | `claude-workspace:proposal-writer` | opus | writes the active initiative's `proposal.md` (its root of truth) |
+| "plan it / break it down / make tasks" | `claude-workspace:task-planner` | opus | decomposes the proposal into atomic tasks in `tasks.md` |
+| "check the plan / does the plan match the spec" | `claude-workspace:task-checker` | opus | read-only adversary; checks tasks against the proposal (detect-only); the orchestrator saves its report into `verification/` |
+| "build / implement / do task N" | `claude-workspace:implementer` | sonnet | implements exactly one task per dispatch in a fresh session; writes the code itself |
+| "verify / does it match the task" | `claude-workspace:implementation-verifier` | opus | read + run-tests only; adversarially checks the build against the task; the orchestrator saves its report into `verification/` |
+| "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | sonnet | read-only; rebuilds state from the artefacts and memory; the orchestrator persists the result to the active initiative's memory |
+| "tidy / organise / move these files" | `claude-workspace:archivist` | haiku | moves and organises files (never edits content); the orchestrator records its map to the project-level `file-structure.md` |
+
+Models use bare aliases (opus / sonnet / haiku); for the full mapping, override instructions, graceful degradation, and advanced levers see [install.md](install.md).
 
 The five read-only agents (`research-harvester`, `task-checker`,
 `implementation-verifier`, `context-recovery`, `archivist`) cannot write the

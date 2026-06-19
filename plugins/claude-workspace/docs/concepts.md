@@ -82,16 +82,18 @@ registry and memory tiers add no new agent.
 Five of the agents are **read-only** (they cannot write project artefacts; the orchestrator persists
 their returned output). Three are **generators / executors** that write their own outputs.
 
-| Agent | Role |
-|---|---|
-| `research-harvester` | Gathers domain knowledge, prior art, examples, risks, and constraints. Read-and-web only; never plans or implements. Feeds the proposal-writer. |
-| `proposal-writer` | Turns a raw idea (plus any research) into the canonical **proposal** - the root of truth. Writes only the active initiative's `proposal.md`. |
-| `task-planner` | Decomposes the proposal into atomic, ordered tasks with inputs, outputs, dependencies, and acceptance criteria. Writes only the active initiative's `tasks.md`. |
-| `task-checker` | Adversarially checks the task list against the proposal. Read-only - it **detects** deviations and **never fixes** them. |
-| `implementer` | Executes exactly **one** task as written, in a fresh session. No planning, no reinterpretation. Writes code itself. |
-| `implementation-verifier` | Adversarially checks an implementation against its task spec. Read + run-tests only - detects deviations, never fixes them. |
-| `context-recovery` | Rebuilds project state when context is lost or drifting. Read-only - reports only what IS. |
-| `archivist` | Keeps the file tree clean and predictable. Moves / renames / creates directories - **never edits file content**. |
+| Agent | Model | Role |
+|---|---|---|
+| `research-harvester` | sonnet | Gathers domain knowledge, prior art, examples, risks, and constraints. Read-and-web only; never plans or implements. Feeds the proposal-writer. |
+| `proposal-writer` | opus | Turns a raw idea (plus any research) into the canonical **proposal** - the root of truth. Writes only the active initiative's `proposal.md`. |
+| `task-planner` | opus | Decomposes the proposal into atomic, ordered tasks with inputs, outputs, dependencies, and acceptance criteria. Writes only the active initiative's `tasks.md`. |
+| `task-checker` | opus | Adversarially checks the task list against the proposal. Read-only - it **detects** deviations and **never fixes** them. |
+| `implementer` | sonnet | Executes exactly **one** task as written, in a fresh session. No planning, no reinterpretation. Writes code itself. |
+| `implementation-verifier` | opus | Adversarially checks an implementation against its task spec. Read + run-tests only - detects deviations, never fixes them. |
+| `context-recovery` | sonnet | Rebuilds project state when context is lost or drifting. Read-only - reports only what IS. |
+| `archivist` | haiku | Keeps the file tree clean and predictable. Moves / renames / creates directories - **never edits file content**. |
+
+Models use bare aliases (opus / sonnet / haiku); for override instructions, graceful degradation, and advanced levers see [install.md](./install.md).
 
 The two adversarial checkers (`task-checker`, `implementation-verifier`) are **detect-only** by
 design: a FAIL routes the correction back to the originating generator (a failed plan to
