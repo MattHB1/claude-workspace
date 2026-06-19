@@ -148,3 +148,51 @@ You have two options:
 > granted in your own `settings.local.json`, not shipped with the plugin.
 
 If you hit a permission error in practice, see [troubleshooting.md](troubleshooting.md).
+
+---
+
+## Per-agent models / cost
+
+Each agent ships with a deliberately chosen model tier set via its frontmatter `model:`
+field, using the bare aliases `opus` / `sonnet` / `haiku` (not pinned model IDs). The
+intent is cost-aware: cheap, fast tiers for mechanical roles and the strongest reasoning
+tier for the planning and adversarial-verification roles.
+
+| Agent | Model | Rationale |
+|---|---|---|
+| `proposal-writer` | `opus` | High-reasoning authoring of the root-of-truth spec. |
+| `task-planner` | `opus` | High-reasoning decomposition; correctness-critical. |
+| `task-checker` | `opus` | Adversarial spec enforcement; reasoning-critical. |
+| `implementation-verifier` | `opus` | Adversarial review; reasoning-critical. |
+| `implementer` | `sonnet` | Mechanical execution of a fully-specified task; fast/cheaper. |
+| `research-harvester` | `sonnet` | Read + web gathering; fast/cheaper. |
+| `context-recovery` | `sonnet` | State reconstruction; fast/cheaper. |
+| `archivist` | `haiku` | Pure file moves; cheapest/fastest. |
+
+Totals: 4 `opus` / 3 `sonnet` / 1 `haiku`. The cost rationale in one line: cheap/fast on
+the mechanical roles, stronger on planning plus adversarial verification.
+
+### Overriding a per-agent model
+
+To change the model for an agent, drop a **same-named** agent file (carrying your own
+`model:` value) into either your project's `.claude/agents/` or your user
+`~/.claude/agents/` directory. That copy **wins** over the plugin's copy.
+
+The override is **whole-file, not field-level**: your file replaces the plugin agent
+entirely, so it must contain the complete agent definition (name, description, tools, and
+body), not just the `model:` line you want to change. Copy the plugin agent as a starting
+point and adjust the `model:` line.
+
+### Graceful degradation (no Opus access)
+
+The aliases degrade gracefully. An installer **without Opus access** does not see a hard
+failure on the `opus`-aliased agents - the alias **falls back to the inherited/default
+model** for that session/account instead of erroring. Because the agents use aliases
+rather than pinned IDs, the selection also survives model refreshes.
+
+Advanced levers (documented here as options; not the mechanism this plugin relies on):
+
+- `CLAUDE_CODE_SUBAGENT_MODEL` - set one model for **all** subagents at once.
+- `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`,
+  `ANTHROPIC_DEFAULT_HAIKU_MODEL` (i.e. `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL`) -
+  repoint a given alias at a specific model for your account/host.
