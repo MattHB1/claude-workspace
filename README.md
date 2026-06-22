@@ -1,53 +1,48 @@
 # Claude Workspace
 
-**Claude Workspace turns any folder into a deterministic, multi-agent workspace that audits and
-documents itself.** You work conversationally: it takes your ideas, researches them, and turns them
-into verified implementation plans -- with every plan and every result covered by independent,
-adversarial checks. The output isn't limited to code; it can be whatever the work needs -- a spec,
-docs, a migration, a config, a refactor, a plan.
+Claude Workspace turns any folder into a place where ideas get built right. You talk to it
+in plain language; it researches your idea, turns it into a spec, plans the work, and builds
+it -- and independent, adversarial checks catch when the plan or build drifts from what you
+agreed, before you ship. Every decision lands in a plain file you can read, grep, and revert.
+So the work is traceable, it doesn't drift, and even a multi-day project picks up exactly
+where you left off. Everything is plain markdown files in git -- nothing to install, run,
+or maintain beyond the plugin itself.
 
-*Deterministic* describes the workspace, not the model's creativity: it never guesses where things
-live or leans on whatever happens to be left in the chat. Artefacts are explicit files, retrieval is
-by path and `grep` (no fuzzy recall or embeddings), and each artefact has exactly one writer -- so the
-work stays auditable and doesn't drift across a long session. It is *self-documenting* because the
-proposal, task list, verification reports, and decision journal **are** the project record, written
-as the work happens. It is *self-auditing* because adversarial checkers grade every plan and build,
-and only *detect* -- fixes route back to whoever produced the work.
-
-Behind the conversation: one orchestrator skill (`/claude-workspace:workspace`) routes your natural
-requests to eight single-responsibility subagents (research -> proposal -> planning -> adversarial
-check -> implementation -> verification), keeping canonical, versioned artefacts as the single source
-of truth.
-
-This repository is both the (private) plugin **marketplace** (`matt-workspace`) and the plugin
-(`claude-workspace`). Full documentation ships inside the plugin: see the bundled docs index at
-[`plugins/claude-workspace/README.md`](plugins/claude-workspace/README.md).
+**Build the right thing, and prove it.**
 
 ---
 
-## The agents
+## The pains it kills
 
-You drive one orchestrator skill (`/claude-workspace:workspace`) in plain language; it routes and
-holds the line on determinism, and never does the specialist work itself. Behind it are eight
-single-responsibility subagents, each running in a fresh, isolated session:
+- **"The AI confidently built the wrong thing."** Claude Workspace refuses to guess. Every
+  step traces to a written spec; agents stop and ask rather than improvise.
+- **"I lose the thread on a multi-day project."** Plans, decisions, and progress live in
+  plain files on disk. Drop it for days; reload exactly where you left off, no re-explaining.
+- **"The plan quietly drifted from the spec."** The proposal is the root of truth. Tasks
+  trace to it, and an adversarial checker flags drift before a single line is built.
 
-| Agent | Model | Role | Learn more |
-|---|---|---|---|
-| `research-harvester` | sonnet | Gather prior art, examples, and risks (read + web only) | [workflow](plugins/claude-workspace/docs/workflow.md) |
-| `proposal-writer` | opus | Turn an idea into the canonical proposal (the root of truth) | [concepts](plugins/claude-workspace/docs/concepts.md) |
-| `task-planner` | opus | Decompose the proposal into atomic, ordered, traceable tasks | [workflow](plugins/claude-workspace/docs/workflow.md) |
-| `task-checker` | opus | Adversarially check the plan against the proposal (detect only) | [design principles](plugins/claude-workspace/docs/design-principles.md) |
-| `implementer` | sonnet | Execute exactly one task, no reinterpretation | [workflow](plugins/claude-workspace/docs/workflow.md) |
-| `implementation-verifier` | opus | Adversarially verify an implementation vs its task (detect only) | [design principles](plugins/claude-workspace/docs/design-principles.md) |
-| `context-recovery` | sonnet | Rebuild project state when you have lost the thread | [concepts](plugins/claude-workspace/docs/concepts.md) |
-| `archivist` | haiku | Move and organize files (never edits content) | [workflow](plugins/claude-workspace/docs/workflow.md) |
+---
 
-Models use bare aliases (opus / sonnet / haiku); for the full mapping, override instructions, graceful degradation, and advanced levers see [install](plugins/claude-workspace/docs/install.md).
+## Why not just prompt Claude directly?
 
-Checkers and verifiers only *detect* deviations; corrections route back to the originating
-generator, never patched by the grader. See
-[why it refuses](plugins/claude-workspace/docs/why-it-refuses.md) and
-[design principles](plugins/claude-workspace/docs/design-principles.md) for the contract behind this.
+Prompting Claude is a conversation; Claude Workspace is a conversation with a memory, a spec,
+an auditor, and a paper trail.
+
+Raw prompting has predictable failure modes -- and this is how Claude Workspace addresses each:
+
+- **Drifts over a long session.** Chat loses early decisions. Claude Workspace keeps a
+  written proposal as the single root of truth; every agent answers to it, not to the
+  current conversation.
+- **Guesses when uncertain.** One agent improvises. Claude Workspace refuses-to-guess by
+  design: agents stop and surface ambiguities rather than inventing an answer.
+- **No audit trail.** A transcript is not a record. Every decision is a plain file you can
+  grep and revert; the git history is the audit trail.
+- **Marks its own homework.** In Claude Workspace, checkers are entirely separate agents,
+  tool-locked read-only. A FAIL routes back to whoever owns the work -- no silent patching.
+
+Honest caveat: the determinism here is convention-backed discipline plus a few real
+tool-locks, not a sandboxed runtime. Claude Workspace reduces and surfaces errors; it does
+not guarantee correct output and is not a substitute for human review.
 
 ---
 
@@ -67,15 +62,72 @@ Then start the orchestrator and talk to it:
 /claude-workspace:workspace
 ```
 
-For the full operational walkthrough -- private marketplace add, auth, manual vs background updates,
-shared-not-secret distribution, and the `Write`/`Edit`/`Bash` permissions the executor agents need --
-see [install](plugins/claude-workspace/docs/install.md). For the big picture, start with
-[concepts](plugins/claude-workspace/docs/concepts.md) and the bundled docs index at
+### Staying current
+
+This plugin is centrally maintained by the author. To stay current, run:
+
+```text
+/plugin marketplace update
+/reload-plugins
+```
+
+Updating is encouraged -- new versions fix issues and improve agents. What is discouraged is
+modifying your local copy: local changes are overwritten on update, and the plugin is not
+open for contributions, pull requests, or forks. Install, use, update -- that is the
+intended workflow.
+
+For the full operational walkthrough -- private marketplace add, auth, manual vs background
+updates, and the `Write`/`Edit`/`Bash` permissions the executor agents need -- see
+[install](plugins/claude-workspace/docs/install.md). For the big picture, start with
+[concepts](plugins/claude-workspace/docs/concepts.md) and the full docs index at
 [`plugins/claude-workspace/README.md`](plugins/claude-workspace/README.md).
 
 ---
 
+## The agents
+
+You drive one orchestrator skill (`/claude-workspace:workspace`) in plain language; it routes
+your requests and keeps the artefacts as the source of truth. Behind it are eight
+single-responsibility subagents:
+
+| Agent | What it does for you |
+|---|---|
+| Orchestrator | Routes your instructions to the right specialist; keeps artefacts as the source of truth throughout the session. |
+| Researcher | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
+| Spec Writer | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
+| Planner | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
+| Task Checker | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the Planner. |
+| Implementation Agent | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
+| Verifier | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the Implementation Agent. |
+| Journal Agent | Maintains the per-initiative journal and index so sessions stay coherent across reloads. |
+
+Read-only agents (Task Checker, Verifier) are tool-locked from writing to your codebase --
+the one mechanical guardrail. For the agent contract, see
+[why it refuses](plugins/claude-workspace/docs/why-it-refuses.md) and
+[design principles](plugins/claude-workspace/docs/design-principles.md).
+
+Models use bare aliases (opus / sonnet / haiku); for the full mapping, override instructions,
+and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
+
+---
+
+## Honest limits
+
+Claude Workspace is not a sandboxed runtime, does not guarantee correct output, and is not a
+substitute for human review. See
+[What this is NOT](plugins/claude-workspace/README.md#what-this-is-not) in the bundled plugin
+README, or [docs/limitations.md](plugins/claude-workspace/docs/limitations.md) for the full
+list of known gaps.
+
+This plugin is centrally maintained by the author and is not open for contributions, pull
+requests, or forks. Do not modify your local copy -- local changes are overwritten on update.
+
+---
+
 ## Layout
+
+One repo, two roles: a private plugin **marketplace** (`matt-workspace`) and the plugin it
+ships (`claude-workspace`). Full documentation is inside the plugin.
 
 ```text
 .
@@ -89,6 +141,8 @@ see [install](plugins/claude-workspace/docs/install.md). For the big picture, st
         |-- docs/                   # the docs set
         `-- README.md               # bundled docs index
 ```
+
+---
 
 ## License
 

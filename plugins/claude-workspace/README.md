@@ -1,14 +1,139 @@
 # claude-workspace
 
-A personal pipeline that takes an idea from **research -> spec -> plan -> build -> verify**, using strict single-responsibility subagents and adversarial verification. The point: reliable, non-drifting work, with project state kept in flat files so long sessions never "forget." This README is the index -- the one-paragraph map of the plugin. Each topic below lives in its own page under `docs/`; start with the quickstart, then follow the table of contents.
+Claude Workspace turns any folder into a place where ideas get built right. You talk to it
+in plain language; it researches your idea, turns it into a spec, plans the work, and builds
+it -- and independent, adversarial checks catch when the plan or build drifts from what you
+agreed, before you ship. Every decision lands in a plain file you can read, grep, and revert.
+So the work is traceable, it doesn't drift, and even a multi-day project picks up exactly
+where you left off.
+
+**Build the right thing, and prove it.**
 
 ---
 
-## Quickstart (about 60 seconds)
+## What it's good for
 
-This is a pointer-level quickstart. The full operational guide -- private marketplace add, auth/credentials, manual vs background updates, permissions, and "shared, not secret" distribution -- lives in [docs/install.md](docs/install.md).
+- **"The AI confidently built the wrong thing."** Claude Workspace refuses to guess. It stops
+  and asks, traces every step back to a written spec, and flags when the build doesn't match
+  what you agreed on -- before you ship.
+- **"I lose the thread on a multi-day project."** Plans, decisions, and progress live in plain
+  files on disk. Drop a project for days; reload exactly where you left off, no re-explaining.
+- **"The plan quietly drifted from the spec."** The proposal is the root of truth. Every task
+  traces to it, and an adversarial checker flags drift before a single line is built.
+- **"I can't trust the output, and there's no way to check."** Every decision is a versioned
+  file with one named owner. The agents that review your work are tool-locked read-only --
+  they literally cannot edit what they review.
 
-In a Claude Code session, run the three install commands (replace `MattHB1/claude-workspace` with the private repo you were invited to if it differs):
+---
+
+## Why not just prompt Claude directly?
+
+Prompting Claude is a conversation; Claude Workspace is a conversation with a memory, a spec,
+an auditor, and a paper trail.
+
+Raw prompting has predictable failure modes -- and this is how Claude Workspace addresses each:
+
+- **Drifts over a long session** -- chat loses early decisions. Claude Workspace keeps a
+  written proposal as the single root of truth; every agent answers to it, not to the
+  current conversation.
+- **Guesses when uncertain** -- one agent improvises. Claude Workspace refuses-to-guess by
+  design: agents stop and surface the ambiguity rather than inventing an answer.
+- **No audit trail** -- a transcript is not a record. Every decision is a plain file you can
+  grep and revert; the git history is the audit trail.
+- **Marks its own homework** -- the same agent that writes the plan checks the plan. In
+  Claude Workspace, checkers are entirely separate agents, tool-locked read-only. A FAIL
+  routes back to whoever owns the work; it cannot be silently patched.
+- **Forgets between sessions** -- you re-explain every time. The per-initiative journal and
+  index reload only what matters, so you pick up where you left off.
+
+Honest caveat: determinism here is convention-backed discipline plus a few real tool-locks,
+not a sandboxed runtime. Claude Workspace reduces and surfaces errors; it does not guarantee
+correct output and is not a substitute for human review.
+
+---
+
+## How it feels to use
+
+You invoke the orchestrator with `/claude-workspace:workspace` and then just talk to it.
+
+Say "research this idea" -- the Researcher agent reads the relevant context and surfaces what
+it finds. Then "spec it out" -- the Spec Writer turns the research into a written proposal
+you agree on. Next, "plan the work" -- the Planner breaks the spec into a task list that
+traces back to it. Before any building starts, "check the plan" -- the Task Checker (a
+separate, read-only agent) flags anything that has drifted from the proposal.
+
+Now you build: "implement task 1" -- the Implementation agent writes the code, to spec. Then
+"verify it" -- the Verifier (also read-only, also tool-locked) checks the build against the
+task definition. If it finds a gap, the failure goes back to the Implementation agent to fix,
+not to the Verifier to quietly patch.
+
+You run only the stages you need. It's a map, not a track.
+
+---
+
+## What you get that you can trust
+
+- **Detect-only, tool-locked checkers.** The agents that review your plan and build cannot
+  edit what they review. A failure routes back to the generator -- no silent patching.
+- **Single-writer + git audit trail.** Every decision is a versioned file with one named
+  owner. The git history is the audit trail; every change is attributable and revertible.
+- **Proposal as root of truth.** One spec that everything answers to. "Done" means the same
+  thing at every stage. Traceability is structural, not a convention you hope people follow.
+- **Artefacts win over chat.** Your written record is stable across session resets and
+  context compaction. The artefact is the source of truth; the transcript is a byproduct.
+- **No infra to babysit.** Everything is flat markdown files in git. Nothing to install,
+  run, or maintain beyond the plugin itself.
+- **Refuses to guess.** When an agent hits an ambiguity it can't resolve from the artefacts,
+  it stops and asks rather than inventing an answer.
+
+---
+
+## The agents
+
+Each agent has a single job. Read-only agents are tool-locked so they cannot write to your
+codebase even if prompted to. See [docs/workflow.md](docs/workflow.md) for the full intent
+and command table.
+
+| Agent | What it does for you |
+|---|---|
+| Orchestrator | Routes your instructions to the right specialist; keeps artefacts as the source of truth throughout the session. |
+| Researcher | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
+| Spec Writer | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
+| Planner | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
+| Task Checker | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the Planner. |
+| Implementation Agent | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
+| Verifier | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the Implementation Agent. |
+| Journal Agent | Maintains the per-initiative journal and index so sessions stay coherent across reloads. |
+
+---
+
+## What this is NOT
+
+- **Not a sandboxed runtime.** The determinism here is convention-backed discipline plus a
+  few real tool-locks (the read-only agents). There is no mechanical isolation around the
+  full build. Reduces and surfaces errors; does not guarantee correctness.
+- **Not a substitute for human review.** Adversarial checks catch common failure modes; they
+  do not catch everything. You still review the output.
+- **Not total recall.** Session memory is bounded: the journal reloads approximately the
+  most recent entries plus an index. Retrieval is keyword-based (grep-style), not semantic.
+  There is no semantic search.
+- **Not built for multiple active initiatives.** One initiative is active at a time. There
+  is no built-in delete -- closing an initiative is a manual step.
+- **Not automatic cross-project learning.** Promoting a pattern from one project to another
+  is a deliberate, manual step. Nothing propagates automatically; you choose what carries
+  over and re-validate it.
+- **Not open for modification.** This plugin is centrally maintained by the author. Do not
+  modify your local copy -- local changes are overwritten on update. It is not open for
+  contributions, pull requests, or forks. (Updating is a different matter; see below.)
+
+---
+
+## Quickstart
+
+Full setup guide (auth, permissions, per-agent models, distribution model) is in
+[docs/install.md](docs/install.md). Here is the short version.
+
+In a Claude Code session, run the three install commands:
 
 ```
 /plugin marketplace add MattHB1/claude-workspace
@@ -22,37 +147,19 @@ Then start the orchestrator:
 /claude-workspace:workspace
 ```
 
-You drive; Claude becomes the Orchestrator that routes your instructions to the right specialist agent and keeps the artefacts as the source of truth. For the full setup (permissions you must grant, updates, and distribution model), see [docs/install.md](docs/install.md).
+### Staying current
 
----
-
-## Repository layout: one repo, two roles
-
-This single repository is **both** a Claude Code marketplace **and** the plugin it ships. That dual role explains the file layout:
+This plugin is centrally maintained by the author. To stay current, run:
 
 ```
-claude-workspace/                         <- the git repo you add as a marketplace
-  .claude-plugin/
-    marketplace.json                      <- marketplace manifest (name: "matt-workspace")
-  plugins/
-    claude-workspace/                     <- the plugin (name: "claude-workspace")
-      .claude-plugin/
-        plugin.json                       <- plugin manifest, nested under the plugin
-      skills/
-      agents/
-      docs/                               <- the documentation set this index links to
-      README.md                           <- this file
+/plugin marketplace update
+/reload-plugins
 ```
 
-Four "why" points this layout raises, answered explicitly:
-
-1. **Why is `marketplace.json` at the repo root?** Claude Code discovers a marketplace by reading `.claude-plugin/marketplace.json` at the **root** of whatever repo you add with `/plugin marketplace add`. A git-based marketplace clones the whole repo, so the root manifest is what registers the marketplace; placing it anywhere else would not be found.
-
-2. **Why is `plugin.json` nested under `plugins/claude-workspace/.claude-plugin/`?** The marketplace manifest points at the plugin via a relative `source` (`./plugins/claude-workspace`). The plugin's own manifest lives inside that plugin directory, in its own `.claude-plugin/` folder, so each plugin carries its manifest with it. The two manifests are distinct files for distinct roles -- one describes the marketplace, one describes the plugin.
-
-3. **Why does the plugin live under `plugins/`?** Keeping the plugin in a `plugins/` subdirectory lets the one repository be a marketplace at its root while still shipping the plugin as a self-contained directory underneath. It is the relative `source` target the marketplace manifest resolves to, and it keeps the marketplace concern (root) separate from the plugin concern (the subdirectory).
-
-4. **Why does the marketplace name (`matt-workspace`) differ from the plugin name (`claude-workspace`)?** They name two different things. `matt-workspace` is the marketplace you register; `claude-workspace` is the plugin you install from it. That is why the install command reads `claude-workspace@matt-workspace` -- plugin `claude-workspace` from marketplace `matt-workspace`. The names are independent on purpose.
+Updating is encouraged -- new versions fix issues and improve agents. What is discouraged is
+modifying your local copy: local changes are overwritten on update, and the plugin is not
+open for contributions, pull requests, or forks. Install, use, update -- that is the intended
+workflow.
 
 ---
 
