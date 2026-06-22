@@ -23,7 +23,7 @@ EXPECTED_AGENTS=(
 )
 
 # -------------------------------------------------------------------
-# 2. Exact distributable file set (24) — AC11 / I5
+# 2. Exact distributable file set (27) — AC11 / I5
 #    Repo-root-relative paths. Every file here must be present;
 #    no file outside this list may appear in the distributable tree.
 # -------------------------------------------------------------------
@@ -47,9 +47,12 @@ EXPECTED_TREE=(
   plugins/claude-workspace/docs/limitations.md
   plugins/claude-workspace/docs/memory.md
   plugins/claude-workspace/docs/safety-and-compliance.md
+  plugins/claude-workspace/docs/statusline.md
   plugins/claude-workspace/docs/troubleshooting.md
   plugins/claude-workspace/docs/why-it-refuses.md
   plugins/claude-workspace/docs/workflow.md
+  plugins/claude-workspace/scripts/install-statusline.js
+  plugins/claude-workspace/scripts/statusline.js
   .claude-plugin/marketplace.json
   README.md
 )
