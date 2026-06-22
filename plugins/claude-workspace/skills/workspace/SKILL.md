@@ -15,7 +15,7 @@ A single project can host **more than one initiative**, so the **initiative** �
 .workspace/
   initiatives.md       # registry: every initiative + which is ACTIVE — owned by you (see "Initiative registry" below)
   file-structure.md    # PROJECT-LEVEL intended/current layout — one file tree per project — recorded by you from archivist output
-  namespaces           # PROJECT-LEVEL cross-project namespace declaration — shared by all initiatives (see "Cross-project memory tier")
+  namespaces           # PROJECT-LEVEL cross-project namespace declaration — shared by all initiatives (see cross-project pointer below)
   <slug>/              # one subfolder PER INITIATIVE — its complete, non-colliding artefact set
     proposal.md        # this initiative's root of truth — owned by proposal-writer
     tasks.md           # this initiative's atomic task list — owned by task-planner
@@ -27,7 +27,7 @@ A single project can host **more than one initiative**, so the **initiative** �
       archive/         # consolidation destination + paged detail (moved, never deleted)
 ```
 
-Only **three** artefacts live at the `.workspace/` root: the registry `initiatives.md`, the project-level `file-structure.md`, and the project-level `namespaces` declaration. `file-structure.md` is **one file tree per project** (never per-initiative — no `.workspace/<slug>/file-structure.md`); `namespaces` is the project's cross-project membership, **shared by all its initiatives** (never duplicated per initiative). Everything else is initiative-scoped under `<slug>/`.
+Only **three** artefacts live at the `.workspace/` root: the registry `initiatives.md`, the project-level `file-structure.md`, and the project-level `namespaces` declaration. `file-structure.md` is **one file tree per project** (never per-initiative — no `.workspace/<slug>/file-structure.md`); `namespaces` is the project's cross-project membership, **shared by all of the project's initiatives** (never duplicated per initiative). Everything else is initiative-scoped under `<slug>/`.
 
 > The journal+index **subsumes `context-snapshot.md`** (see "Memory layer › Integration"). The old `context-snapshot.md` per-initiative working-state home is **superseded and no longer maintained**: episodic working-state now lives in each initiative's `journal.md` and the state-of-world pointer role moves to its `index.md`.
 
@@ -63,6 +63,8 @@ Dispatch via the Agent tool with `subagent_type` set to the **namespaced** agent
 
 **The orchestrator passes the active initiative's paths into every dispatch.** Before dispatching any subagent, you resolve the ACTIVE initiative from the registry and **pass that initiative's absolute paths** (its `proposal.md`, `tasks.md`, `research/`, `verification/`, `memory/` under `.workspace/<active-slug>/`, plus the project-level `file-structure.md`/`namespaces` where relevant) to the subagent as its inputs/outputs. **Subagents are path-agnostic:** they act only on the paths you hand them and do **not** read the registry or discover/guess the active initiative themselves.
 
+**Dispatch-excerpt guidance:** when dispatching an adversary against one task, pass the relevant task block inline; the agent still reads the live tree to verify (UESA intact).
+
 | Intent from the user | Dispatch | Notes |
 |---|---|---|
 | "research / look into / what's known about…" | `claude-workspace:research-harvester` | Read+web only. **You** save its brief to the active initiative's `.workspace/<active-slug>/research/`. |
@@ -83,6 +85,16 @@ The read-only agents (research-harvester, task-checker, implementation-verifier,
 3. **Proposal is root of truth.** Tasks trace to proposal acceptance criteria; implementations trace to tasks. If the proposal must change, that's a `proposal-writer` job — and the plan should be re-checked afterward.
 4. **Fresh execution.** Each `implementer` / verifier dispatch is a new isolated session. Give it the task spec + proposal; don't assume it remembers prior turns.
 5. **Gates before progress.** Prefer running `task-checker` after planning and `implementation-verifier` after each task — but stay conversational: surface the gate, let the user decide to proceed or skip.
+
+## Conversational flow
+
+- One implementation task at a time. After it's built, offer to verify it.
+- On a FAIL: summarise the violations, then route the fix to the correct generator and re-check. Don't hand-fix.
+- Keep the user in the loop at each handoff with a one-line status ("proposal updated → want me to plan it, or review it first?"). Let their reply pick the next move.
+
+## Prompt-caching awareness
+
+The SDK's default prompt-caching TTL is **5 minutes** — keep this default. Do **not** enable the 1-hour tier (extra cost, out of scope). Awareness note only: if rate-limit pressure grows, revisit TTL settings, but make no code change now.
 
 ## Memory layer (per-initiative working-memory + journal)
 
@@ -171,6 +183,8 @@ At session end **and at safe checkpoints**, you **must** (this is mandatory, not
 - (a) **session teardown**, and
 - (b) the journal **exceeding a size threshold — default 500 KB, configurable**.
 
+**Measure-then-decide:** measure real journal sizes before lowering from 500 KB or adding a turn-count trigger — only adjust if a smaller value is warranted by real data. Do not set a guessed number now.
+
 **Mechanism (non-destructive):** roll up superseded detail into a **new summary entry** (appended to the live journal) and **move** the superseded detail into the active initiative's `.workspace/<slug>/memory/archive/`. You **never hard-delete unique information** — detail is relocated, not destroyed, and full history remains recoverable via **git**. This never breaches the append-only rule: the live journal is only ever appended to (the roll-up writes a new summary entry); prior entries' unique info is archived by `mv`, not rewritten or deleted in place. `archivist` may perform the pure `mv` of detail into `archive/` where appropriate (relocation only, no content edits).
 
 ### Integration with existing state homes
@@ -178,146 +192,18 @@ At session end **and at safe checkpoints**, you **must** (this is mandatory, not
 - **Subsumes `context-snapshot.md`.** The journal+index **supersedes** the old `context-snapshot.md`: its per-initiative working-state role is absorbed into the append-only `journal.md`, and the state-of-world pointer role moves to `index.md`. `context-snapshot.md` is **no longer separately maintained** — this is a historical/superseded note, not a live instruction. (Where the routing table previously saved `context-recovery` output to `context-snapshot.md`, it now appends to the journal and refreshes the index.)
 - **Coexists with native auto-memory, no mirroring.** Claude Code's native `MEMORY.md`/auto-memory remains a **separate per-repository tier** (cwd-keyed, machine-local, non-git, Claude-written) with its own home. It is **neither mirrored into nor out of** this per-initiative layer in either direction. Net result: exactly one documented home per kind of state — per-initiative working-state in the journal+index; per-repository Claude-written learnings in native auto-memory.
 
-### Cross-project seam (occupied by the cross-project memory tier below)
+### Cross-project seam
 
-The cross-project memory tier lives at a **separate** above-the-project path under `~/.claude/` (see "Cross-project memory tier" below) — it does **not** live in any project's `.workspace/`. The seam is **satisfied, not violated**: per-initiative memory files contain **no cross-project content** and reference no other project names/paths, and the per-initiative files require **no move or reformat** to coexist with the cross-project tier. The per-initiative `.workspace/<slug>/memory/` layer is **unchanged** by that tier.
+The cross-project memory tier lives at `~/.claude/shared-memory/` — a separate above-the-project path. See the on-demand include below.
 
 ### Versioning
 
 Memory artefacts live inside the **git-controlled** `.workspace/` tree, so every write is versioned and revertible from git. The layer introduces **no parallel versioning mechanism** — history comes free from the existing repo.
 
-## Cross-project memory tier (above-the-project shared knowledge)
+## Cross-project memory tier (on-demand include)
 
-The per-initiative Memory layer above is **episodic and per-initiative only** — by construction it holds one initiative's history and references no other project. But some knowledge is **durable and recurring** across separate projects: stable facts about entities you work with, reusable how-to lessons, and durable preferences/conventions. The **cross-project memory tier** is a single, above-the-project home for exactly that knowledge, so it can be reused when you start a new project instead of being independently re-derived and duplicated.
+The cross-project memory tier provides durable above-the-project shared knowledge stored at `~/.claude/shared-memory/`. Its full rules — layout, journal+index schemas, namespace taxonomy, shared-claim schema, eligibility, de-contextualization guard, promotion protocol, bootstrap-both, read-time re-validation/surface-don't-merge, consolidation/pruning, ownership table, and three-system relationship — are defined in the on-demand include:
 
-This tier is a **bespoke flat-file** home — the same proven mechanics as the per-project layer, one level up. It is **explicitly not** native Claude Code auto-memory, and it references **no** database, vector/graph/embedding store, daemon, server, scheduler, or external service. It is **not auto-loaded**: **you (the orchestrator) read it explicitly** during bootstrap; nothing pulls it in for you.
+**`~/.claude/skills/workspace/MEMORY-XPROJECT.md`**
 
-### Layout
-
-All shared-tier artefacts are flat files under one above-the-project root — **`~/.claude/shared-memory/`** (name non-load-bearing) — and **none** under any project's `.workspace/`:
-
-```
-~/.claude/shared-memory/
-  index.md            # small, machine-OVERWRITTEN structured pointer / state-of-world + table-of-contents
-  journal.md          # APPEND-ONLY markdown + per-entry YAML-frontmatter log of promotion events / shared decisions
-  global/             # namespace: universal facts/preferences/lessons that hold everywhere — holds shared claim files
-  acme/               # namespace: one dir PER PROJECT FAMILY (e.g. acme) — holds shared claim files
-  archive/            # consolidation/staleness destination (moved here, never hard-deleted; full history via git)
-```
-
-Each namespace dir holds shared **claim files** (markdown + YAML frontmatter). The index and journal serve the whole tier; per-namespace claim files carry the durable payload. The tier lives **inside the existing `~/.claude` git repo** (provenance parity with the per-project layer) — every shared write is versioned and revertible from git; no separate versioning mechanism is introduced. Because that repo uses a default-deny `.gitignore` allowlist, the `shared-memory/` directory must be allowlisted so it is actually tracked.
-
-This is a **separate path** from any initiative's `.workspace/<slug>/memory/` — no shared-tier artefact path ever contains `.workspace/`.
-
-### Journal + index schemas (same mechanics as the per-project layer)
-
-- **Shared journal (`shared-memory/journal.md`)** — **append-only** markdown with per-entry **YAML frontmatter**: a timestamped, attributed, **trust-marked** log of promotion events and shared decisions. Entries are **only appended** — never edited or deleted in place (consolidation rolls up into a *new* summary entry and moves detail to `archive/`; it never rewrites history).
-- **Shared index (`shared-memory/index.md`)** — a small, machine-maintained **structured** file (YAML/frontmatter-list, JSON-like form) that you **overwrite** (not append) on each refresh. It is the state-of-world + table-of-contents: it stores **pointers (paths/anchors) and short summaries only — never the authoritative payload**. It is an allowed plain local structured text file, **not** a database, vector store, graph store, or similarity/embedding index.
-  - **Rebuild from sources:** the index holds no unique authoritative data, so it is fully **regenerable** — delete and rebuild it from `journal.md` plus the namespace claim files. Regenerating loses nothing.
-
-**Retrieval is index-first + `grep`/`glob`, keyword-only** over the files — never embeddings, vectors, similarity ranking, or semantic search. No shared-tier mechanism uses any such technique. Across unrelated projects the **keyword miss-rate is higher** than within one project; that higher miss-rate is an **accepted tradeoff** for determinism, auditability, and zero infra.
-
-### Namespace taxonomy + per-project declaration
-
-Shared knowledge is organised into a **two-level namespace taxonomy**: exactly one **`global/`** namespace (universal facts, preferences, and lessons that hold everywhere) plus **one namespace dir per project family** (e.g. `acme/`). There is **no tech-stack dimension, no per-org dimension, and no per-repo tagging dimension in this version** (one may be added later). Namespace dirs are the relevance filter.
-
-Each project declares **which** shared namespaces it reads via a small **project-level declaration file at its `.workspace/` root** — `.workspace/namespaces` (filename non-load-bearing) — holding a parseable list of namespace names (always `global/`, plus zero or more project-family namespaces). This declaration is the project's cross-project membership and is **shared by all of the project's initiatives** — it is **not** duplicated per initiative (there is no `.workspace/<slug>/.../namespaces`), because cross-project membership is a property of the project/family, not of an individual initiative. This convention is **defined, not necessarily pre-created** — create it on demand when a project first reads the shared tier. Retrieval over the declared namespaces is index-first + `grep`/`glob`, keyword-only; the accepted higher miss-rate above applies.
-
-### Shared-claim schema (type + provenance/scoping — all mandatory)
-
-Every shared claim is a markdown + YAML-frontmatter file in a namespace dir. Its frontmatter carries these fields, **all mandatory, none optional**:
-
-- `type` — one of `{semantic, procedural, preference}`, operationally:
-  - `semantic` — a stable fact about a recurring entity (e.g. "service-a runs on Python 3.9").
-  - `procedural` — a reusable lesson / how-to / workflow learning (e.g. "deploys to prod RDS require an authorized exception").
-  - `preference` — a durable convention / preference / hard constraint / reference.
-- `source` — the source project(s) the claim was learned in.
-- `scope` — the validity scope where the claim is asserted to hold: a namespace/entity, or `global`.
-- a **supersedes / staleness** marker — whether this claim supersedes a prior claim, plus a freshness/superseded indicator.
-- `trust` — `verified` (re-derived/re-run against reality) vs `asserted` (claimed-only), extending the per-project layer's trust marker.
-
-**Eligibility line:** only `semantic` / `procedural` / `preference` knowledge is **promotable**. **Episodic** content — one initiative's task state, in-flight decisions, project history — is **non-promotable** and stays in that initiative's per-initiative `.workspace/<slug>/memory/`. No shared claim is typed episodic or carries one initiative's task state as its payload.
-
-**De-contextualization guard.** A project-specific fact must record its **source project and a bounded `scope`**, never an unqualified `global` — lifting a claim out of its project silently drops the implicit "…in project X" qualifier. Example claim frontmatter:
-
-```yaml
----
-type: semantic
-source: [service-a]
-scope: acme/service-a
-supersedes: none
-stale: false
-trust: verified
----
-service-a runs on Python 3.9.
-```
-
-Here the Python-version fact is scoped to `acme/service-a`, not `global` — so a sibling project's `service-b runs on Python 3.10` claim does **not** silently contradict it.
-
-### Promotion protocol (manual / explicit / orchestrator-owned)
-
-Knowledge enters the shared tier **only by an explicit promotion decision made by you, the orchestrator** — on the user's instruction or on a read-only agent's surfaced candidate. There is **no automatic / on-recurrence promotion** mechanism of any kind.
-
-Read-only agents (`research-harvester`, `task-checker`, `implementation-verifier`, `context-recovery`, `archivist`) may **read** the shared tier and **surface a "this looks reusable" candidate by returning it as content** — they **never write** the tier. **You** decide and persist.
-
-**Dedup-on-promotion (pre-write):** before writing, check for an existing claim with the **same or overlapping scope, keyed on namespace/scope + `type`**. If one exists, **update or supersede** it (set the supersedes marker, archive the old) rather than appending a parallel duplicate. A new claim must never create a scope-overlapping duplicate.
-
-### Bootstrap — read the active initiative's memory AND the declared shared namespaces
-
-When starting a project (after resolving the active initiative from the registry), your bootstrap reads **BOTH**:
-
-1. the active initiative's **per-initiative `.workspace/<active-slug>/memory/`** (per the per-initiative Memory layer bootstrap above), **AND**
-2. per the project's `.workspace/namespaces` declaration file, the **`global/`** namespace **plus its declared project-family namespace(s)** under `~/.claude/shared-memory/`.
-
-These shared reads are **index-first + `grep`/`glob`, namespace-scoped, page-on-demand, with bounded read sizes** — read `shared-memory/index.md` first, then page in only the relevant claim files on demand. **Never "load every project's shared memory."** Omit none of: per-project memory, `global/`, or the declared family namespace(s).
-
-### Read-time re-validation + surface-don't-merge
-
-A shared claim is **evidence, not ground truth** — and it is evidence **gathered in another project's context**. Before acting on a shared claim consumed in a new project, **re-validate it in that project's context** (the higher stakes — a bad shared write affects every future project — make this more load-bearing, not less).
-
-When a shared claim disagrees with anything, the conflict is **surfaced, never silently merged or auto-resolved by fiat**. This covers all conflict kinds:
-
-- **shared-vs-live-tree** — a shared claim contradicts the current repository/working tree.
-- **shared-vs-canonical-artefact** — a shared claim contradicts the active initiative's `proposal.md` / `tasks.md` / `verification/` / source.
-- **shared-vs-per-initiative-memory** — a shared claim contradicts the active initiative's own `.workspace/<slug>/memory/`.
-- **shared-A-vs-shared-B** — two shared claims contradict each other (the stale/superseded case included).
-
-No instruction permits silently adopting or merging an unverified shared claim.
-
-### Consolidation / pruning (orchestrator-owned, non-destructive, staleness-aware)
-
-**You (the orchestrator) are the sole owner** of shared-tier consolidation/pruning. It is triggered by **either**:
-
-- (a) a **size threshold — default 500 KB, configurable** (same default as the per-project layer), and
-- (b) **explicit curation at promotion time**.
-
-**Mechanism (non-destructive):** superseded/stale claims are **rolled up into a summary** and **moved to `shared-memory/archive/`** — **never hard-deleted**. Full history remains recoverable via **git**. **Staleness handling:** claims marked superseded/stale via the schema's supersedes/staleness marker are **pruned to the archive, not silently dropped**. `archivist` may perform the pure `mv` relocation of detail into `archive/` (relocation only, never content edits).
-
-### Ownership — you (the orchestrator) are the sole writer of the shared tier
-
-This tier adds **no new agent**: the agent set is still the **eight** roles of the routing table above. Each shared-tier artefact has **exactly one** content writer — **you**. Read-only agents may read the tier and surface candidates as returned content, but **never write** it.
-
-| Shared-tier artefact | Single writer (content) | Notes |
-|---|---|---|
-| `~/.claude/shared-memory/index.md` | **orchestrator (you)** | Overwritten by you on refresh. |
-| `~/.claude/shared-memory/journal.md` | **orchestrator (you)** | Appended to by you only. |
-| `~/.claude/shared-memory/<namespace>/` claim files (`global/`, per-family dirs) | **orchestrator (you)** | Promotion writes; dedup/supersede before write. |
-| `~/.claude/shared-memory/archive/` | **orchestrator (you)** | `archivist` may perform a pure `mv` to relocate detail here — relocation only, never content edits, so it is not a content *writer*. |
-| `.workspace/namespaces` (project-level declaration, in the consuming project) | **orchestrator (you)** | Names which shared namespaces the project reads; shared by all the project's initiatives. |
-
-No shared-tier file has zero, more than one, or a non-orchestrator content writer. The read-only agents remain tool-locked out of `Write`/`Edit` (and `Bash` where applicable) exactly as before; candidate-surfacing is returning content only, with you persisting.
-
-### Three-system relationship
-
-Three memory systems coexist, with no mirroring between them:
-
-- **Per-initiative `.workspace/<slug>/memory/`** — **unchanged**; the home for an initiative's **episodic** history.
-- **Native Claude Code auto-memory** — a **separate per-repository (cwd-keyed) system** that coexists, is **not mirrored** into or out of any other tier in either direction, and is **not** the cross-project tier.
-- **This bespoke `~/.claude/shared-memory/` tier** — the **only** genuine cross-project tier for agent-accumulated knowledge.
-
-## How to run it conversationally
-
-- Read `.workspace/initiatives.md` first to resolve the active initiative, then read that initiative's `.workspace/<active-slug>/` to know where it stands, then act on what the user asks next — don't restart the pipeline from the top each time.
-- One implementation task at a time. After it's built, offer to verify it.
-- On a FAIL: summarise the violations, then route the fix to the correct generator and re-check. Don't hand-fix.
-- Keep the user in the loop at each handoff with a one-line status ("proposal updated → want me to plan it, or review it first?"). Let their reply pick the next move.
+**Load trigger (deterministic, not auto-loaded):** read `MEMORY-XPROJECT.md` on demand when a cross-project / shared-memory action occurs — specifically: (a) bootstrap of declared namespaces (when starting a project that has a `.workspace/namespaces` declaration), or (b) a promotion of a claim to the shared tier. Do not load it on every turn. Load it by reading the file at the explicit path above when either trigger fires.

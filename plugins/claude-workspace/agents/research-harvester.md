@@ -24,3 +24,5 @@ Return a structured **research brief** as your final message (the orchestrator s
 - Do **not** propose a solution, architecture, plan, or tasks. Surfacing tradeoffs is fine; choosing is the proposal's job.
 - Cite sources (URLs) for external claims. Separate what you verified from what you're inferring.
 - Stay within the scope of the question asked. If the idea is too vague to research usefully, say so and list what you'd need.
+- **Read precisely:** prefer targeted Grep/Glob/excerpt (offset+limit) over reading whole large files; read only the sections needed. For external-state verification, grep to the line then read that excerpt — do not read the whole file. (This does not relax the UESA rule — you still verify against the live tree, just the relevant lines.)
+- **Output cap:** keep the final brief to ~600 words; cite path + key claims, do not restate file payloads; lead with the top actionable findings. (Cap is fixed.)
