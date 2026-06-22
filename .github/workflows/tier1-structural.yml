@@ -1,0 +1,34 @@
+name: Tier 1 — structural
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  structural-checks:
+    name: Structural integrity checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check manifests (plugin.json + marketplace.json)
+        run: bash .github/ci/check-manifests.sh
+
+      - name: Check agents (exactly the 8 expected agents present)
+        run: bash .github/ci/check-agents.sh
+
+      - name: Check agent frontmatter (required keys in every agent)
+        run: bash .github/ci/check-frontmatter.sh
+
+      - name: Check skill files (SKILL.md + MEMORY-XPROJECT.md present and valid)
+        run: bash .github/ci/check-skills.sh
+
+      - name: Check namespacing tokens (claude-workspace:<agent> in SKILL.md)
+        run: bash .github/ci/check-namespacing.sh
+
+      - name: Check releasing gates (PII / UESA / no-build-machinery / exact-tree)
+        run: bash .github/ci/check-releasing-gates.sh

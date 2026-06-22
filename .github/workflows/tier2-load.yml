@@ -1,0 +1,43 @@
+name: Tier 2 -- headless load
+
+# Runs ONLY on release tags -- never on push/PR to main (AC13 / I3 / C3).
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  headless-load:
+    name: Real headless load gate
+    runs-on: ubuntu-latest
+
+    # Auth-gate: skip the entire job when the secret is absent (AC13 / C3 / I3).
+    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # C8: install CLI via npm -- plain workflow + bash/jq, not the official GitHub action.
+      - name: Install Claude CLI
+        run: npm i -g @anthropic-ai/claude-code
+
+      # AC14: exact invocation required by spec.
+      # Capture stdout (stream-json NDJSON) to a temp file; stderr goes to the log.
+      - name: Run headless plugin load
+        run: |
+          claude \
+            --plugin-dir ./plugins/claude-workspace \
+            -p "noop" \
+            --output-format stream-json \
+            --verbose \
+            > /tmp/claude-load-output.ndjson || true
+
+      # AC15 (a)(b)(c): assert pinned init-event paths via check-load.sh.
+      # Assertions source agent names from .github/ci/expected.sh (single source -- C4/I4).
+      # See .github/ci/PINNED-INIT.md for the pinned JSON shape (C7 / R3).
+      - name: Assert init-event (plugin present, all 8 agents, plugin_errors absent-or-empty)
+        run: bash .github/ci/check-load.sh /tmp/claude-load-output.ndjson
