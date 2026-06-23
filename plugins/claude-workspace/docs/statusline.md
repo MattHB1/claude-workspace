@@ -45,7 +45,7 @@ run:
 /plugin show claude-workspace
 ```
 
-The path ends with something like `.../marketplaces/matt-workspace/plugins/claude-workspace`.
+The path ends with something like `.../marketplaces/pocdoc-workspace/plugins/claude-workspace`.
 
 **Run the installer once, deliberately:**
 

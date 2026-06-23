@@ -13,36 +13,36 @@ For a one-paragraph overview and the quickstart, see the bundled index ([README.
 
 The marketplace lives in a **private git repository**, so you install it with your own
 git credentials. The repository handle in the commands below is the public GitHub handle
-`MattHB1/claude-workspace`; use the actual private repo you were invited to if it differs
-(or use a full git URL such as `https://github.com/MattHB1/claude-workspace.git`).
+`vitalsignssolutionsltd/claude-workspace`; use the actual private repo you were invited to if it differs
+(or use a full git URL such as `https://github.com/vitalsignssolutionsltd/claude-workspace.git`).
 
 In a Claude Code session:
 
 ```
-/plugin marketplace add MattHB1/claude-workspace
-/plugin install claude-workspace@matt-workspace
+/plugin marketplace add vitalsignssolutionsltd/claude-workspace
+/plugin install claude-workspace@pocdoc-workspace
 /reload-plugins
 ```
 
 - The first command registers the private marketplace. A git-based marketplace clones
   the whole repo, so the relative-path plugin source resolves automatically.
 - The second installs the plugin (`claude-workspace`) from the marketplace
-  (`matt-workspace`). Note the names differ on purpose: `matt-workspace` is the
+  (`pocdoc-workspace`). Note the names differ on purpose: `pocdoc-workspace` is the
   marketplace, `claude-workspace` is the plugin it ships.
 - `/reload-plugins` makes the skill and agents available in the current session.
 
 CLI equivalents exist if you prefer them outside a session:
 
 ```
-claude plugin marketplace add MattHB1/claude-workspace
-claude plugin install claude-workspace@matt-workspace
+claude plugin marketplace add vitalsignssolutionsltd/claude-workspace
+claude plugin install claude-workspace@pocdoc-workspace
 ```
 
 You can also point the marketplace add at a **full git URL** instead of the
 `owner/repo` short form:
 
 ```
-/plugin marketplace add https://github.com/MattHB1/claude-workspace.git
+/plugin marketplace add https://github.com/vitalsignssolutionsltd/claude-workspace.git
 ```
 
 ---
@@ -66,7 +66,7 @@ credential present in the environment. See "Updates" below for the detail.
 **Manual update (no token needed).** To pull the latest version from the private remote:
 
 ```
-/plugin marketplace update matt-workspace
+/plugin marketplace update pocdoc-workspace
 /reload-plugins
 ```
 
@@ -103,8 +103,8 @@ already-distributed copies.
 A recipient who wants to remove it can uninstall and detach the marketplace:
 
 ```
-/plugin uninstall claude-workspace@matt-workspace
-/plugin marketplace remove matt-workspace
+/plugin uninstall claude-workspace@pocdoc-workspace
+/plugin marketplace remove pocdoc-workspace
 ```
 
 ---

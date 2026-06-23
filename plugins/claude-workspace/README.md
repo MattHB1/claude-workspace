@@ -136,8 +136,8 @@ Full setup guide (auth, permissions, per-agent models, distribution model) is in
 In a Claude Code session, run the three install commands:
 
 ```
-/plugin marketplace add MattHB1/claude-workspace
-/plugin install claude-workspace@matt-workspace
+/plugin marketplace add vitalsignssolutionsltd/claude-workspace
+/plugin install claude-workspace@pocdoc-workspace
 /reload-plugins
 ```
 
