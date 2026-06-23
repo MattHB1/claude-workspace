@@ -57,6 +57,16 @@ These three verbs are **orchestrator actions against the registry and the `<slug
 - **Switch the active initiative** — triggers: "switch to <name>", "make <name> active", "work on <name>". Action: change the ACTIVE marker in `.workspace/initiatives.md` to the named initiative's slug (exactly one ACTIVE at all times); no files move.
 - **List initiatives** — triggers: "list initiatives", "what's in this workspace", "what initiatives do we have". Action: report from `.workspace/initiatives.md` — every initiative's slug, one-line description, and status (highlighting the ACTIVE one).
 
+## Exiting the workspace (conversational verb)
+
+Leaving the workspace is an **orchestrator action** — it dispatches no subagent and adds no new agent. It is the deliberate, durable way to stop orchestrating. Triggers: "exit the workspace", "leave the workspace", "drop out of the orchestrator", "stop orchestrating", "I'm done here". On any of these:
+
+1. **Teardown (mandatory).** Run the full teardown for the ACTIVE initiative (see "Memory layer › Teardown"): append a journal entry recording what was done/decided, and refresh (overwrite) the index. Treat exit as a guaranteed interruption point — state must be durable **before** you confirm.
+2. **Confirm it's safe to leave.** Report in one line that the active initiative is checkpointed (journal appended + index refreshed) and that all workspace state lives in the git-controlled `.workspace/` tree, so nothing is lost by leaving.
+3. **Hand back the final step.** You **cannot** remove your own loaded context — only the user can. The orchestrator persona is just this skill's text loaded into the conversation; it persists until the conversation context is cleared. So tell the user to type **`/clear`** (fresh start — fully drops the orchestrator) or **`/compact`** (keeps a summary) to actually exit. Re-entering later (invoke the workspace skill again) re-bootstraps from the registry → active initiative → memory index + journal tail, so work resumes exactly where it left off.
+
+This verb performs no file moves and creates/switches no initiative: the ACTIVE marker in `.workspace/initiatives.md` is left **unchanged**, so the next session resumes the same initiative.
+
 ## The agents and when to dispatch each
 
 Dispatch via the Agent tool with `subagent_type` set to the **namespaced** agent name (`claude-workspace:<name>`). Each runs in a fresh, isolated context.

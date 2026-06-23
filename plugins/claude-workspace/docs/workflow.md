@@ -64,6 +64,26 @@ themselves stay path-agnostic.
 
 ---
 
+## Exiting the workspace
+
+There is no "kill switch" command, because the orchestrator is not a running
+process - it is this skill's instructions loaded into the conversation. It stays
+in effect until the conversation context itself is cleared, which only **you** can
+do. To leave cleanly:
+
+1. Say **"exit the workspace"** (or "I'm done", "stop orchestrating"). The
+   orchestrator runs a mandatory teardown of the active initiative - appends a
+   journal entry and refreshes the index - then confirms it is safe to leave.
+2. Type **`/clear`** to fully drop the orchestrator (a fresh conversation), or
+   **`/compact`** to keep a summary. This is the step that actually exits.
+
+Nothing is lost. All workspace state lives in the git-controlled `.workspace/`
+tree, and the ACTIVE marker is left untouched - so the next time you invoke the
+workspace skill it re-bootstraps the same initiative from the registry, memory
+index, and journal tail, and you pick up where you left off.
+
+---
+
 ## The typical stage flow
 
 A full initiative tends to move through these stages:
