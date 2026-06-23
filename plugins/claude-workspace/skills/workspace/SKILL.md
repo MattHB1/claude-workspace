@@ -92,6 +92,76 @@ The read-only agents (research-harvester, task-checker, implementation-verifier,
 - On a FAIL: summarise the violations, then route the fix to the correct generator and re-check. Don't hand-fix.
 - Keep the user in the loop at each handoff with a one-line status ("proposal updated → want me to plan it, or review it first?"). Let their reply pick the next move.
 
+## Tier-selection — execution-tier routing (orchestrator routing guidance)
+
+**ORCHESTRATOR ROUTING GUIDANCE ONLY.** This section tells you which steps to invoke per task. It adds NO new agent (the canonical set remains 8) and does NOT amend Hard Rule #1 (dispatch-always / single-responsibility). Tiering governs only *which* steps are invoked. All criteria are explicit, checkable conditions (file kind, path, diff text, grep output) — deterministic, never inferential; consistent with the "Determinism of retrieval" rule below.
+
+### How to apply
+
+1. Inspect the request and the target (file kind, path, symbols/references touched, repo span).
+2. Evaluate T1 predicates; if ALL hold, assign T1. Else evaluate T2; if ALL hold, assign T2. Else assign T3.
+3. Before finalising: evaluate the Safe-Default-Escalate triggers (E1–E5). If ANY fires, move UP one tier. **There is NO downward-reclassification path.**
+4. Run the step set for the assigned tier.
+
+### T1 — Trivial: documentation, comments, whitespace, metadata
+
+**ALL five predicates must hold** (one failing predicate escalates to T2/T3):
+- P1.1 Target file(s) are docs, comment blocks, docstrings, whitespace-only lines, or top-level metadata fields read only by humans.
+- P1.2 Change is a typo correction, whitespace normalisation, or a rename that does NOT appear in any symbol reference, import, `require()`, `use`, call site, path string, or config lookup.
+- P1.3 No executable code path is added, removed, or modified: no function body, no conditional, no return value, no exported identifier, no schema field.
+- P1.4 No file in the plugin repository (`~/code/claude-workspace/` or the active initiative's plugin root) is touched.
+- P1.5 Change is confined to a SINGLE repository.
+
+**Step set:** `implementer` dispatch (required). `implementation-verifier`: NOT dispatched by default — verification is **available on request**; the orchestrator proceeds without asking per edit. The offer is never a forced round-trip. Any T1 task that escalates to T2/T3 MUST run the verifier. Plugin-export parity gate, exact-tree CI, and artefact regeneration are not invoked (P1.4/P1.5 confirm they do not apply).
+
+### T2 — Local-Semantic: single-scope logic change, no cross-repo or plugin impact
+
+**ALL five predicates must hold** (one failing predicate escalates to T3):
+- P2.1 Change is one new/modified helper function, one non-schema config file, a single agent's logic file, or a single template file.
+- P2.2 No symbol/path exported from the changed scope is consumed by external code in a way the change alters.
+- P2.3 No invariant-bearing file (schema, type definition, contract shared across ≥2 agents or ≥2 repos) is touched.
+- P2.4 No file in the plugin repository is touched.
+- P2.5 Change is confined to a SINGLE repository.
+
+**Step set:** `implementer` (required) + `implementation-verifier` (required — adversarial verification is always required for a semantic code change). Plugin-export parity gate and artefact regeneration not invoked (P2.4/P2.5).
+
+### T3 — Structural: schema, invariants, cross-repo, plugin — FULL V-MODEL UNCHANGED
+
+**ANY single predicate is sufficient for T3:**
+- P3.1 Touches a schema file (`.json`/`.yaml` schema, grammar, type/interface definition used across ≥2 modules or ≥2 agents).
+- P3.2 Touches an invariant-bearing file (hard rule, ownership entry, routing table, contract consumed by ≥2 consumers).
+- P3.3 Change spans ≥2 repositories.
+- P3.4 Touches any file under the plugin repository root.
+- P3.5 Touches core orchestration logic: `SKILL.md`, any agent file, the bootstrap sequence, the routing table, the ownership table, or any memory-layer rule file.
+- P3.6 Affects a plugin export, release process, CI gate, or artefact parity check.
+- P3.7 Safe-Default-Escalate promoted this task from T1 or T2.
+
+**Step set: full V-model, UNCHANGED by this rubric.** Task-checker / plan gate, `implementer`, `implementation-verifier` (adversarial, required), plugin-export parity gate (when P3.3/P3.4/P3.6), exact-tree CI (when applicable), full artefact regeneration (when schema or derived outputs affected), any additional initiative-specific gates — all invoked as before.
+
+### Safe-Default-Escalate (upward-only)
+
+Evaluate BEFORE finalising the tier. If ANY trigger fires, move UP one tier (T1→T2, T2→T3). T3 stays T3.
+
+| Trigger | Fires when |
+|---------|------------|
+| E1 Scope ambiguity | Request is underspecified, contradictory, or uses language (e.g. "clean up", "fix") where changed files and exact lines cannot be identified without inference. |
+| E2 Any reference touched | The change modifies, removes, or renames a symbol, path string, import, `require()`, config key, or URL consumed anywhere outside the definition site. (Grep the repo; any non-definition occurrence fires the trigger.) |
+| E3 Any invariant touched | The change affects a file/field documented as an invariant (`STRM-*`, hard rule, ownership entry, routing-table row, schema constraint). |
+| E4 Cross-repo state | The change requires reading or writing any file under a different repo root, or a cross-repo consistency check. |
+| E5 Predicate check inconclusive | Evaluating any membership predicate requires an inference or judgement call that cannot be resolved by direct file-path, file-kind, diff, or grep inspection. |
+
+### "Skip" — narrow restriction
+
+**"Skip" NEVER means skipping adversarial verification of a semantic code change.** "Skip" applies ONLY to:
+1. **Non-applicable initiative-machinery** — plugin-export parity gate, exact-tree CI, and artefact regeneration are skipped when (and only when) the tier predicates confirm they genuinely do not apply (no plugin file touched, no schema modified, no derived output affected).
+2. **Default-proceed at T1** — at T1 the orchestrator does not dispatch `implementation-verifier` by default; it states verification is available on request and proceeds. This is the ONLY case where the verifier is not dispatched by default, and only because T1 predicates confirm zero semantic effect. Verification remains available; any escalated-T1 task MUST run the verifier.
+
+"Skip" NEVER applies to adversarial verification of any semantic code change; to any step at T2/T3 for which predicates confirm applicability; or to the `implementer` dispatch at any tier.
+
+### Tier-selection consistency note
+
+This section is **consistent with Hard Rule #5** (gates before progress): at T1, verification is *offered/available on request* (not removed); at T2 and T3, verification is *required*. Hard Rule #5 text is unchanged.
+
 ## Prompt-caching awareness
 
 The SDK's default prompt-caching TTL is **5 minutes** — keep this default. Do **not** enable the 1-hour tier (extra cost, out of scope). Awareness note only: if rate-limit pressure grows, revisit TTL settings, but make no code change now.
