@@ -101,6 +101,25 @@ returns to `implementer`. The checker never fixes, and neither does the
 orchestrator (see [design-principles.md](design-principles.md) and
 [why-it-refuses.md](why-it-refuses.md)).
 
+The amount of verification a task gets scales with its blast radius, by a
+deterministic rubric (file kind, path, and diff - never a judgement call):
+
+- **Trivial** - documentation, comments, whitespace, or human-only metadata.
+  The orchestrator builds it and proceeds; an adversarial verify is available
+  on request but not forced, because the change has no semantic effect.
+- **Local-semantic** - a single-scope logic change that touches no shared
+  contract, no other repo, and no plugin file. Adversarial verification is
+  **required**.
+- **Structural** - anything touching a schema, a shared invariant, more than
+  one repo, the plugin, or the core orchestration rules. The full
+  check -> build -> verify path runs, unchanged.
+
+The rubric only ever escalates - when a task is ambiguous or reaches further
+than it first appears - and never downgrades verification. **A change with any
+semantic effect is always verified;** the trivial lane applies only to edits
+that change no behaviour. The authoritative rules live in the orchestrator
+skill (`SKILL.md`).
+
 ---
 
 ## Invoke only what you need (no forced sequence)
