@@ -30,6 +30,8 @@ FAILURES=()
 #   - .github/ci/     (C6: this dir contains detection literals as strings)
 # Allowance: case-insensitive "matthb" that is exactly the public handle MattHB1
 #             in README install commands is permitted.
+#             The exact marketplace token "pocdoc-workspace" is also permitted
+#             (stripped before re-grep; bare "pocdoc" still fails).
 # ---------------------------------------------------------------------------
 gate_a_pii() {
   local hits
@@ -50,11 +52,14 @@ gate_a_pii() {
 
   hits="${hits}"$'\n'"${github_hits}"
 
-  # Filter out the allowed MattHB1 handle occurrences:
-  # A line is allowed if the ONLY case-insensitive 'matthb' match it contains
-  # is part of the literal token 'MattHB1' (the public GitHub handle).
-  # Strategy: strip all occurrences of MattHB1 (case-insensitive) from the line,
-  # then check whether any of the banned patterns still appear.
+  # Filter out the allowed MattHB1 and pocdoc-workspace token occurrences:
+  # A line is allowed if, after stripping those two exact tokens (case-insensitive),
+  # no banned pattern remains.
+  # Allowed tokens:
+  #   MattHB1        — the public GitHub handle (existing allowance)
+  #   pocdoc-workspace — the exact org marketplace token (new allowance;
+  #                      bare "pocdoc" is NOT stripped and still fails)
+  # Strategy: strip each allowed token from the content portion, then re-grep.
   local offenders=""
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
@@ -63,7 +68,8 @@ gate_a_pii() {
     local prefix content cleaned
     prefix=$(printf '%s' "$line" | cut -d: -f1-2)
     content=$(printf '%s' "$line" | cut -d: -f3-)
-    cleaned=$(printf '%s' "$content" | sed -E 's/[Mm][Aa][Tt][Tt][Hh][Bb]1//g')
+    cleaned=$(printf '%s' "$content" | sed -E 's/[Mm][Aa][Tt][Tt][Hh][Bb]1//g' \
+                                     | sed -E 's/[Pp][Oo][Cc][Dd][Oo][Cc]-[Ww][Oo][Rr][Kk][Ss][Pp][Aa][Cc][Ee]//g')
     # Now check if any banned pattern still appears in the cleaned content
     if printf '%s' "$cleaned" | grep -qiE 'pocdoc|central-be|admin-be|matt@mypocdoc\.com|mypocdoc|/Users/matthb'; then
       offenders="${offenders}${line}"$'\n'
