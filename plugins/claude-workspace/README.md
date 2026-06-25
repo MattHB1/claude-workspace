@@ -107,6 +107,21 @@ and command table.
 
 ---
 
+## Skills
+
+Four methodology skills ship with the plugin. Invoke them directly in a Claude Code session:
+
+| Skill | What it does |
+|---|---|
+| `/claude-workspace:ideate` | Structured ideation: Frame → Diverge → Adversarial-challenge → Converge. |
+| `/claude-workspace:decide` | Decision process: surface options, stress-test, and converge on a recorded choice. |
+| `/claude-workspace:plan` | Planning methodology: decompose a goal into a traceable, reviewable task structure. |
+| `/claude-workspace:reflect` | Reflection methodology: review what happened, extract learnings, and record them. |
+
+These are general-purpose methodology skills. They are independent of any active initiative and can be invoked at any time.
+
+---
+
 ## What this is NOT
 
 - **Not a sandboxed runtime.** The determinism here is convention-backed discipline plus a
