@@ -107,6 +107,21 @@ and command table.
 
 ---
 
+## Skills
+
+Four methodology skills ship with the plugin. Invoke them directly in a Claude Code session:
+
+| Skill | What it does |
+|---|---|
+| `/claude-workspace:ideate` | Structured ideation: Frame → Diverge → Adversarial-challenge → Converge. |
+| `/claude-workspace:decide` | Decision process: surface options, stress-test, and converge on a recorded choice. |
+| `/claude-workspace:plan` | Planning methodology: decompose a goal into a traceable, reviewable task structure. |
+| `/claude-workspace:reflect` | Reflection methodology: review what happened, extract learnings, and record them. |
+
+These are general-purpose methodology skills. They are independent of any active initiative and can be invoked at any time.
+
+---
+
 ## What this is NOT
 
 - **Not a sandboxed runtime.** The determinism here is convention-backed discipline plus a
@@ -180,3 +195,4 @@ The full guide is split into focused pages under `docs/`:
 | [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows the active initiative in your Claude Code prompt. |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Fixes for permission errors, missing tools, marketplace auth, and the two "why did it refuse" cases. |
 | [docs/limitations.md](docs/limitations.md) | Known gaps and what the system is NOT (no semantic retrieval, no auto-promotion, no built-in delete, and more). |
+| [docs/ideation-spiral.md](docs/ideation-spiral.md) | How to use the ideation spiral (triggers, the Frame→Diverge→Challenge→Converge loop, convergence gate), its capabilities and boundaries, and how to thread `ideation.md` downstream into the pipeline or export it externally. |
