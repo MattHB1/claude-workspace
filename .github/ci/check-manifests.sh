@@ -89,11 +89,37 @@ check_marketplace_json() {
 }
 
 # ---------------------------------------------------------------------------
+# Check 3: README badge versions match plugin.json version
+# ---------------------------------------------------------------------------
+check_readme_badge_versions() {
+  echo "Checking README badge versions match $PLUGIN_JSON ..."
+
+  plugin_version="$(jq -r '.version // empty' "$PLUGIN_JSON")"
+  [[ -n "$plugin_version" ]] || fail "Could not read version from $PLUGIN_JSON."
+
+  ROOT_README="README.md"
+  PLUGIN_README="plugins/claude-workspace/README.md"
+
+  for readme in "$ROOT_README" "$PLUGIN_README"; do
+    [[ -f "$readme" ]] || fail "$readme does not exist."
+    badge_version="$(grep -o 'img\.shields\.io/badge/version-[^-]*-brightgreen' "$readme" | sed 's|img\.shields\.io/badge/version-||; s|-brightgreen||')"
+    if [[ -z "$badge_version" ]]; then
+      fail "$readme: no version badge found (expected img.shields.io/badge/version-<VER>-brightgreen)."
+    fi
+    if [[ "$badge_version" != "$plugin_version" ]]; then
+      fail "$readme: badge version '$badge_version' does not match plugin.json version '$plugin_version'."
+    fi
+    echo "  OK: $readme badge version '$badge_version' matches plugin.json."
+  done
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 require_jq
 check_plugin_json
 check_marketplace_json
+check_readme_badge_versions
 
 echo ""
 echo "All manifest checks passed."
