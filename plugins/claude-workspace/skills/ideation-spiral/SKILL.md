@@ -17,6 +17,16 @@ its own text. It does NOT invoke or depend on the loose local `ideate`, `decide`
 skills at runtime. A fresh plugin install can run this skill end-to-end with no loose local skills
 present.
 
+## Right-sizing the process (necessity invariant applied to the spiral itself)
+
+The same necessity invariant that governs every artefact this workspace produces governs the spiral's own generative process: the smallest, simplest process that fully satisfies the real need. Three rules, applied to every run:
+
+- **Divergence proportional to residual uncertainty.** How wide to diverge is set by how open/uncertain the problem actually is. A near-crisp idea earns a shallow pass through Phase 2; only a genuinely vague one earns wide divergence. The six-lens pass in Phase 2 is a ceiling, not a floor — use as much of it as residual uncertainty justifies, no more.
+- **User short-circuit.** If the user states the answer, the invariant, or the concept directly, converge to it immediately and test it — do not re-mandate breadth or cycle back through earlier phases. The spiral helps the user reach a crisp concept; if they are already there, the job is to confirm it, not reopen it.
+- **Conditional completeness gate.** The structural-completeness conditions (a)–(d) are the gate, but the gate passes when there is enough confidence given the residual uncertainty — not when maximal exploration is always complete. A near-crisp problem can satisfy the gate with a proportionately shallower pass than a genuinely open one.
+
+Low cognitive load throughout: few options at a time, plain language, short turns. The process should feel like help, not homework.
+
 ## Triggers & Routing
 
 **Invocation triggers** (these phrases invoke the spiral inline in the orchestrator's conversation):
@@ -95,9 +105,7 @@ test to each. Then check the **convergence gate**:
 
 ### Convergence Gate (must pass before convergence is offered)
 
-Convergence is **blocked** until ALL four structural-completeness conditions hold. The skill may only
-offer convergence — and the user's declaration of "done" may only take effect — when every condition
-below is satisfied:
+Convergence is **blocked** until ALL four structural-completeness conditions hold. Evaluate them against residual uncertainty: a problem with low residual uncertainty can satisfy these conditions with a proportionately shallower pass; a genuinely open problem requires the full pass. The skill may only offer convergence — and the user's declaration of "done" may only take effect — when every condition below is satisfied:
 
 - **(a) Hypotheses are MECE** — the explored hypotheses / idea-branches are mutually exclusive (no two
   are the same direction restated) and collectively exhaustive at the chosen frame (the challenge phase

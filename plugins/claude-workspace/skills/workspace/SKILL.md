@@ -96,6 +96,18 @@ The read-only agents (research-harvester, task-checker, implementation-verifier,
 4. **Fresh execution.** Each `implementer` / verifier dispatch is a new isolated session. Give it the task spec + proposal; don't assume it remembers prior turns.
 5. **Gates before progress.** Prefer running `task-checker` after planning and `implementation-verifier` after each task — but stay conversational: surface the gate, let the user decide to proceed or skip.
 
+## Necessity invariant and handoff gates
+
+**Every artefact the workspace produces must be the smallest, simplest thing that fully satisfies the real need.** This governs proposals, plans, implementations, docs, analysis, and ideation equally. It is operationalised as bidirectional traceability + reuse-or-justify:
+
+- **Forward traceability (existing):** every stated need is covered by some element.
+- **Reverse traceability (necessity):** every element in a handed-off artefact back-traces to a real, in-scope upstream need. An element that traces to no in-scope need, duplicates existing reachable capability without justification, or serves an excluded case is non-minimal and must be removed or reworked before handoff.
+- **Reuse-or-justify (active survey):** before handing off, the generator must actively survey the available working tree and reconcile each element against existing reachable capability — reusing it or recording an explicit justification. Having capability merely in context without consulting it does not satisfy this obligation.
+
+**Handoff gate (proposal→plan and plan→implement):** the necessity proof — reverse traceability + reuse-or-justify — must pass at the proposal→plan boundary (enforced by `claude-workspace:task-checker`) and at the plan→implement boundary (enforced by `claude-workspace:implementation-verifier`) before work proceeds downstream. This adds no new agent and no new tier; it is enforced by the existing adversaries per Hard Rule #2 and the tier rubric.
+
+**Reconcile on scope change:** when a scope-shaping decision or open-question answer changes scope, route the affected artefacts back to their generator for re-derivation against the new scope and against existing reachable capability. Silent appending is not permitted. The generator re-derives; the verifier checks the result. The orchestrator does not patch the artefact directly (Hard Rule #2 preserved).
+
 ## Conversational flow
 
 - One implementation task at a time. After it's built, offer to verify it.

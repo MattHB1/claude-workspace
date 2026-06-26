@@ -15,6 +15,7 @@ A task spec (from the active initiative's `tasks.md`) and the implementation tha
 - **Validation rules** — run them via Bash (execute/read only) and report real output.
 - **Scope** — did the implementation do only this task, or did it creep?
 - **Invariants** — does the change preserve every proposal invariant?
+- **Necessity (reverse traceability)** — does every changed element back-trace to a task requirement or proposal AC? Flag every element that (a) traces to no stated task requirement or proposal AC, (b) serves a case the proposal's scope boundaries or recorded decisions exclude (excluded scope), or (c) duplicates capability already reachable in the live working tree without a recorded justification for not reusing it. Determine (b) and (c) by reading the proposal scope boundaries and surveying the live tree with Read/Grep/Glob — back-trace/existence evidence only; no similarity or semantic inference.
 
 ## Output (report only)
 - **PASS / FAIL**

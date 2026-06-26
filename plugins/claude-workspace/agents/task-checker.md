@@ -20,6 +20,7 @@ For each task:
 
 Across the whole list:
 - **Coverage** — is every proposal acceptance criterion covered by at least one task?
+- **Necessity (reverse traceability)** — does every task back-trace to a real, in-scope proposal acceptance criterion? A task with no such back-trace is non-minimal and must be flagged. Flag every task that (a) traces to no stated proposal AC, (b) serves a case the proposal's scope boundaries or recorded decisions exclude (excluded scope), or (c) duplicates capability already reachable in the live working tree without a recorded justification for not reusing it. Determine (b) and (c) by reading the proposal scope boundaries and surveying the live tree with Read/Grep/Glob — back-trace/existence evidence only; no similarity or semantic inference.
 
 ## Output (report only)
 - **Overall: PASS / FAIL**

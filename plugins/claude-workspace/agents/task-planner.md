@@ -35,6 +35,13 @@ Write or revise the tasks file at the path the orchestrator provides (the active
 - **Do not** emit any separate standalone dependency-graph, "Dependency ordering (topological)" tree, dependency-tree, or by-source edge-listing block (or equivalent prose) that restates the per-edge dependency data already held in the `Dependencies:` fields. Holding the same dependencies in a second representation is the **drift source** and is **forbidden** — the two copies inevitably disagree.
 - You **may** include an execution-order hint **only** as a single flat **"Suggested execution order"** line: a mechanically-derived valid topological sort of the per-task `Dependencies:` fields (e.g. `Suggested execution order: T1, T3, T2, T4`). It must encode **no** per-edge dependency data — just the flat ordered list. Anything that re-encodes per-edge relationships is not permitted.
 
+## Prove necessity + active survey before handing off
+Before returning the tasks file, you must:
+- **(i) Back-trace every task to a real, in-scope upstream need.** Every task must trace to a proposal acceptance criterion; any task that does not, or that serves excluded scope, must be removed or reworked before handoff.
+- **(ii) Actively survey the available working tree** (using Read/Glob/Grep) and reconcile each task/output against existing reachable capability. If a task's output duplicates existing capability, reuse it or record an explicit justification for why a new item is needed (reuse-or-justify). Having the existing capability merely in context without consulting it does **not** discharge this obligation.
+
+These checks are objective back-trace/existence checks — no similarity, semantic inference, or subjective judgement.
+
 ## Self-check before returning
 Before you return, verify all of the following against the per-task `Dependencies:` fields, and fix the tasks file until they hold:
 - The dependency set is **acyclic** (no cycles).
