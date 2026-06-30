@@ -1,0 +1,40 @@
+{
+  "description": "Workspace observability hooks — captures events to per-initiative events.jsonl and per-session cost log",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Agent|Bash|Write|Edit|Read|Skill|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/autolog.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/autolog.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/log-session-cost.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/record-session-start.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

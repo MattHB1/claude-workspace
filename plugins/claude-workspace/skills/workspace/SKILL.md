@@ -222,6 +222,11 @@ Every entry carries these **mandatory** frontmatter fields (none optional):
 - `role` — the agent/role attribution for the underlying claim (e.g. `orchestrator`, `implementation-verifier`).
 - `trust` — provenance marker, one of `verified` (re-derived/re-run against reality) or `asserted` (unverified / claimed-only). This distinguishes verified facts from asserted ones so downstream readers re-verify rather than trust.
 
+Two additional **optional-but-recorded** frontmatter fields may also appear (existing entries without them remain fully valid — these fields are additive, not mandatory):
+
+- `tier` — the task-risk tier decision for the relevant task; enum `T1|T2|T3`. Covers event type 3 (tier decision) from the six-event-type table. Recorded by the orchestrator at teardown on the relevant entry.
+- `outcome` — the verification/result status (including the semantic side of caught errors); enum `pass|fail|retry`. Covers the semantic side of event type 2 (caught-error / gate pass-fail) from the six-event-type table. Recorded by the orchestrator at teardown on the relevant entry.
+
 Example entry:
 
 ```markdown
@@ -266,7 +271,7 @@ Once the active slug is resolved, the memory read is **required**, not optional,
 
 ### Teardown — persist state (required, assume interruption)
 
-At session end **and at safe checkpoints**, you **must** (this is mandatory, not discretionary): (1) **append a journal entry** (per the schema above) recording what was done/decided, and (2) **refresh the index** (overwrite it to reflect the new state-of-world). Frame every checkpoint as **"assume interruption"**: state must be durable at every teardown, not only at final completion, so a reset/compaction mid-project loses nothing.
+At session end **and at safe checkpoints**, you **must** (this is mandatory, not discretionary): (1) **append a journal entry** (per the schema above) recording what was done/decided, and (2) **refresh the index** (overwrite it to reflect the new state-of-world). Frame every checkpoint as **"assume interruption"**: state must be durable at every teardown, not only at final completion, so a reset/compaction mid-project loses nothing. When a task has an associated tier decision and a verification outcome, **record `tier` and `outcome`** on the relevant journal entry at teardown — `tier` records the task-risk decision (T1/T2/T3) and `outcome` records the pass/fail/retry result (including the semantic side of any caught error).
 
 ### Consolidation policy — orchestrator-owned, dual-trigger, non-destructive
 
@@ -278,6 +283,56 @@ At session end **and at safe checkpoints**, you **must** (this is mandatory, not
 **Measure-then-decide:** measure real journal sizes before lowering from 500 KB or adding a turn-count trigger — only adjust if a smaller value is warranted by real data. Do not set a guessed number now.
 
 **Mechanism (non-destructive):** roll up superseded detail into a **new summary entry** (appended to the live journal) and **move** the superseded detail into the active initiative's `.workspace/<slug>/memory/archive/`. You **never hard-delete unique information** — detail is relocated, not destroyed, and full history remains recoverable via **git**. This never breaches the append-only rule: the live journal is only ever appended to (the roll-up writes a new summary entry); prior entries' unique info is archived by `mv`, not rewritten or deleted in place. `archivist` may perform the pure `mv` of detail into `archive/` where appropriate (relocation only, no content edits).
+
+**events.jsonl governed by this same policy (AC9, INV7):** the per-initiative `events.jsonl` (auto-captured operational-event trace written by the PostToolUse/Stop hook) is **subject to this same consolidation policy** — no second or divergent bounding policy is introduced for it. When `events.jsonl` exceeds the 500 KB threshold (measured, not guessed — same "measure-then-decide" rule applies), the consolidation cycle fires: roll up into a summary entry and move detail to `.workspace/<slug>/memory/archive/`. Deletion is never permitted. The bounding threshold for `events.jsonl` is 500 KB (the existing policy default); a lower per-initiative threshold may be set after measuring real sizes in practice, but may not be set from a guess at planning time. One policy governs both `journal.md` and `events.jsonl`.
+
+### Efficiency-metric grep/count recipes (AC8, INV12)
+
+The following deterministic one-line recipes derive each claimed efficiency metric from `events.jsonl` and/or `journal.md`. All are grep/count — no inference. Recipes use the path `.workspace/<slug>/memory/` — substitute the active initiative's slug.
+
+**Metric 1 — Tier assigned per task** (from `journal.md` `tier` frontmatter field):
+```sh
+grep -E '^tier:' .workspace/<slug>/memory/journal.md
+```
+Lists all `tier:` values (T1/T2/T3) recorded by the orchestrator at teardown. One value per journal entry that records a tier decision.
+
+**Metric 2 — Dispatches per task** (from `events.jsonl` `agent` events):
+```sh
+grep '"event": *"agent"' .workspace/<slug>/memory/events.jsonl | wc -l
+```
+Counts all Agent-dispatch lines. To scope to a task window, bound by `ts` range or correlate with the task's journal `refs`/timestamp.
+
+**Metric 3 — Gate pass/fail per task** (from `journal.md` `outcome` frontmatter field):
+```sh
+grep -E '^outcome:' .workspace/<slug>/memory/journal.md
+```
+Lists all `outcome:` values (pass/fail/retry) recorded at teardown. One value per journal entry that records an outcome.
+
+**Metric 4 — Retry count per task** (count of fail/retry outcomes):
+```sh
+grep -cE '^outcome: (fail|retry)' .workspace/<slug>/memory/journal.md
+```
+Counts all `fail` or `retry` outcomes; scoped to a task by bounding on the `refs` field and `timestamp` range in the surrounding entries.
+
+**Metric 5 — Git push count** (from `events.jsonl`):
+```sh
+grep -c '"event": *"git-push"' .workspace/<slug>/memory/events.jsonl
+```
+
+**Metric 5b — PR create count** (from `events.jsonl`):
+```sh
+grep -c '"event": *"pr-create"' .workspace/<slug>/memory/events.jsonl
+```
+
+**NOT claimed (INV12):** per-task wall-clock duration and per-task token counts are **NOT derivable** from `events.jsonl` or `journal.md` alone and are explicitly excluded. The Admin API reports per session/date-bucket, not per task-dispatch; SessionStart/Stop events are not correlated to task IDs. No metric recipe is provided for these — claiming them would be dishonest.
+
+### Honest cost/timing granularity note (AC7, INV12)
+
+The two session scripts wired as hooks (`log-session-cost.py` on Stop; `record-session-start.py` on SessionStart) give **per-session / date-bucket** granularity — **NOT per-task and NOT per-initiative**:
+
+- **`log-session-cost.py`** calls the Anthropic Admin API to retrieve token counts and estimated cost. The API buckets usage by session and date, not by task or initiative. Cost data is therefore **per-session / date-bucketed** and cannot be attributed to a specific task or initiative. This script writes to **`$CLAUDE_PROJECT_DIR/agentic/cost-log.md`** (the consumer project root, resolved from `$CLAUDE_PROJECT_DIR` — never cwd, never a home-path fallback) — **not** into `events.jsonl` and **not** into any per-initiative path. This is intentional: cost is session-scoped data, not initiative-scoped, so it does not belong in a per-initiative file. **Cost is silently absent without `ANTHROPIC_ADMIN_KEY`** — if that environment variable is not set, the script produces no output and no error; cost data simply does not appear in `cost-log.md`.
+- **`record-session-start.py`** writes session start timing to `~/.claude/sessions/` (a fixed path by construction via `expanduser`). Session wall-clock duration is derivable by pairing this with the Stop event — but at session level only, subject to the same per-session/date-bucket caveat.
+- **Neither script writes to `events.jsonl`**: they are separate, independently-scoped scripts. `events.jsonl` is the per-initiative structured operational-event trace; `cost-log.md` is the per-session/date cost ledger. These are distinct files with distinct scopes and distinct granularities — do not conflate them.
 
 ### Integration with existing state homes
 
@@ -291,6 +346,8 @@ The cross-project memory tier lives at `~/.claude/shared-memory/` — a separate
 ### Versioning
 
 Memory artefacts live inside the **git-controlled** `.workspace/` tree, so every write is versioned and revertible from git. The layer introduces **no parallel versioning mechanism** — history comes free from the existing repo.
+
+**INV13 deviation — raw log/trace/cost files are git-ignored (DEVIATION from this section):** the auto-captured `events.jsonl` (per-initiative event trace) **and** the cost-log at `$CLAUDE_PROJECT_DIR/agentic/cost-log.md` are **git-ignored — never committed**. This is a deliberate, scoped DEVIATION from the rule above: the **semantic** memory artefacts (`journal.md`, `index.md`) **stay git-versioned exactly as before everywhere**; only the raw log/trace/cost files are excluded from version control. **Enforcement scope:** this git-ignore exclusion is **auto-enforced only in the user's own repos** — the `~/.claude/.gitignore` entries (`.workspace/*/memory/events.jsonl` and `agentic/cost-log.md`) apply in the repos where that `.gitignore` governs. A plugin **cannot edit a consumer's `.gitignore`**, so for consumer projects the recommended `.gitignore` lines are **documented** (see the plugin README/docs) rather than auto-enforced. In all cases `journal.md`/`index.md` stay tracked. **Honest implication:** because `events.jsonl` and `agentic/cost-log.md` are git-ignored (in the user's repos) or should be (per documented recommendation in consumer repos), their consolidation/archive (per the consolidation policy above) is **local-only** — git is NOT the recovery backstop for them, unlike `journal.md`. The 500 KB → archive bounding still applies, but loss of the local files is not recoverable from git history. This is accepted: the events trace and cost log are disposable observability instrumentation, and the canonical decisions remain in the versioned journal/index.
 
 ## Cross-project memory tier (on-demand include)
 

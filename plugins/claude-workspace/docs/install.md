@@ -151,6 +151,37 @@ If you hit a permission error in practice, see [troubleshooting.md](troubleshoot
 
 ---
 
+## Logging hooks: Python requirement and .gitignore
+
+The plugin ships three logging hooks that capture session events, session start
+timing, and per-session cost into your project. Using them requires:
+
+**Python 3.x on PATH.** The hooks are invoked as
+`python3 "${CLAUDE_PLUGIN_ROOT}/hooks/<script>.py"`. If `python3` is not on your
+`PATH`, the hooks fail non-blocking -- Claude logs the non-zero exit but does not
+interrupt your session, and no events or cost data are written. Logging simply does
+not occur. To verify: `python3 --version`.
+
+**Recommended `.gitignore` entries.** The logging hooks write two files into your
+project that you will normally want to keep out of version control:
+
+- `.workspace/<slug>/memory/events.jsonl` -- the per-initiative structured event
+  log (one JSONL line per captured hook event).
+- `agentic/cost-log.md` -- the per-session cost log written at session end.
+
+Because a plugin cannot edit your `.gitignore`, add these lines yourself:
+
+```
+.workspace/*/memory/events.jsonl
+agentic/cost-log.md
+```
+
+Note: `journal.md` and `index.md` (the prose journal and its index) are
+intentionally **not** excluded -- they are the human-readable record of decisions
+and stay tracked in version control.
+
+---
+
 ## Per-agent models / cost
 
 Each agent ships with a deliberately chosen model tier set via its frontmatter `model:`

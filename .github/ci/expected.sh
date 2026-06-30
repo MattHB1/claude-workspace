@@ -59,6 +59,10 @@ EXPECTED_TREE=(
   plugins/claude-workspace/docs/ideation-spiral.md
   plugins/claude-workspace/scripts/install-statusline.js
   plugins/claude-workspace/scripts/statusline.js
+  plugins/claude-workspace/hooks/hooks.json
+  plugins/claude-workspace/hooks/autolog.py
+  plugins/claude-workspace/hooks/log-session-cost.py
+  plugins/claude-workspace/hooks/record-session-start.py
   .claude-plugin/marketplace.json
   README.md
 )
