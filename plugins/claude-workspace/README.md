@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.6.1-brightgreen)
+![version](https://img.shields.io/badge/version-1.6.2-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
 in plain language; it researches your idea, turns it into a spec, plans the work, and builds

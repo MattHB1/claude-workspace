@@ -35,6 +35,23 @@ function shortenCwd(dir) {
   return dir;
 }
 
+// Resolve the current git branch for `dir`, or '' if not a repo / detached /
+// on any error. Mirrors the prior bash statusline's `git -C <dir>
+// --no-optional-locks symbolic-ref --short HEAD`. Never throws.
+function gitBranch(dir) {
+  try {
+    const out = cp.spawnSync(
+      'git',
+      ['-C', dir, '--no-optional-locks', 'symbolic-ref', '--short', 'HEAD'],
+      { encoding: 'utf8', timeout: 1000 }
+    );
+    if (out && out.status === 0 && typeof out.stdout === 'string') {
+      return out.stdout.trim();
+    }
+  } catch (_) {}
+  return '';
+}
+
 // Walk up from `startDir` looking for `.workspace/initiatives.md`.
 // Returns the file path if found, or null.
 function findInitiativesFile(startDir) {
@@ -99,6 +116,7 @@ const CYAN    = '\x1b[36m';
 const MAGENTA = '\x1b[35m';
 const DIM     = '\x1b[2m';
 const RESET   = '\x1b[0m';
+const YELLOW  = '\x1b[33m';
 
 // ---------------------------------------------------------------------------
 // Takeover + delegate (C3/INV3) — installer-authored sidecar carrying the
@@ -206,9 +224,14 @@ function main() {
     process.exit(0);
   }
 
-  // Default mode: shortened-cwd [⚡<slug>] [model].
+  // Default mode: [branch] shortened-cwd [⚡<slug>] [model].
   const shortCwd = shortenCwd(cwd);
-  let line = CYAN + shortCwd + RESET;
+  const branch = gitBranch(cwd);
+  let line = '';
+  if (branch) {
+    line += YELLOW + branch + RESET + ' ';
+  }
+  line += CYAN + shortCwd + RESET;
 
   if (slug) {
     line += ' ' + MAGENTA + '⚡' + slug + RESET;

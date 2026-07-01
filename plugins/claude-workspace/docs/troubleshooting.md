@@ -149,3 +149,37 @@ conversation and the files agree and work proceeds. If you only need to record c
 rather than change the source of truth, that belongs in memory -- see
 [design-principles.md](./design-principles.md) for the precedence rules and
 [why-it-refuses.md](./why-it-refuses.md) for the artefacts-vs-conversation case.
+
+## 6. Duplicate log entries in a project that already logs (double-fire)
+
+**Symptom.** After installing this plugin at user scope, a project that already runs its
+own logging hook appears to log twice -- once to this plugin's `events.jsonl` and once to
+the project's own log file.
+
+**Cause.** This is expected and harmless. Plugin hooks and a project's own hooks
+**coexist -- they do not override each other**. When a plugin is enabled, its hooks merge
+with your user and project hooks: all matching hooks run, and only *byte-identical* command
+strings are de-duplicated. A project that runs its own autolog with a *different* command
+(for example, writing to its own `logs/` file) therefore fires **both** its hook and this
+plugin's `autolog.py` -- writing to two different files. No data is lost or corrupted; the
+two logs are simply independent.
+
+**Fix.** Usually none needed -- dual logging is acceptable and the files do not collide.
+This plugin does **not** touch or remove any other project's hooks. If you genuinely want a
+single log in a given project, remove that project's own logging hook from its
+`.claude/settings.json` yourself; this plugin will not do it for you.
+
+## 7. Commands and agents have a `claude-workspace:` prefix
+
+**Symptom.** After installing the plugin, the workspace skill is invoked as
+`/claude-workspace:workspace` rather than `/workspace`, and the subagents appear under
+namespaced names.
+
+**Cause.** Plugin-provided skills and agents are **namespaced by the plugin name**. This is
+normal Claude Code behaviour for any installed plugin -- the prefix is what lets multiple
+plugins ship skills or agents with the same short name without colliding.
+
+**Fix.** Nothing to fix -- use the namespaced names: `/claude-workspace:workspace` for the
+orchestrator, and the `claude-workspace:` prefix for the eight subagents when dispatching.
+If you previously ran hand-placed copies under bare names (`/workspace`), those are the
+old un-namespaced mirrors; once you consume the plugin, the namespaced names are canonical.
