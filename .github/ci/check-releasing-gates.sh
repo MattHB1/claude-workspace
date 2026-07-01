@@ -107,6 +107,8 @@ gate_b_uesa() {
 # Exclusions:
 #   - .git/       (standard)
 #   - .github/    (C6: CI scripts name these patterns for detection purposes)
+#   - .workspace/ (local, git-ignored dev state; never tracked/shipped, so it is
+#                  not distributable machinery — excluded like .git/.github)
 # ---------------------------------------------------------------------------
 gate_c_no_machinery() {
   local offending_paths=()
@@ -137,7 +139,7 @@ gate_c_no_machinery() {
         fi
       fi
     done
-  done < <(find . -not -path './.git/*' -not -path './.github/*' -print0)
+  done < <(find . -not -path './.git/*' -not -path './.github/*' -not -path './.workspace/*' -print0)
 
   if [[ ${#offending_paths[@]} -gt 0 ]]; then
     local msg="GATE C [NO-MACHINERY] — build-machinery pattern(s) found in repo:"
