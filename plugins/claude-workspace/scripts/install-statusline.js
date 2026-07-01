@@ -1,25 +1,37 @@
 #!/usr/bin/env node
 'use strict';
 
-// install-statusline.js — Opt-in installer for the claude-workspace statusline.
+// install-statusline.js — Takeover + delegate installer for the
+// claude-workspace statusline.
 //
-// Usage:  node plugins/claude-workspace/scripts/install-statusline.js
+// Usage:
+//   node plugins/claude-workspace/scripts/install-statusline.js
+//   node plugins/claude-workspace/scripts/install-statusline.js --uninstall
 //
-// What it does:
+// What it does (install):
 //   1. Preflights node availability (required by the statusLine command).
 //   2. Locates ~/.claude/settings.json; if missing, treats settings as {}.
-//   3. Never-clobber: if statusLine already exists, never modifies settings.json.
-//      - If it references our script → already installed (no-op).
-//      - If it references something else → prints the --segment snippet + docs pointer.
-//   4. Fresh-wire: if no statusLine key exists:
-//      - Copies statusline.js to ~/.claude/claude-workspace-statusline.js.
-//      - Backs up existing settings.json (if any) to settings.json.bak.
-//      - Adds statusLine key with forward-slash command.
-//      - Writes atomically (temp file + rename).
-//      - Prints what it did and how to undo.
+//   3. Idempotent no-op: if our own statusLine is already wired, does nothing.
+//   4. Takeover + delegate: if a FOREIGN statusLine command exists (one this
+//      installer did not author), CAPTURES it verbatim into a sidecar file
+//      (~/.claude/.claude-workspace-statusline-prior.json) BEFORE rewiring —
+//      never destroying it. The sole-slot script (statusline.js) reads that
+//      sidecar at render time and, when no session marker is present,
+//      re-invokes the captured command with the same stdin and emits its
+//      output verbatim — restoring the user's prior/default statusline
+//      automatically.
+//   5. Wires the workspace script as the SOLE statusLine (stable-path copy),
+//      backing up settings.json first and writing atomically (temp+rename).
+//
+// What it does (--uninstall):
+//   Restores the captured prior statusLine command byte-for-byte (or removes
+//   the statusLine key entirely if none was captured), leaving all other
+//   settings.json keys intact. Backs up settings.json first; writes
+//   atomically. Removes the prior-capture sidecar once restored.
 //
 // Node stdlib only. No npm dependencies. child_process is used solely for the
-// node preflight check (to mirror the runtime environment of the statusLine command).
+// node preflight check (to mirror the runtime environment of the statusLine
+// command).
 
 const fs   = require('fs');
 const path = require('path');
@@ -47,20 +59,34 @@ function settingsDir() {
   return path.join(os.homedir(), '.claude');
 }
 
+// Sidecar carrying the captured prior statusLine value (verbatim), read at
+// render time by the installed statusline.js to delegate when inactive
+// (C3/INV3/AC3/AC10). Deterministic path, PII-safe (only ever contains
+// whatever the user's own pre-existing statusLine.command string already
+// was).
+function priorCapturePath() {
+  return path.join(os.homedir(), '.claude', '.claude-workspace-statusline-prior.json');
+}
+
 // The command string written into settings.json — forward slashes everywhere.
 function statusLineCommand() {
   const homeFs = forwardSlashHome();
   return `node "${homeFs}/.claude/claude-workspace-statusline.js"`;
 }
 
-// The --segment snippet shown when a foreign statusLine exists.
+// The --segment snippet shown as a developer/compose affordance in output.
 function segmentSnippet() {
   const homeFs = forwardSlashHome();
   return `node "${homeFs}/.claude/claude-workspace-statusline.js" --segment`;
 }
 
+// Is the given statusLine command string one this installer authored?
+function isOurCommand(cmd) {
+  return typeof cmd === 'string' && cmd.includes('claude-workspace-statusline');
+}
+
 // ---------------------------------------------------------------------------
-// C5a — Node preflight
+// Node preflight
 // ---------------------------------------------------------------------------
 
 // Synchronously verify that `node` is resolvable/runnable in the current
@@ -99,6 +125,48 @@ function readSettings() {
       return {};
     }
     throw e; // unexpected I/O error
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Prior-capture sidecar read/write
+// ---------------------------------------------------------------------------
+
+// Read the captured prior statusLine value, if any. Returns the parsed
+// object or null on any absence/parse error.
+function readPriorCapture() {
+  try {
+    const raw = fs.readFileSync(priorCapturePath(), 'utf8');
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+// Write the captured prior statusLine value verbatim to the sidecar. Uses the
+// same temp+rename atomic pattern as settings.json writes.
+function writePriorCaptureAtomic(statusLineValue) {
+  const target = priorCapturePath();
+  const dir    = settingsDir();
+  const tmp    = target + '.tmp.' + process.pid;
+
+  fs.mkdirSync(dir, { recursive: true });
+  const json = JSON.stringify(statusLineValue, null, 2) + '\n';
+
+  try {
+    fs.writeFileSync(tmp, json, 'utf8');
+    fs.renameSync(tmp, target);
+  } catch (err) {
+    try { fs.unlinkSync(tmp); } catch (_) {}
+    throw err;
+  }
+}
+
+function removePriorCapture() {
+  try {
+    fs.unlinkSync(priorCapturePath());
+  } catch (_) {
+    // absent or unremovable — non-fatal for the caller's purposes.
   }
 }
 
@@ -144,11 +212,11 @@ function backupSettings() {
 }
 
 // ---------------------------------------------------------------------------
-// Main
+// Install
 // ---------------------------------------------------------------------------
 
-function main() {
-  // 1. Node preflight (C5a).
+function runInstall() {
+  // 1. Node preflight.
   if (!nodeIsAvailable()) {
     process.stdout.write(
       'Node not found on PATH; statusline not installed; install Node or wire it manually — see docs/statusline.md\n' +
@@ -164,52 +232,57 @@ function main() {
 
   // 2. Read settings.
   const existing = readSettings(); // null → file missing; {} → empty/invalid
+  const existingHasStatusLine = existing !== null &&
+    Object.prototype.hasOwnProperty.call(existing, 'statusLine');
+  const existingCmd = existingHasStatusLine &&
+    existing.statusLine && typeof existing.statusLine.command === 'string'
+    ? existing.statusLine.command
+    : '';
 
-  // 3. Never-clobber check (C3 / I2 / AC6 / AC9).
-  if (existing !== null && Object.prototype.hasOwnProperty.call(existing, 'statusLine')) {
-    const sl = existing.statusLine;
-    const cmd = (sl && typeof sl.command === 'string') ? sl.command : '';
-
-    if (cmd.includes('claude-workspace-statusline')) {
-      // OUR statusline is already wired — idempotent no-op.
-      process.stdout.write(
-        '[claude-workspace] statusline already installed — nothing to do.\n' +
-        '\n' +
-        'To uninstall:\n' +
-        '  1. Remove the "statusLine" key from ' + settingsPath() + '\n' +
-        '     (restore from ' + settingsPath() + '.bak if you have one)\n' +
-        '  2. Delete ' + stableScriptPath() + '\n'
-      );
-      process.exit(0);
-      return;
-    }
-
-    // FOREIGN statusLine — do NOT touch settings.json (C3).
+  // 3. Idempotent no-op: our own statusLine is already the sole slot AND a
+  //    prior-capture decision has already been made (either a sidecar exists
+  //    from an earlier takeover, or there is nothing to capture). Re-running
+  //    must not duplicate or re-wrap anything (AC13).
+  if (existingHasStatusLine && isOurCommand(existingCmd)) {
+    const prior = readPriorCapture();
     process.stdout.write(
-      '[claude-workspace] A statusLine is already configured in settings.json.\n' +
-      'The installer will NOT overwrite it.\n' +
+      '[claude-workspace] statusline already installed — nothing to do.\n' +
+      (prior
+        ? '  A prior statusline is captured and will be restored automatically\n' +
+          '  outside workspace sessions, and on uninstall.\n'
+        : '  No prior statusline was captured (none existed at install time).\n') +
       '\n' +
-      'To add the claude-workspace active-initiative segment to your existing statusline,\n' +
-      'pipe the session JSON through our script in --segment mode:\n' +
-      '\n' +
-      '  ' + segmentSnippet() + '\n' +
-      '\n' +
-      'Example — append our segment to your own line:\n' +
-      '  <your-command> | node "' + forwardSlashHome() + '/.claude/claude-workspace-statusline.js" --segment\n' +
-      '\n' +
-      'You will need to copy the script to the stable path first:\n' +
-      '  cp "' + path.join(__dirname, 'statusline.js') + '" "' + stableScriptPath() + '"\n' +
-      '\n' +
-      'See docs/statusline.md for full details:\n' +
-      '  plugins/claude-workspace/docs/statusline.md\n'
+      'To uninstall:\n' +
+      '  node ' + __filename + ' --uninstall\n'
     );
     process.exit(0);
     return;
   }
 
-  // 4. Fresh-wire (AC8 / AC10 / AC11 / AC12 / C4 / C5 / C7).
+  // 4. Takeover + delegate (C3/INV3/AC10): if a FOREIGN statusLine exists
+  //    (one we did not author), capture it verbatim into the sidecar BEFORE
+  //    rewiring. If no statusLine exists, there is nothing to capture.
+  let capturedNote = '';
+  if (existingHasStatusLine) {
+    try {
+      writePriorCaptureAtomic(existing.statusLine);
+      capturedNote =
+        'Your existing statusline was captured and will be restored automatically\n' +
+        'outside workspace sessions (and on uninstall):\n' +
+        '  ' + JSON.stringify(existing.statusLine) + '\n' +
+        '  (captured to ' + priorCapturePath() + ')\n';
+    } catch (err) {
+      process.stdout.write(
+        '[claude-workspace] ERROR: could not capture existing statusLine:\n' +
+        '  ' + err.message + '\n' +
+        'settings.json was NOT modified.\n'
+      );
+      process.exit(1);
+      return;
+    }
+  }
 
-  // 4a. Copy statusline.js to the stable path.
+  // 5. Copy statusline.js to the stable path.
   const srcScript  = path.join(__dirname, 'statusline.js');
   const destScript = stableScriptPath();
 
@@ -227,7 +300,7 @@ function main() {
     return;
   }
 
-  // 4b. Back up existing settings.json (if any).
+  // 6. Back up existing settings.json (if any).
   let backedUpTo = null;
   if (existing !== null) {
     try {
@@ -243,7 +316,8 @@ function main() {
     }
   }
 
-  // 4c. Merge settings — additive: only add/replace statusLine key.
+  // 7. Sole-slot wire — additive to all other keys; the statusLine key is
+  //    replaced with ours (the prior value, if any, is already captured).
   const updated = Object.assign({}, existing || {}, {
     statusLine: {
       type: 'command',
@@ -251,7 +325,7 @@ function main() {
     },
   });
 
-  // 4d. Atomic write.
+  // 8. Atomic write.
   try {
     writeSettingsAtomic(updated);
   } catch (err) {
@@ -265,9 +339,9 @@ function main() {
     return;
   }
 
-  // 4e. Success output.
+  // 9. Success output.
   process.stdout.write(
-    '[claude-workspace] statusline installed successfully.\n' +
+    '[claude-workspace] statusline installed successfully (takeover + delegate).\n' +
     '\n' +
     'Script copied to:\n' +
     '  ' + destScript + '\n' +
@@ -276,18 +350,106 @@ function main() {
     '  ' + settingsPath() + '\n' +
     (backedUpTo ? '  (backup: ' + backedUpTo + ')\n' : '') +
     '\n' +
+    (capturedNote ? capturedNote + '\n' : '') +
     'The statusLine command is:\n' +
     '  ' + statusLineCommand() + '\n' +
     '\n' +
+    'In a workspace session the ⚡<slug> segment is shown; outside a workspace\n' +
+    'session your prior/default statusline is restored automatically.\n' +
+    '\n' +
     'To uninstall:\n' +
-    '  1. Remove the "statusLine" key from ' + settingsPath() + '\n' +
-    (backedUpTo ? '     (restore from ' + backedUpTo + ' if needed)\n' : '') +
-    '  2. Delete ' + destScript + '\n' +
+    '  node ' + __filename + ' --uninstall\n' +
     '\n' +
     'See docs/statusline.md for more:\n' +
     '  plugins/claude-workspace/docs/statusline.md\n'
   );
   process.exit(0);
+}
+
+// ---------------------------------------------------------------------------
+// Uninstall / revert
+// ---------------------------------------------------------------------------
+
+function runUninstall() {
+  const existing = readSettings(); // null → file missing; {} → empty/invalid
+
+  if (existing === null) {
+    process.stdout.write(
+      '[claude-workspace] No settings.json found — nothing to uninstall.\n'
+    );
+    process.exit(0);
+    return;
+  }
+
+  const prior = readPriorCapture();
+
+  // Back up before any write.
+  let backedUpTo = null;
+  try {
+    backedUpTo = backupSettings();
+  } catch (err) {
+    process.stdout.write(
+      '[claude-workspace] ERROR: could not create backup of settings.json:\n' +
+      '  ' + err.message + '\n' +
+      'settings.json was NOT modified.\n'
+    );
+    process.exit(1);
+    return;
+  }
+
+  // Build the restored settings: replace/remove the statusLine key only,
+  // leaving every other key byte-identical.
+  const updated = Object.assign({}, existing);
+  if (prior) {
+    updated.statusLine = prior; // restore captured value byte-for-byte
+  } else {
+    delete updated.statusLine; // nothing pre-existed — remove the key
+  }
+
+  try {
+    writeSettingsAtomic(updated);
+  } catch (err) {
+    process.stdout.write(
+      '[claude-workspace] ERROR: could not write settings.json:\n' +
+      '  ' + err.message + '\n' +
+      'The original settings.json is intact' +
+      (backedUpTo ? ' (backup at ' + backedUpTo + ')' : '') + '.\n'
+    );
+    process.exit(1);
+    return;
+  }
+
+  // Clean up the prior-capture sidecar and the stable script copy — the
+  // takeover is fully removed.
+  removePriorCapture();
+  try { fs.unlinkSync(stableScriptPath()); } catch (_) {}
+
+  process.stdout.write(
+    '[claude-workspace] statusline uninstalled — prior statusLine restored.\n' +
+    '\n' +
+    'settings.json updated:\n' +
+    '  ' + settingsPath() + '\n' +
+    (backedUpTo ? '  (backup: ' + backedUpTo + ')\n' : '') +
+    '\n' +
+    (prior
+      ? 'Restored statusLine (byte-for-byte the captured prior value):\n' +
+        '  ' + JSON.stringify(prior) + '\n'
+      : 'No prior statusLine existed before install — the statusLine key was removed.\n')
+  );
+  process.exit(0);
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+function main() {
+  const uninstall = process.argv.includes('--uninstall');
+  if (uninstall) {
+    runUninstall();
+  } else {
+    runInstall();
+  }
 }
 
 main();

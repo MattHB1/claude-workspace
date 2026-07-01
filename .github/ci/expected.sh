@@ -23,7 +23,7 @@ EXPECTED_AGENTS=(
 )
 
 # -------------------------------------------------------------------
-# 2. Exact distributable file set (33) — AC11 / I5
+# 2. Exact distributable file set (38) — AC11 / I5
 #    Repo-root-relative paths. Every file here must be present;
 #    no file outside this list may appear in the distributable tree.
 # -------------------------------------------------------------------
@@ -63,6 +63,7 @@ EXPECTED_TREE=(
   plugins/claude-workspace/hooks/autolog.py
   plugins/claude-workspace/hooks/log-session-cost.py
   plugins/claude-workspace/hooks/record-session-start.py
+  plugins/claude-workspace/hooks/statusline-marker.py
   .claude-plugin/marketplace.json
   README.md
 )

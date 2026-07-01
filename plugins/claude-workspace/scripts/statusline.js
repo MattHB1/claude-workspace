@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const cp = require('child_process');
 
 // Read all of stdin synchronously.
 // Uses fd 0 (cross-platform; works on macOS, Linux, and Windows).
@@ -79,11 +80,86 @@ function resolveSlug(cwd) {
   }
 }
 
+// Determine whether the workspace-orchestrator session is "active" for the
+// given session_id: a pure-existence marker file at
+// ~/.claude/.workspace-active/<session_id>. Missing session_id, missing dir,
+// or any read error all degrade to "inactive" — never an error.
+function isSessionActive(sessionId) {
+  if (!sessionId || typeof sessionId !== 'string') return false;
+  try {
+    const markerPath = path.join(os.homedir(), '.claude', '.workspace-active', sessionId);
+    return fs.existsSync(markerPath);
+  } catch (_) {
+    return false;
+  }
+}
+
 // ANSI helpers.
 const CYAN    = '\x1b[36m';
 const MAGENTA = '\x1b[35m';
 const DIM     = '\x1b[2m';
 const RESET   = '\x1b[0m';
+
+// ---------------------------------------------------------------------------
+// Takeover + delegate (C3/INV3) — installer-authored sidecar carrying the
+// captured prior statusLine command, if the installer took over an existing
+// slot. This file is written by install-statusline.js BEFORE it rewires the
+// sole statusLine; it is deterministic, PII-safe (only ever contains whatever
+// the user's own prior statusLine.command string already was), and read-only
+// from this script's perspective.
+// ---------------------------------------------------------------------------
+function priorStatuslinePath() {
+  return path.join(os.homedir(), '.claude', '.claude-workspace-statusline-prior.json');
+}
+
+// Read the captured prior statusLine command (verbatim), if any. Returns the
+// prior settings.statusLine object (e.g. { type: 'command', command: '...' })
+// or null on any absence/parse/shape error — never throws.
+function readCapturedPrior() {
+  try {
+    const raw = fs.readFileSync(priorStatuslinePath(), 'utf8');
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.command === 'string' && parsed.command.length > 0) {
+      return parsed;
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Re-invoke the captured prior statusLine command with the SAME raw stdin and
+// emit its output verbatim (byte-for-byte), so the inactive-state output
+// reproduces the user's prior/default statusline exactly. Returns true if
+// delegation was attempted and its output was written (regardless of the
+// delegate's own exit code — we still forward whatever it printed); returns
+// false if delegation could not be attempted at all (e.g. no captured prior),
+// in which case the caller falls back to this script's own default line.
+function delegateToPrior(rawStdin) {
+  const prior = readCapturedPrior();
+  if (!prior) return false;
+
+  try {
+    const result = cp.spawnSync(prior.command, {
+      input: rawStdin,
+      encoding: 'utf8',
+      shell: true,
+      timeout: 5000,
+    });
+    // Emit the delegate's stdout verbatim — no trimming, no re-formatting —
+    // so the byte-for-byte contract (AC3/INV3) holds even if the delegate
+    // itself emits no trailing newline.
+    if (typeof result.stdout === 'string') {
+      process.stdout.write(result.stdout);
+    }
+    process.exit(0);
+    return true;
+  } catch (_) {
+    // Delegate could not be spawned at all — degrade to this script's own
+    // default line rather than erroring (INV9 spirit: never break the line).
+    return false;
+  }
+}
 
 function main() {
   const segmentMode = process.argv.includes('--segment');
@@ -102,8 +178,24 @@ function main() {
     ? json.model.display_name
     : '';
 
-  // Resolve active initiative slug.
-  const slug = resolveSlug(cwd);
+  // Resolve session_id and the session-marker gate. Missing session_id (or
+  // any error resolving the marker) is treated as "no marker" → inactive.
+  const sessionId = (typeof json.session_id === 'string') ? json.session_id : null;
+  const active = isSessionActive(sessionId);
+
+  // Takeover + delegate (C3/INV3/AC3): when inactive and NOT in --segment
+  // mode (--segment remains a developer/compose affordance, never the
+  // restore mechanism), and a prior statusLine was captured by the
+  // installer, re-invoke it verbatim and pass its output straight through.
+  // If there is no captured prior (e.g. fresh install, nothing to restore),
+  // fall through to this script's own default-mode line with no segment.
+  if (!active && !segmentMode) {
+    const delegated = delegateToPrior(raw);
+    if (delegated) return; // process.exit(0) already called inside.
+  }
+
+  // Resolve active initiative slug only when the session is marker-active.
+  const slug = active ? resolveSlug(cwd) : null;
 
   if (segmentMode) {
     // --segment: print ONLY ⚡<slug> or nothing.
