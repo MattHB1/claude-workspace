@@ -107,8 +107,16 @@ def handle_post_tool_use(event: dict, log_file: Path, slug: str) -> None:
     agent_id = event.get("agent_id") or None
     agent_type = event.get("agent_type") or None
 
-    if tool in ("Write", "Edit", "Read"):
-        # Delta (d): use workspace path filter; delta (c): emit JSONL with event="edit"
+    if tool == "Read":
+        # Read-only access to a tracked path: distinct discriminator so read-only
+        # agents are never conflated with mutations (event="read").
+        file_path = inp.get("file_path", "")
+        if not is_tracked_path(file_path):
+            return
+        emit(log_file, ts, session, "read", file_path, slug, agent_id, agent_type)
+
+    elif tool in ("Write", "Edit"):
+        # Mutation of a tracked path (event="edit").
         file_path = inp.get("file_path", "")
         if not is_tracked_path(file_path):
             return
