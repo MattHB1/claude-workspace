@@ -1,0 +1,3 @@
+# Local, git-ignored workspace dev state (plugin-self-consume): initiative
+# artefacts, memory/journal, events.jsonl. Never tracked or shipped to consumers.
+.workspace/
