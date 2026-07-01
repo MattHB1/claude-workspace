@@ -28,6 +28,8 @@ FAILURES=()
 # Exclusions:
 #   - .git/           (standard)
 #   - .github/ci/     (C6: this dir contains detection literals as strings)
+#   - .workspace/     (local, git-ignored dev state; never tracked/shipped, and
+#                      its journals legitimately contain project names/paths)
 # Allowance: case-insensitive "matthb" that is exactly the public handle MattHB1
 #             in README install commands is permitted.
 #             The exact marketplace token "pocdoc-workspace" is also permitted
@@ -41,6 +43,7 @@ gate_a_pii() {
     'pocdoc|central-be|admin-be|matt@mypocdoc\.com|mypocdoc|/Users/matthb' \
     --exclude-dir='.git' \
     --exclude-dir='.github' \
+    --exclude-dir='.workspace' \
     . 2>/dev/null || true)
 
   # Re-scan .github/ but exclude .github/ci/ (CI machinery contains detection literals)
@@ -139,7 +142,7 @@ gate_c_no_machinery() {
         fi
       fi
     done
-  done < <(find . -not -path './.git/*' -not -path './.github/*' -not -path './.workspace/*' -print0)
+  done < <(find . -not -path './.git/*' -not -path './.github/*' -not -path './.workspace' -not -path './.workspace/*' -print0)
 
   if [[ ${#offending_paths[@]} -gt 0 ]]; then
     local msg="GATE C [NO-MACHINERY] — build-machinery pattern(s) found in repo:"
