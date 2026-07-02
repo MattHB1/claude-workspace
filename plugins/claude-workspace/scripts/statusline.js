@@ -76,7 +76,13 @@ function findInitiativesFile(startDir) {
 function extractActiveSlug(content) {
   const lines = content.split('\n');
   for (const line of lines) {
-    if (line.includes('**ACTIVE**')) {
+    // Whole-cell marker match: split on '|', trim each cell, exact-match
+    // '**ACTIVE**'. A mention of the token inside another cell (e.g. a
+    // description) no longer collides. D3: escaped pipes ('\|') inside a
+    // cell are out of scope — such a cell simply won't equal '**ACTIVE**'
+    // (fail-safe non-match, not a crash).
+    const isActiveRow = line.split('|').some((cell) => cell.trim() === '**ACTIVE**');
+    if (isActiveRow) {
       // Match first backticked cell: | `slug` |
       const m = line.match(/^\s*\|\s*`([^`]+)`/);
       if (m) return m[1];

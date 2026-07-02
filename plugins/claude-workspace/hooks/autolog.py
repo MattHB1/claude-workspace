@@ -43,7 +43,12 @@ def resolve_active_slug(root: Path):
         # Only consider actual table rows: line must start with '|' (after optional whitespace)
         if not re.match(r"\s*\|", line):
             continue
-        if re.search(r"\*\*ACTIVE\*\*", line):
+        # Whole-cell marker match: split on '|', trim each cell, exact-match
+        # '**ACTIVE**'. A mention of the token inside another cell (e.g. a
+        # description) no longer collides. D3: escaped pipes ('\|') inside a
+        # cell are out of scope — such a cell simply won't equal '**ACTIVE**'
+        # (fail-safe non-match, not a crash).
+        if any(cell.strip() == "**ACTIVE**" for cell in line.split("|")):
             m = re.search(r"`([^`]+)`", line)
             if m and m.group(1):
                 return m.group(1)
