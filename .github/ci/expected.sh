@@ -61,6 +61,7 @@ EXPECTED_TREE=(
   plugins/claude-workspace/scripts/statusline.js
   plugins/claude-workspace/hooks/hooks.json
   plugins/claude-workspace/hooks/autolog.py
+  plugins/claude-workspace/hooks/conform-registry.py
   plugins/claude-workspace/hooks/log-session-cost.py
   plugins/claude-workspace/hooks/record-session-start.py
   plugins/claude-workspace/hooks/statusline-marker.py
