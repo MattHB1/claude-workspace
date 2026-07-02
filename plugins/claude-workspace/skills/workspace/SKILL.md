@@ -139,7 +139,8 @@ The read-only agents (research-harvester, task-checker, implementation-verifier,
 1. Inspect the request and the target (file kind, path, symbols/references touched, repo span).
 2. Evaluate T1 predicates; if ALL hold, assign T1. Else evaluate T2; if ALL hold, assign T2. Else assign T3.
 3. Before finalising: evaluate the Safe-Default-Escalate triggers (E1–E5). If ANY fires, move UP one tier. **There is NO downward-reclassification path.**
-4. Run the step set for the assigned tier.
+4. Evaluate the Lightweight-Lane gate (L1–L4 below). If ALL hold, run the **lean step set** for the assigned tier; otherwise run the **full step set**. The lane never changes the assigned tier.
+5. Run the step set for the assigned tier.
 
 ### T1 — Trivial: documentation, comments, whitespace, metadata
 
@@ -188,11 +189,37 @@ Evaluate BEFORE finalising the tier. If ANY trigger fires, move UP one tier (T1�
 | E4 Cross-repo state | The change requires reading or writing any file under a different repo root, or a cross-repo consistency check. |
 | E5 Predicate check inconclusive | Evaluating any membership predicate requires an inference or judgement call that cannot be resolved by direct file-path, file-kind, diff, or grep inspection. |
 
+### Lightweight Lane — lean step set for small, well-scoped changes (step-set modifier, NOT a reclassification)
+
+Tier classification is gated on file-sensitivity: any touch to a sensitive/invariant/plugin file lands in T3, which forces the full generative ceremony. But "edits a sensitive file" ≠ "big or risky change" — a small, backward-compatible parser edit is low-complexity regardless of which file it lives in. The Lightweight Lane fixes this by decoupling *ceremony* from *file-sensitivity* with an explicit **change-size/complexity axis**.
+
+It is a **step-set modifier, orthogonal to classification**. It NEVER changes the assigned tier, NEVER downgrades, and NEVER disables a correctness gate (plugin-export parity, exact-tree CI, artefact regeneration all still run whenever the tier predicates say they apply). It substitutes ONLY the *generative* ceremony — separate `proposal.md` + `tasks.md`, and the `proposal-writer`/`task-planner`/`task-checker` dispatches — with **acceptance criteria stated inline in the `implementer` dispatch**. Adversarial verification is ALWAYS run: `implementation-verifier` (adversarial, required) is never skipped in this lane. The point is to keep the rigor and drop the paperwork.
+
+**Applicability:** a task assigned **T2 or T3** may run the lean step set when **ALL** Lightweight-Lane predicates hold (deterministic, checkable — if ANY fails, run the full step set):
+- **L1 Small diff.** ≤ **40** changed lines total across ≤ **3** files. (Both are single named, tunable values — default **40 lines / 3 files** — adjustable in one place, mirroring the memory layer's "default 500 KB, configurable" precedent.)
+- **L2 Fully specifiable inline.** Exact files, exact edits, and acceptance criteria are stateable without inference — equivalently, neither **E1** (scope ambiguity) nor **E5** (predicate inconclusive) fires.
+- **L3 Conforms to an existing contract.** Introduces no new schema/contract/invariant and changes no existing invariant's *meaning* — a backward-compatible parser edit conforms; adding a schema field or flipping an invariant redefines (→ full lane).
+- **L4 Single coherent change.** One logical edit, not a multi-part structural reorganisation.
+
+**Lean step set:** orchestrator states acceptance criteria inline → single `implementer` dispatch → single `implementation-verifier` dispatch (adversarial, required). No `proposal-writer`, no `task-planner`, no `task-checker`, no separate `proposal.md`/`tasks.md`. Correctness gates still run when their tier predicates apply.
+
+This adds no new agent (the 8 roles are intact) and does not amend Hard Rule #1 (the `implementer` and `implementation-verifier` are still dispatched — the orchestrator does not implement or verify itself) or Hard Rule #5 (required verification at T2/T3 is preserved — the lane keeps the verifier).
+
+### Verification economy — one adversarial check per stage, verify once (applies to ALL tiers)
+
+Redundant verification is a primary cost driver: re-verifying already-passed work, and re-running a whole-artefact check for a trivial correction. These rules apply at **every** tier and do NOT weaken rigor — they remove *repeated* checks, not *the* check.
+
+- **One check per stage.** Each artefact version gets exactly ONE adversarial pass at its stage — `task-checker` after planning, `implementation-verifier` after implementing. A PASS advances; there is no confirmatory second pass of passed work.
+- **Verify once (PASS is terminal).** A task that passed adversarial verification is NOT re-verified in a later integrated/final pass. If a subsequent change actually modifies it, re-check ONLY the changed delta (a delta smoke-check) — never the whole artefact again.
+- **Bounded, delta-scoped re-check on FAIL.** A FAIL routes the correction back to the generator (Hard Rule #2); the re-check covers ONLY the corrected delta — it never re-opens already-passed portions and never re-reads the whole tree. If the fix itself fails, the same delta-scoped cycle repeats — but passed work is never re-verified.
+- **Prevent avoidable re-check rounds.** The orchestrator passes the known standing invariants into each generator dispatch (e.g. "memory is orchestrator-owned — never a task"; "the 8-agent set is fixed") so a predictable miscast doesn't burn a full re-check round.
+
 ### "Skip" — narrow restriction
 
 **"Skip" NEVER means skipping adversarial verification of a semantic code change.** "Skip" applies ONLY to:
 1. **Non-applicable initiative-machinery** — plugin-export parity gate, exact-tree CI, and artefact regeneration are skipped when (and only when) the tier predicates confirm they genuinely do not apply (no plugin file touched, no schema modified, no derived output affected).
 2. **Default-proceed at T1** — at T1 the orchestrator does not dispatch `implementation-verifier` by default; it states verification is available on request and proceeds. This is the ONLY case where the verifier is not dispatched by default, and only because T1 predicates confirm zero semantic effect. Verification remains available; any escalated-T1 task MUST run the verifier.
+3. **Lightweight-Lane generative ceremony** — when L1–L4 all hold, the lean step set skips ONLY the *generative* ceremony (separate `proposal.md`/`tasks.md` + `proposal-writer`/`task-planner`/`task-checker`). It NEVER skips adversarial verification and NEVER skips a correctness gate.
 
 "Skip" NEVER applies to adversarial verification of any semantic code change; to any step at T2/T3 for which predicates confirm applicability; or to the `implementer` dispatch at any tier.
 
