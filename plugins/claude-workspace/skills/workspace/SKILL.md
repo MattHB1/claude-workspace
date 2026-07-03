@@ -96,7 +96,7 @@ Dispatch via the Agent tool with `subagent_type` set to the **namespaced** agent
 | "research / look into / what's known about…" | `claude-workspace:research-harvester` | Read+web only. **You** save its brief to the active initiative's `.workspace/<active-slug>/research/`. |
 | "spec it / write the proposal / define the problem" | `claude-workspace:proposal-writer` | Writes the active initiative's `.workspace/<active-slug>/proposal.md` (path you supply). |
 | "plan it / break it down / make tasks" | `claude-workspace:task-planner` | Writes the active initiative's `.workspace/<active-slug>/tasks.md` (path you supply). |
-| "check the plan / does the plan match the spec" | `claude-workspace:task-checker` | Read-only adversary. **You** save its report to the active initiative's `.workspace/<active-slug>/verification/`. |
+| "check the proposal / is it valid and buildable" | `claude-workspace:task-checker` | Read-only adversary — one lean validity pass over the proposal. **You** save its report to the active initiative's `.workspace/<active-slug>/verification/`. |
 | "build / implement / do task N" | `claude-workspace:implementer` | One task per dispatch, fresh session. Writes code itself. |
 | "verify / does it match the task" | `claude-workspace:implementation-verifier` | Read+run-tests only. **You** save its report to the active initiative's `.workspace/<active-slug>/verification/`. |
 | "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | Read-only; reads the active initiative's memory index/journal too. **You** persist its reconstructed state by appending a journal entry to `.workspace/<active-slug>/memory/journal.md` and refreshing `.workspace/<active-slug>/memory/index.md` (this replaces the retired `context-snapshot.md`). |
@@ -110,123 +110,36 @@ The read-only agents (research-harvester, task-checker, implementation-verifier,
 2. **Adversarial verification never fixes.** `task-checker` and `implementation-verifier` only detect deviations. When they FAIL something, the correction goes **back to the generator** — a failed plan returns to `task-planner`, a failed implementation returns to `implementer` — never to the verifier, and never patched by you.
 3. **Proposal is root of truth.** Tasks trace to proposal acceptance criteria; implementations trace to tasks. If the proposal must change, that's a `proposal-writer` job — and the plan should be re-checked afterward.
 4. **Fresh execution.** Each `implementer` / verifier dispatch is a new isolated session. Give it the task spec + proposal; don't assume it remembers prior turns.
-5. **Gates before progress.** Prefer running `task-checker` after planning and `implementation-verifier` after each task — but stay conversational: surface the gate, let the user decide to proceed or skip.
+5. **Lean by default; one check per stage, no loops.** Run the lean linear flow (see "## Flow — lean by default"): one proposal-validity check after proposing, one adversarial check after each build. A check runs ONCE — a FAIL routes the fix back to the generator once (Hard Rule #2) and re-checks only that fix, never a multi-round correction↔re-check cycle. Escalate beyond the lean flow (research, deeper scrutiny) only when the work genuinely warrants it; ask if unsure. Stay conversational: surface each handoff and let the user steer.
 
-## Necessity invariant and handoff gates
+## Keep it lean (the necessity principle)
 
-**Every artefact the workspace produces must be the smallest, simplest thing that fully satisfies the real need.** This governs proposals, plans, implementations, docs, analysis, and ideation equally. It is operationalised as bidirectional traceability + reuse-or-justify:
-
-- **Forward traceability (existing):** every stated need is covered by some element.
-- **Reverse traceability (necessity):** every element in a handed-off artefact back-traces to a real, in-scope upstream need. An element that traces to no in-scope need, duplicates existing reachable capability without justification, or serves an excluded case is non-minimal and must be removed or reworked before handoff.
-- **Reuse-or-justify (active survey):** before handing off, the generator must actively survey the available working tree and reconcile each element against existing reachable capability — reusing it or recording an explicit justification. Having capability merely in context without consulting it does not satisfy this obligation.
-
-**Handoff gate (proposal→plan and plan→implement):** the necessity proof — reverse traceability + reuse-or-justify — must pass at the proposal→plan boundary (enforced by `claude-workspace:task-checker`) and at the plan→implement boundary (enforced by `claude-workspace:implementation-verifier`) before work proceeds downstream. This adds no new agent and no new tier; it is enforced by the existing adversaries per Hard Rule #2 and the tier rubric.
-
-**Reconcile on scope change:** when a scope-shaping decision or open-question answer changes scope, route the affected artefacts back to their generator for re-derivation against the new scope and against existing reachable capability. Silent appending is not permitted. The generator re-derives; the verifier checks the result. The orchestrator does not patch the artefact directly (Hard Rule #2 preserved).
+Every artefact must be the smallest, simplest thing that fully satisfies the real need — lean proposals, lean tasks, lean checks. As it writes, each generator keeps only elements that trace to a real, in-scope need, and reuses existing capability rather than duplicating it. This is a **principle the generators apply inline** — not a separate gated proof or a multi-round reconciliation ceremony. If a scope change makes an artefact wrong, route it back to its generator to re-derive (the orchestrator never patches it directly — Hard Rule #2) and re-check only the change.
 
 ## Conversational flow
 
-- One implementation task at a time. After it's built, offer to verify it.
-- **Plan→implement `/clear` nudge (age-gated, advisory).** When you are about to dispatch the **first** `implementer` for the active initiative after its plan is complete (the plan→implement handoff — e.g. the user says "build it / do task 1" once `tasks.md` exists and any `task-checker` gate has passed), offer the same fresh-start reminder the create/switch verbs use — **once at that transition**, not before every task. Gate it on the identical deterministic session-age signal: read `~/.claude/sessions/"$CLAUDE_CODE_SESSION_ID".json` (written by `record-session-start.py`) and take its `start_time`; age = now − `start_time`. If the file is absent or unreadable, treat age as **unknown** and **do not fire** (fail-silent, mirroring the script's own `except: pass`). Emit the reminder **only when** age is **≥ the same single threshold the create/switch verbs use** (**default 2 hours**, the one tunable value — do **not** introduce a second threshold); below it, or when age is unknown, stay **silent** and dispatch the implementer exactly as normal. When the gate fires, say: "Before I start implementing, if this session has been running a while a fresh start will cut cost with no loss — the proposal and plan are durable on disk, so clearing now sheds the proposal/planning context the implement phase doesn't need. You can type `/clear` (fresh start) or `/compact` (keeps a summary), then re-invoke `/workspace` to land straight back in <slug> and I'll pick up at implementation. (Advisory only — I cannot clear context myself.)" This reuses the exact clearing vocabulary and honesty note of the exit and create/switch reminders. **Scope:** this handoff exists only in the full generative flow; the **Lightweight Lane** has no separate plan phase, so no plan→implement nudge applies there. **Reuse / determinism note:** reuses `record-session-start.py`'s existing `~/.claude/sessions/<session_id>.json` output — no new file, hook, script, env var, or threshold; a path lookup + timestamp subtraction only. `events.jsonl` is **not** the age source (its 8-char session prefix and first-tool-event timestamp disqualify it).
-- On a FAIL: summarise the violations, then route the fix to the correct generator and re-check. Don't hand-fix.
+- Build independent tasks in parallel (multi-agent) where they have no dependency; serialise only genuine dependencies. After each task is built, run its one lean adversarial check.
+- **Plan→implement `/clear` nudge (age-gated, advisory).** When you are about to dispatch the **first** `implementer` for the active initiative after its plan is complete (the plan→implement handoff — e.g. the user says "build it / do task 1" once `tasks.md` exists), offer the same fresh-start reminder the create/switch verbs use — **once at that transition**, not before every task. Gate it on the identical deterministic session-age signal: read `~/.claude/sessions/"$CLAUDE_CODE_SESSION_ID".json` (written by `record-session-start.py`) and take its `start_time`; age = now − `start_time`. If the file is absent or unreadable, treat age as **unknown** and **do not fire** (fail-silent, mirroring the script's own `except: pass`). Emit the reminder **only when** age is **≥ the same single threshold the create/switch verbs use** (**default 2 hours**, the one tunable value — do **not** introduce a second threshold); below it, or when age is unknown, stay **silent** and dispatch the implementer exactly as normal. When the gate fires, say: "Before I start implementing, if this session has been running a while a fresh start will cut cost with no loss — the proposal and plan are durable on disk, so clearing now sheds the proposal/planning context the implement phase doesn't need. You can type `/clear` (fresh start) or `/compact` (keeps a summary), then re-invoke `/workspace` to land straight back in <slug> and I'll pick up at implementation. (Advisory only — I cannot clear context myself.)" This reuses the exact clearing vocabulary and honesty note of the exit and create/switch reminders. **Reuse / determinism note:** reuses `record-session-start.py`'s existing `~/.claude/sessions/<session_id>.json` output — no new file, hook, script, env var, or threshold; a path lookup + timestamp subtraction only. `events.jsonl` is **not** the age source (its 8-char session prefix and first-tool-event timestamp disqualify it).
+- On a FAIL: summarise the deviation, route the fix to the correct generator, and re-check only that fix — once, no loop. Don't hand-fix.
 - Keep the user in the loop at each handoff with a one-line status ("proposal updated → want me to plan it, or review it first?"). Let their reply pick the next move.
 
-## Tier-selection — execution-tier routing (orchestrator routing guidance)
+## Flow — lean by default
 
-**ORCHESTRATOR ROUTING GUIDANCE ONLY.** This section tells you which steps to invoke per task. It adds NO new agent (the canonical set remains 8) and does NOT amend Hard Rule #1 (dispatch-always / single-responsibility). Tiering governs only *which* steps are invoked. All criteria are explicit, checkable conditions (file kind, path, diff text, grep output) — deterministic, never inferential; consistent with the "Determinism of retrieval" rule below.
+The workspace runs ONE flow, linear and lean: **propose → check proposal → plan into tasks → build → check each build.** Lean is the default, not a special case: there is no complexity-tiering and no separate fast-track lane — every initiative gets this flow unless you deliberately escalate (see below). It adds no new agent (the canonical set remains 8) and does not amend Hard Rule #1 — every step is still dispatched to its specialist; the orchestrator routes, it does not do the work itself.
 
-### How to apply
+1. **Propose.** `proposal-writer` writes a **lean** proposal — the problem, the acceptance criteria (how we'll know it's done), and the key constraints/invariants. About a page. Not a treatise; no exhaustive traceability essays.
+2. **Check the proposal.** `task-checker` runs **one lean validity pass** — is the proposal sound, coherent, and buildable? Single pass. On FAIL it returns the correction to `proposal-writer` once, and only the fix is re-checked. No multi-round loop.
+3. **Plan into tasks.** `task-planner` decomposes the proposal into **simple, lean tasks**, each with one clear acceptance criterion that is **checkable after implementation**. No dependency-graph dissertations. Tasks are lean by construction — there is no separate adversarial plan-gate.
+4. **Build.** `implementer` executes the tasks — **in parallel / multi-agent where tasks are independent** (dispatch independent tasks together; serialise only genuine dependencies). One task per implementer dispatch, fresh session, task spec + proposal supplied.
+5. **Check each build.** After each task, `implementation-verifier` runs **one lean adversarial check**: did the implementer actually deliver what the task specified — no hallucination, no fabrication — and do the system invariants still hold? PASS is terminal; passed work is never re-verified. On FAIL, return the fix to `implementer` for that task only, and re-check only that one fix. No multi-round correction/re-check loop.
 
-1. Inspect the request and the target (file kind, path, symbols/references touched, repo span).
-2. Evaluate T1 predicates; if ALL hold, assign T1. Else evaluate T2; if ALL hold, assign T2. Else assign T3.
-3. Before finalising: evaluate the Safe-Default-Escalate triggers (E1–E5). If ANY fires, move UP one tier. **There is NO downward-reclassification path.**
-4. Evaluate the Lightweight-Lane gate (L1–L4 below). If ALL hold, run the **lean step set** for the assigned tier; otherwise run the **full step set**. The lane never changes the assigned tier.
-5. Run the step set for the assigned tier.
+**No multi-round loops — this is the rule that matters most.** A check runs once. A FAIL routes the fix back to the generator once (Hard Rule #2 — the checker never fixes) and re-checks only the changed fix. Never a repeated correction↔re-check cycle over a whole artefact: that is the specific bloat this flow exists to remove.
 
-### T1 — Trivial: documentation, comments, whitespace, metadata
+**Escalate beyond the lean flow only when warranted — ask if unsure.**
+- **Research:** dispatch `research-harvester` only when the proposal genuinely needs external/domain knowledge you don't already have. If it's obvious, skip it and propose directly; if you're unsure whether research is needed, ask the user.
+- **Deeper scrutiny:** for genuinely high-risk or structural work you may add extra review, but say so and keep it proportionate — the default stays lean.
 
-**ALL five predicates must hold** (one failing predicate escalates to T2/T3):
-- P1.1 Target file(s) are docs, comment blocks, docstrings, whitespace-only lines, or top-level metadata fields read only by humans.
-- P1.2 Change is a typo correction, whitespace normalisation, or a rename that does NOT appear in any symbol reference, import, `require()`, `use`, call site, path string, or config lookup.
-- P1.3 No executable code path is added, removed, or modified: no function body, no conditional, no return value, no exported identifier, no schema field.
-- P1.4 No file in the plugin repository (`~/code/claude-workspace/` or the active initiative's plugin root) is touched.
-- P1.5 Change is confined to a SINGLE repository.
-
-**Step set:** `implementer` dispatch (required). `implementation-verifier`: NOT dispatched by default — verification is **available on request**; the orchestrator proceeds without asking per edit. The offer is never a forced round-trip. Any T1 task that escalates to T2/T3 MUST run the verifier. Plugin-export parity gate, exact-tree CI, and artefact regeneration are not invoked (P1.4/P1.5 confirm they do not apply).
-
-### T2 — Local-Semantic: single-scope logic change, no cross-repo or plugin impact
-
-**ALL five predicates must hold** (one failing predicate escalates to T3):
-- P2.1 Change is one new/modified helper function, one non-schema config file, a single agent's logic file, or a single template file.
-- P2.2 No symbol/path exported from the changed scope is consumed by external code in a way the change alters.
-- P2.3 No invariant-bearing file (schema, type definition, contract shared across ≥2 agents or ≥2 repos) is touched.
-- P2.4 No file in the plugin repository is touched.
-- P2.5 Change is confined to a SINGLE repository.
-
-**Step set:** `implementer` (required) + `implementation-verifier` (required — adversarial verification is always required for a semantic code change). Plugin-export parity gate and artefact regeneration not invoked (P2.4/P2.5).
-
-### T3 — Structural: schema, invariants, cross-repo, plugin — FULL V-MODEL UNCHANGED
-
-**ANY single predicate is sufficient for T3:**
-- P3.1 Touches a schema file (`.json`/`.yaml` schema, grammar, type/interface definition used across ≥2 modules or ≥2 agents).
-- P3.2 Touches an invariant-bearing file (hard rule, ownership entry, routing table, contract consumed by ≥2 consumers).
-- P3.3 Change spans ≥2 repositories.
-- P3.4 Touches any file under the plugin repository root.
-- P3.5 Touches core orchestration logic: `SKILL.md`, any agent file, the bootstrap sequence, the routing table, the ownership table, or any memory-layer rule file.
-- P3.6 Affects a plugin export, release process, CI gate, or artefact parity check.
-- P3.7 Safe-Default-Escalate promoted this task from T1 or T2.
-
-**Step set: full V-model, UNCHANGED by this rubric.** Task-checker / plan gate, `implementer`, `implementation-verifier` (adversarial, required), plugin-export parity gate (when P3.3/P3.4/P3.6), exact-tree CI (when applicable), full artefact regeneration (when schema or derived outputs affected), any additional initiative-specific gates — all invoked as before.
-
-### Safe-Default-Escalate (upward-only)
-
-Evaluate BEFORE finalising the tier. If ANY trigger fires, move UP one tier (T1→T2, T2→T3). T3 stays T3.
-
-| Trigger | Fires when |
-|---------|------------|
-| E1 Scope ambiguity | Request is underspecified, contradictory, or uses language (e.g. "clean up", "fix") where changed files and exact lines cannot be identified without inference. |
-| E2 Any reference touched | The change modifies, removes, or renames a symbol, path string, import, `require()`, config key, or URL consumed anywhere outside the definition site. (Grep the repo; any non-definition occurrence fires the trigger.) |
-| E3 Any invariant touched | The change affects a file/field documented as an invariant (`STRM-*`, hard rule, ownership entry, routing-table row, schema constraint). |
-| E4 Cross-repo state | The change requires reading or writing any file under a different repo root, or a cross-repo consistency check. |
-| E5 Predicate check inconclusive | Evaluating any membership predicate requires an inference or judgement call that cannot be resolved by direct file-path, file-kind, diff, or grep inspection. |
-
-### Lightweight Lane — lean step set for small, well-scoped changes (step-set modifier, NOT a reclassification)
-
-Tier classification is gated on file-sensitivity: any touch to a sensitive/invariant/plugin file lands in T3, which forces the full generative ceremony. But "edits a sensitive file" ≠ "big or risky change" — a small, backward-compatible parser edit is low-complexity regardless of which file it lives in. The Lightweight Lane fixes this by decoupling *ceremony* from *file-sensitivity* with an explicit **change-size/complexity axis**.
-
-It is a **step-set modifier, orthogonal to classification**. It NEVER changes the assigned tier, NEVER downgrades, and NEVER disables a correctness gate (plugin-export parity, exact-tree CI, artefact regeneration all still run whenever the tier predicates say they apply). It substitutes ONLY the *generative* ceremony — separate `proposal.md` + `tasks.md`, and the `proposal-writer`/`task-planner`/`task-checker` dispatches — with **acceptance criteria stated inline in the `implementer` dispatch**. Adversarial verification is ALWAYS run: `implementation-verifier` (adversarial, required) is never skipped in this lane. The point is to keep the rigor and drop the paperwork.
-
-**Applicability:** a task assigned **T2 or T3** may run the lean step set when **ALL** Lightweight-Lane predicates hold (deterministic, checkable — if ANY fails, run the full step set):
-- **L1 Small diff.** ≤ **40** changed lines total — a single named, tunable value (default **40 lines**), adjustable in one place, mirroring the memory layer's "default 500 KB, configurable" precedent. **There is deliberately NO file-count cap:** file *spread* is not a size measure — one tiny edit repeated across many files (e.g. a rename or a propagated signature tweak) is low-complexity, and sprawl that genuinely matters is caught by **L4** (single coherent change), not by counting files. False-positive admission to the lean lane is cheap (verification is never skipped), so the size gate is deliberately churn-based, not file-based.
-- **L2 Fully specifiable inline.** Exact files, exact edits, and acceptance criteria are stateable without inference — equivalently, neither **E1** (scope ambiguity) nor **E5** (predicate inconclusive) fires.
-- **L3 Conforms to an existing contract.** Introduces no new schema/contract/invariant and changes no existing invariant's *meaning* — a backward-compatible parser edit conforms; adding a schema field or flipping an invariant redefines (→ full lane).
-- **L4 Single coherent change.** One logical edit — however many files it touches — not a multi-part structural reorganisation. This is the anti-sprawl guard the file-count cap used to (badly) approximate: a change spread across many files still qualifies **iff** it is one coherent edit; a multi-part restructure with several distinct logical parts does not, even if small.
-
-**Lean step set:** orchestrator states acceptance criteria inline → single `implementer` dispatch → single `implementation-verifier` dispatch (adversarial, required). No `proposal-writer`, no `task-planner`, no `task-checker`, no separate `proposal.md`/`tasks.md`. Correctness gates still run when their tier predicates apply.
-
-This adds no new agent (the 8 roles are intact) and does not amend Hard Rule #1 (the `implementer` and `implementation-verifier` are still dispatched — the orchestrator does not implement or verify itself) or Hard Rule #5 (required verification at T2/T3 is preserved — the lane keeps the verifier).
-
-### Verification economy — one adversarial check per stage, verify once (applies to ALL tiers)
-
-Redundant verification is a primary cost driver: re-verifying already-passed work, and re-running a whole-artefact check for a trivial correction. These rules apply at **every** tier and do NOT weaken rigor — they remove *repeated* checks, not *the* check.
-
-- **One check per stage.** Each artefact version gets exactly ONE adversarial pass at its stage — `task-checker` after planning, `implementation-verifier` after implementing. A PASS advances; there is no confirmatory second pass of passed work.
-- **Verify once (PASS is terminal).** A task that passed adversarial verification is NOT re-verified in a later integrated/final pass. If a subsequent change actually modifies it, re-check ONLY the changed delta (a delta smoke-check) — never the whole artefact again.
-- **Bounded, delta-scoped re-check on FAIL.** A FAIL routes the correction back to the generator (Hard Rule #2); the re-check covers ONLY the corrected delta — it never re-opens already-passed portions and never re-reads the whole tree. If the fix itself fails, the same delta-scoped cycle repeats — but passed work is never re-verified.
-- **Prevent avoidable re-check rounds.** The orchestrator passes the known standing invariants into each generator dispatch (e.g. "memory is orchestrator-owned — never a task"; "the 8-agent set is fixed") so a predictable miscast doesn't burn a full re-check round.
-
-### "Skip" — narrow restriction
-
-**"Skip" NEVER means skipping adversarial verification of a semantic code change.** "Skip" applies ONLY to:
-1. **Non-applicable initiative-machinery** — plugin-export parity gate, exact-tree CI, and artefact regeneration are skipped when (and only when) the tier predicates confirm they genuinely do not apply (no plugin file touched, no schema modified, no derived output affected).
-2. **Default-proceed at T1** — at T1 the orchestrator does not dispatch `implementation-verifier` by default; it states verification is available on request and proceeds. This is the ONLY case where the verifier is not dispatched by default, and only because T1 predicates confirm zero semantic effect. Verification remains available; any escalated-T1 task MUST run the verifier.
-3. **Lightweight-Lane generative ceremony** — when L1–L4 all hold, the lean step set skips ONLY the *generative* ceremony (separate `proposal.md`/`tasks.md` + `proposal-writer`/`task-planner`/`task-checker`). It NEVER skips adversarial verification and NEVER skips a correctness gate.
-
-"Skip" NEVER applies to adversarial verification of any semantic code change; to any step at T2/T3 for which predicates confirm applicability; or to the `implementer` dispatch at any tier.
-
-### Tier-selection consistency note
-
-This section is **consistent with Hard Rule #5** (gates before progress): at T1, verification is *offered/available on request* (not removed); at T2 and T3, verification is *required*. Hard Rule #5 text is unchanged.
+**Correctness gates are not process ceremony.** Plugin-export parity, exact-tree CI, and artefact regeneration still run whenever a change actually touches the plugin, a schema, or a derived output. These are real correctness checks, independent of the lean-vs-heavy question, and are never skipped when they genuinely apply.
 
 ## Prompt-caching awareness
 
