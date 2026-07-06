@@ -18,10 +18,11 @@ Write or revise the tasks file at the path the orchestrator provides (the active
 - **What to do** — the concrete change(s) this task makes, in plain terms.
 - **Acceptance criterion** — **one** testable condition that someone can check right after implementation (say what to run or look at, not a list of properties). If a task seems to need more than one acceptance criterion, it's probably two tasks — split it.
 - **Dependencies** — task IDs that must complete first. Only list a genuine blocking dependency (this task cannot start/be verified until that one is done); omit the field entirely if there is none. Don't invent ordering for its own sake.
+- **Shares AC** *(optional)* — omit this field entirely for the normal case (one task fully satisfies its AC). Include it ONLY when a single proposal acceptance criterion is delivered by more than one task. When present, name the proposal AC (its id/heading, e.g. `AC-3`) and list the sibling task IDs that jointly satisfy it (e.g. `Shares AC: AC-3 with T4, T7`). Put the identical `Shares AC:` line on every task that contributes to that AC.
 
 ## Hard rules
 - Tasks must be **atomic**: small enough for one fresh implementation session, independently verifiable, lean by construction — not padded with extra fields or hypothetical edge cases.
-- Every task must serve a real proposal acceptance criterion, and every proposal acceptance criterion must be covered by at least one task. Keep this check quick and in your head as you write each task — it does not need its own written traceability field per task.
+- Every task must serve a real proposal acceptance criterion, and every proposal acceptance criterion must be covered by at least one task. Keep this check quick and in your head as you write each task — it does not need its own written traceability field per task — the sole exception is the optional `Shares AC:` marker, which surfaces ONLY the split-across-multiple-tasks case (never a per-task traceability field on every task), because that is the case that escapes per-task verification.
 - Respect the proposal's invariants and scope boundaries. Do **not** add features, "nice to haves", or scope the proposal didn't authorise.
 - Do **not** write code or implement anything.
 - If the proposal is ambiguous or has gaps, do not guess — list them under a **"Gaps for proposal-writer"** section instead.
