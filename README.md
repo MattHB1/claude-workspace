@@ -53,8 +53,8 @@ not guarantee correct output and is not a substitute for human review.
 You need read access to this repository. In Claude Code:
 
 ```text
-/plugin marketplace add vitalsignssolutionsltd/claude-workspace
-/plugin install claude-workspace@pocdoc-workspace
+/plugin marketplace add MattHB1/claude-workspace
+/plugin install claude-workspace@mhb-workspace
 /reload-plugins
 ```
 
@@ -130,13 +130,13 @@ requests, or forks. Do not modify your local copy -- local changes are overwritt
 
 ## Layout
 
-One repo, two roles: a private plugin **marketplace** (`pocdoc-workspace`) and the plugin it
+One repo, two roles: a private plugin **marketplace** (`mhb-workspace`) and the plugin it
 ships (`claude-workspace`). Full documentation is inside the plugin.
 
 ```text
 .
 |-- .claude-plugin/
-|   `-- marketplace.json            # marketplace: pocdoc-workspace
+|   `-- marketplace.json            # marketplace: mhb-workspace
 `-- plugins/
     `-- claude-workspace/           # the plugin
         |-- .claude-plugin/plugin.json
