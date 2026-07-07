@@ -13,37 +13,37 @@ For a one-paragraph overview and the quickstart, see the bundled index ([README.
 
 The marketplace lives in a **private git repository**, so you install it with your own
 git credentials. The repository handle in the commands below is the public GitHub handle
-`vitalsignssolutionsltd/claude-workspace`. If your invited private repo differs, use
+`MattHB1/claude-workspace`. If your invited private repo differs, use
 that repo. You can also use a full git URL such as
-`https://github.com/vitalsignssolutionsltd/claude-workspace.git`.
+`https://github.com/MattHB1/claude-workspace.git`.
 
 In a Claude Code session:
 
 ```
-/plugin marketplace add vitalsignssolutionsltd/claude-workspace
-/plugin install claude-workspace@pocdoc-workspace
+/plugin marketplace add MattHB1/claude-workspace
+/plugin install claude-workspace@mhb-workspace
 /reload-plugins
 ```
 
 - The first command registers the private marketplace. A git-based marketplace clones
   the whole repo, so the relative-path plugin source resolves automatically.
 - The second command installs the plugin (`claude-workspace`) from the marketplace
-  (`pocdoc-workspace`). The names differ on purpose. `pocdoc-workspace` is the
+  (`mhb-workspace`). The names differ on purpose. `mhb-workspace` is the
   marketplace. `claude-workspace` is the plugin that it ships.
 - `/reload-plugins` makes the skill and agents available in the current session.
 
 CLI equivalents exist if you prefer them outside a session:
 
 ```
-claude plugin marketplace add vitalsignssolutionsltd/claude-workspace
-claude plugin install claude-workspace@pocdoc-workspace
+claude plugin marketplace add MattHB1/claude-workspace
+claude plugin install claude-workspace@mhb-workspace
 ```
 
 You can also point the marketplace add at a **full git URL** instead of the
 `owner/repo` short form:
 
 ```
-/plugin marketplace add https://github.com/vitalsignssolutionsltd/claude-workspace.git
+/plugin marketplace add https://github.com/MattHB1/claude-workspace.git
 ```
 
 ---
@@ -67,7 +67,7 @@ needs a credential in the environment. See "Updates" below for the detail.
 **Manual update (no token needed).** To pull the latest version from the private remote:
 
 ```
-/plugin marketplace update pocdoc-workspace
+/plugin marketplace update mhb-workspace
 /reload-plugins
 ```
 
@@ -85,7 +85,7 @@ export GITHUB_TOKEN=ghp_xxxxxxxxxxxx
 ```
 
 Without `GITHUB_TOKEN` (or the equivalent for your host), a private-remote auto-update
-fails silently. Use the manual `/plugin marketplace update pocdoc-workspace` command
+fails silently. Use the manual `/plugin marketplace update mhb-workspace` command
 instead.
 
 ---
@@ -105,8 +105,8 @@ copies that are already distributed.
 A recipient who wants to remove the plugin can uninstall it and detach the marketplace:
 
 ```
-/plugin uninstall claude-workspace@pocdoc-workspace
-/plugin marketplace remove pocdoc-workspace
+/plugin uninstall claude-workspace@mhb-workspace
+/plugin marketplace remove mhb-workspace
 ```
 
 ---

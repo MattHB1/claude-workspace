@@ -129,8 +129,8 @@ The full setup guide is in [docs/install.md](docs/install.md). It covers auth, p
 In a Claude Code session, run the three install commands:
 
 ```
-/plugin marketplace add vitalsignssolutionsltd/claude-workspace
-/plugin install claude-workspace@pocdoc-workspace
+/plugin marketplace add MattHB1/claude-workspace
+/plugin install claude-workspace@mhb-workspace
 /reload-plugins
 ```
 
@@ -145,7 +145,7 @@ Then start the orchestrator:
 The author maintains this plugin centrally. To stay current, run:
 
 ```
-/plugin marketplace update pocdoc-workspace
+/plugin marketplace update mhb-workspace
 /reload-plugins
 ```
 
