@@ -52,8 +52,8 @@ guarantee correct output and is not a substitute for human review.
 You need read access to this repository. In Claude Code:
 
 ```text
-/plugin marketplace add vitalsignssolutionsltd/claude-workspace
-/plugin install claude-workspace@pocdoc-workspace
+/plugin marketplace add MattHB1/claude-workspace
+/plugin install claude-workspace@mhb-workspace
 /reload-plugins
 ```
 
@@ -70,7 +70,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 This plugin is centrally maintained by the author. To stay current, run:
 
 ```text
-/plugin marketplace update pocdoc-workspace
+/plugin marketplace update mhb-workspace
 /reload-plugins
 ```
 
@@ -136,13 +136,13 @@ requests, or forks. Do not modify your local copy. An update overwrites local ch
 
 ## Layout
 
-One repo has two roles. It is a private plugin **marketplace** (`pocdoc-workspace`) and the
+One repo has two roles. It is a private plugin **marketplace** (`mhb-workspace`) and the
 plugin that it ships (`claude-workspace`). The full documentation is inside the plugin.
 
 ```text
 .
 |-- .claude-plugin/
-|   `-- marketplace.json            # marketplace: pocdoc-workspace
+|   `-- marketplace.json            # marketplace: mhb-workspace
 |-- .github/                        # CI checks and workflows
 |-- benchmark/                      # benchmark files
 |-- CHANGELOG.md                    # release history
