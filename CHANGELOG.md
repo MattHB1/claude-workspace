@@ -5,6 +5,20 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-07-15
+
+### Added
+- Index-bloat guard: a deterministic byte-size trigger (`wc -c` against a provisional
+  ~10-15 KB tunable threshold) on each initiative's `memory/index.md` — the file read in
+  full every bootstrap. On crossing the threshold it surfaces a prompt-gated nudge to
+  re-derive the index lean (pointers only); never automatic. Distinct from, and
+  independent of, the registry consolidation threshold; because the index is overwritten
+  rather than appended to, it re-derives rather than archives.
+- Epic/granularity guard: a deterministic journal-entry-count signal
+  (`grep -c '^timestamp:'` against a provisional ~30-entry tunable threshold) that
+  surfaces an advisory teardown notice suggesting the initiative may be Epic-sized and
+  worth splitting. Pure advisory: never blocks, never gates on `y`, never auto-splits.
+
 ## [1.10.0] - 2026-07-15
 
 ### Added
