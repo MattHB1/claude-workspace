@@ -66,6 +66,8 @@ Then start the orchestrator and talk to it:
 
 ### Staying current
 
+See [CHANGELOG.md](CHANGELOG.md) for release history.
+
 This plugin is centrally maintained by the author. To stay current, run:
 
 ```text

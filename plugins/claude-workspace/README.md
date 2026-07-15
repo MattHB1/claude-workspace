@@ -198,3 +198,4 @@ The full guide is split into focused pages under `docs/`:
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Fixes for permission errors, missing tools, marketplace auth, and the two "why did it refuse" cases. |
 | [docs/limitations.md](docs/limitations.md) | Known gaps and what the system is NOT (no semantic retrieval, no auto-promotion, no built-in delete, and more). |
 | [docs/ideation-spiral.md](docs/ideation-spiral.md) | How to use the ideation spiral (triggers, the Frame→Diverge→Challenge→Converge loop, convergence gate), its capabilities and boundaries, and how to thread `ideation.md` downstream into the pipeline or export it externally. |
+| [CHANGELOG.md](../../CHANGELOG.md) | Release history and notable changes per version. |
