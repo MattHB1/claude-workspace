@@ -219,6 +219,8 @@ All memory retrieval is by **explicit path, filename/dir convention, or `grep`/`
 
 On entering a project, **read the registry `.workspace/initiatives.md` first** to learn which initiative is ACTIVE, then operate under `.workspace/<active-slug>/`. If the workspace is empty (no `.workspace/`), create `.workspace/` and the registry, then guide the user through creating the first initiative — which creates its `<slug>/` subtree and marks it ACTIVE.
 
+**Registry consolidation check (prompt-gated, never automatic — AC3, AC4).** Since `initiatives.md` was just read above, derive its byte size here (e.g. `wc -c`) and compare it to the registry consolidation threshold (see "Consolidation policy" above). If size ≥ threshold, surface the one-line prompt: `registry is N KB ≥ threshold T — consolidate completed/superseded entries to the archive? y/n`. Consolidation **never** runs automatically at bootstrap — it always waits on the human's answer, and only proceeds (per the procedure above) on "y". This check is advisory only and never blocks or delays the registry read above.
+
 Once the active slug is resolved, the memory read is **required**, not optional, for any participant in memory (you at session start; `context-recovery` on re-sync) and is **scoped to the active initiative's** `.workspace/<active-slug>/memory/`. Read in this order, then stop:
 
 1. the registry `.workspace/initiatives.md` (resolve the ACTIVE slug).
@@ -233,6 +235,8 @@ Once the active slug is resolved, the memory read is **required**, not optional,
 
 At session end **and at safe checkpoints**, you **must** (this is mandatory, not discretionary): (1) **append a journal entry** (per the schema above) recording what was done/decided, and (2) **refresh the index** (overwrite it to reflect the new state-of-world). Frame every checkpoint as **"assume interruption"**: state must be durable at every teardown, not only at final completion, so a reset/compaction mid-project loses nothing. When a task has an associated tier decision and a verification outcome, **record `tier` and `outcome`** on the relevant journal entry at teardown — `tier` records the task-risk decision (T1/T2/T3) and `outcome` records the pass/fail/retry result (including the semantic side of any caught error).
 
+**Registry consolidation check (same trigger, at teardown too — AC3, AC4).** As at bootstrap, derive `.workspace/initiatives.md`'s byte size and compare it to the same tunable threshold (see "Consolidation policy" above). If size ≥ threshold, surface the identical one-line prompt: `registry is N KB ≥ threshold T — consolidate completed/superseded entries to the archive? y/n`. As at bootstrap, consolidation **never** runs automatically at teardown either — it always waits on the human's answer, and only proceeds (per the procedure above) on "y".
+
 ### Consolidation policy — orchestrator-owned, dual-trigger, non-destructive
 
 **You (the orchestrator) are the sole owner** of consolidation. It fires on **either** of two triggers:
@@ -245,6 +249,19 @@ At session end **and at safe checkpoints**, you **must** (this is mandatory, not
 **Mechanism (non-destructive):** roll up superseded detail into a **new summary entry** (appended to the live journal) and **move** the superseded detail into the active initiative's `.workspace/<slug>/memory/archive/`. You **never hard-delete unique information** — detail is relocated, not destroyed, and full history remains recoverable via **git**. This never breaches the append-only rule: the live journal is only ever appended to (the roll-up writes a new summary entry); prior entries' unique info is archived by `mv`, not rewritten or deleted in place. `archivist` may perform the pure `mv` of detail into `archive/` where appropriate (relocation only, no content edits).
 
 **events.jsonl governed by this same policy (AC9, INV7):** the per-initiative `events.jsonl` (auto-captured operational-event trace written by the PostToolUse/Stop hook) is **subject to this same consolidation policy** — no second or divergent bounding policy is introduced for it. When `events.jsonl` exceeds the 500 KB threshold (measured, not guessed — same "measure-then-decide" rule applies), the consolidation cycle fires: roll up into a summary entry and move detail to `.workspace/<slug>/memory/archive/`. Deletion is never permitted. The bounding threshold for `events.jsonl` is 500 KB (the existing policy default); a lower per-initiative threshold may be set after measuring real sizes in practice, but may not be set from a guess at planning time. One policy governs both `journal.md` and `events.jsonl`.
+
+**Registry consolidation — generalizing this policy to `initiatives.md` (AC1, AC2, AC7, AC8).** This same policy generalizes one further hop to the project-root **registry** `.workspace/initiatives.md` → the already-existing `.workspace/initiatives-archive.md` (no new file or system introduced). It shares the same principles as the journal/events policy above — size-triggered, measure-then-decide, non-destructive, archive-relocation — with **one deliberate divergence**: journal/events consolidation fires automatically (teardown or over-threshold), but registry consolidation is **human-prompt-gated** and never automatic (see "Bootstrap" and "Teardown" below for exactly where the check runs and the prompt wording).
+
+- **Trigger:** the **byte size of `initiatives.md`** (a plain `wc -c` / byte-length measurable — no count, hybrid, or "verbose"/semantic heuristic) compared against a **single named, documented, tunable threshold: default ~10–12 KB**. As with the 500 KB journal default, this is a documented starting point, not a data-derived pick — **measure-then-decide**: only lower or otherwise retune it once real registry sizes in practice warrant it; never hard-pick a number from a guess.
+- **Non-destructive:** exactly as above — detail is **relocated**, never deleted. The orchestrator moves completed/superseded verbose content out of `initiatives.md` into `initiatives-archive.md`, and full history remains recoverable via **git**.
+- **Ownership unchanged:** the orchestrator remains the **sole registry writer** (per "Initiative registry" above); this adds **no new agent** — the canonical 8-agent set is unchanged.
+
+**Registry consolidation procedure (AC5, AC6).** The repeatable steps, run only on a "y" answer to the prompt (see "Bootstrap"/"Teardown" below):
+
+1. Move completed/superseded verbose detail out of `initiatives.md` into `initiatives-archive.md` (relocate, never delete).
+2. Trim that initiative's row in the `initiatives.md` table so its status cell holds only a **short** status — the verbose detail now lives in the archive.
+3. Keep only **live pointers** in `initiatives.md`: the ACTIVE row, any parked-but-live initiatives, and the project-level artefacts (`file-structure.md`, `namespaces`) — nothing else.
+4. **Close with the post-consolidation invariant assertion:** confirm (a) every slug that was present in `initiatives.md` is still present as a row (even if trimmed), (b) exactly **one** row still carries the ACTIVE marker, and (c) that row still matches the canonical machine-readable format pinned in "Initiative registry" above — the slug as the **first backtick-wrapped cell** (`` `slug` ``) and the literal whole-cell token `**ACTIVE**` in its own cell. If any of (a)–(c) fails, the consolidation is not complete — fix the row shape before considering it done.
 
 ### Efficiency-metric grep/count recipes (AC8, INV12)
 
