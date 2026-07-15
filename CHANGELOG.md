@@ -5,6 +5,18 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 2026-07-15
+
+### Fixed
+- Index-bloat and Epic/granularity guards now also fire on the `switch` and `create`
+  initiative verbs, not only at bootstrap/teardown. Previously, switching into an
+  already-bloated initiative mid-session ran neither size check until the next teardown or
+  a fresh bootstrap. The switch verb now runs both checks (size-checks-only — it does not
+  become a full bootstrap); the create verb references them for symmetry (neither can trip
+  on a fresh, empty initiative). The Epic guard's definition is reconciled to name
+  Switch/Create/Teardown as its firing points. Reuse-only: no new threshold, env var,
+  file, agent, or inference signal.
+
 ## [1.11.0] - 2026-07-15
 
 ### Added
