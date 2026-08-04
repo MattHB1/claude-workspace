@@ -5,6 +5,31 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-08-04
+
+### Added
+- Agent-intrinsic invariants across the pipeline — task-agnostic "Always / Never" properties
+  encoded directly in each role's prompt body and frontmatter `description` (and the orchestrator
+  SKILL.md), so three recurring self-inflicted build-cost multipliers become structurally
+  unavailable at each role's own decision point rather than living as passive advice:
+  - **Completeness before commitment** — `research-harvester` INV-R1 (a brief must enumerate the
+    complete footprint with coverage + named gaps); `proposal-writer` INV-P1 (scope closed over the
+    known footprint); `task-checker` INV-C1 (open scope is a blocking FAIL).
+  - **Structure follows the write-target** — `task-planner` INV-T1 (decompose by write-target;
+    parallel waves derive from disjoint write-sets, never AC count); orchestrator INV-O3
+    (dispatch bounded by disjoint write-targets).
+  - **Verified before foundation** — `implementer` INV-I1 (returns work UNVERIFIED; self-proof is
+    evidence, not sign-off) + INV-I2 (write-scope confinement); `implementation-verifier` INV-V1
+    (verdicts from reality) + INV-V2 (split-AC union closure, pinned to the `Shares AC:` marker);
+    `context-recovery` INV-CR1 (preserve verification status, never silently upgrade); orchestrator
+    INV-O1 (never build atop/report-done unverified work) + INV-O2 (verification status travels with
+    every reference, generalising the journal `trust:` field).
+- No new pipeline stage, gate, hook, script, CI job, checklist, or agent was added — the canonical
+  8-agent set is unchanged and `archivist` is untouched.
+
+### Fixed
+- README version badges corrected to track the released plugin version (were stale at 1.11.1).
+
 ## [1.12.0] - 2026-08-04
 
 ### Added

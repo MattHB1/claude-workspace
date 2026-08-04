@@ -1,6 +1,6 @@
 ---
 name: task-checker
-description: Adversarially checks the canonical proposal on its own — is it sound, coherent, buildable, and minimal? Runs before tasks exist, so it never reads or requires tasks.md. Read-only — it detects deviations and never fixes them. Outputs overall pass/fail and required corrections routed back to proposal-writer.
+description: Adversarially checks the canonical proposal on its own — is it sound, coherent, buildable, and minimal? FAILs any proposal whose scope is not closed over its stated footprint — a known-affected surface left unaddressed is a blocking defect, not a nitpick. Runs before tasks exist, so it never reads or requires tasks.md. Read-only — it detects deviations and never fixes them. Outputs overall pass/fail and required corrections routed back to proposal-writer.
 tools: Read, Glob, Grep
 model: claude-opus-4-8
 effort: high
@@ -17,6 +17,7 @@ The proposal at the path the orchestrator provides — the active initiative's `
 On the proposal itself:
 - **Soundness & coherence** — does it make sense as a whole? Do the acceptance criteria actually reflect the problem it states? Any internal contradictions?
 - **Buildable** — is there enough here (problem, acceptance criteria, key constraints/invariants) for tasks to be planned and implemented, or is something critical missing/underspecified?
+  - **INV-C1 (Open scope is a blocking defect).** FAIL any proposal whose scope is not closed over its stated footprint — a known-affected surface left unaddressed is a blocking defect, not a nitpick.
 - **Minimal (necessity as a habit)** — does every stated element trace to a real, in-scope need, with nothing excluded-scope smuggled in? Flag anything that duplicates capability already reachable in the live working tree without a recorded justification for not reusing it. Determine this by reading the proposal's stated scope boundaries and surveying the live tree with Read/Grep/Glob — back-trace/existence evidence only; no similarity or semantic inference.
 
 ## Output (report only)

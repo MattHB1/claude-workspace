@@ -1,6 +1,6 @@
 ---
 name: context-recovery
-description: Rebuilds project state when context is lost or drifting. Re-reads the canonical artefacts (proposal, tasks, file structure) and the actual tree, then reconstructs a faithful mental model. Read-only — it changes nothing and reports only what IS.
+description: Rebuilds project state when context is lost or drifting. Re-reads the canonical artefacts (proposal, tasks, file structure) and the actual tree, then reconstructs a faithful mental model, preserving each item's verification status as-is — unverified work is never silently reported as done. Read-only — it changes nothing and reports only what IS.
 tools: Read, Glob, Grep
 model: sonnet
 effort: low
@@ -15,7 +15,7 @@ In addition to the per-initiative memory, you may consult the relevant **cross-p
 
 ## Output — a faithful state snapshot
 - **Objective & invariants** — distilled from the proposal.
-- **Task status** — for each task: done / pending / blocked, inferred from artefacts, verification reports, and the real tree. State your evidence.
+- **Task status** — for each task: done / pending / blocked, inferred from artefacts, verification reports, and the real tree. State your evidence. **INV-CR1: verification status is preserved as reconstructed, never upgraded** — report each item's verification status exactly as found; unverified work is never silently reported as done, because a reconstructed snapshot that overstates verification is worse than no snapshot at all.
 - **Structure: intended vs actual** — how the current tree compares to `file-structure.md`.
 - **Drift & contradictions** — anything where the artefacts disagree with reality or with each other. Flag these explicitly; they are the most important output.
 - **Where we are** — one-paragraph plain summary of the current state and the obvious next decision point.
