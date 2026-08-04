@@ -76,7 +76,7 @@ These three verbs are **orchestrator actions against the registry and the `<slug
 
 Leaving the workspace is an **orchestrator action** — it dispatches no subagent and adds no new agent. It is the deliberate, durable way to stop orchestrating. Triggers: "exit the workspace", "leave the workspace", "drop out of the orchestrator", "stop orchestrating", "I'm done here". On any of these:
 
-1. **Teardown (mandatory).** Run the full teardown for the ACTIVE initiative (see "Memory layer › Teardown"): append a journal entry recording what was done/decided, and refresh (overwrite) the index. Treat exit as a guaranteed interruption point — state must be durable **before** you confirm.
+1. **Teardown (mandatory).** Run the full teardown for the ACTIVE initiative (see "Memory layer › Teardown"): append a journal entry recording what was done/decided, and refresh (overwrite) the index. Treat exit as a guaranteed interruption point — state must be durable **before** you confirm. **If this exit is the initiative's final teardown** (the initiative is complete, not merely paused), also record the `felt` self-rating (`waiting`/`rework`/`steering`, each `1–5`, plus a short free-text note — see "Memory layer › Teardown") once on the closing journal entry — this is the one part of teardown scoped to final close only, not every checkpoint exit.
 2. **Confirm it's safe to leave.** Report in one line that the active initiative is checkpointed (journal appended + index refreshed) and that all workspace state lives in the git-controlled `.workspace/` tree, so nothing is lost by leaving.
 3. **Hand back the final step.** You **cannot** remove your own loaded context — only the user can. The orchestrator persona is just this skill's text loaded into the conversation; it persists until the conversation context is cleared. So tell the user to type **`/clear`** (fresh start — fully drops the orchestrator) or **`/compact`** (keeps a summary) to actually exit. Re-entering later (invoke the workspace skill again) re-bootstraps from the registry → active initiative → memory index + journal tail, so work resumes exactly where it left off.
 4. **Delete this session's statusline marker (best-effort, orchestrator-executed).** Read this session's `session_id` from the `CLAUDE_CODE_SESSION_ID` environment variable, then delete `~/.claude/.workspace-active/<session_id>` if it exists (e.g. `rm -f ~/.claude/.workspace-active/"$CLAUDE_CODE_SESSION_ID"`). Honesty note: this is a step **you** (the orchestrator) carry out as part of complying with this procedure — there is no hook on the conversational exit verb, so nothing fires this mechanically. If you skip it or the session ends without it, the marker simply persists for the rest of this `session_id`'s life (see below) and is swept up later by the `SessionStart(source=clear|startup)` orphan cleanup; no error condition results either way.
@@ -183,10 +183,18 @@ Every entry carries these **mandatory** frontmatter fields (none optional):
 - `role` — the agent/role attribution for the underlying claim (e.g. `orchestrator`, `implementation-verifier`).
 - `trust` — provenance marker, one of `verified` (re-derived/re-run against reality) or `asserted` (unverified / claimed-only). This distinguishes verified facts from asserted ones so downstream readers re-verify rather than trust.
 
-Two additional **optional-but-recorded** frontmatter fields may also appear (existing entries without them remain fully valid — these fields are additive, not mandatory):
+Two additional frontmatter fields may also appear:
 
-- `tier` — the task-risk tier decision for the relevant task; enum `T1|T2|T3`. Covers event type 3 (tier decision) from the six-event-type table. Recorded by the orchestrator at teardown on the relevant entry.
-- `outcome` — the verification/result status (including the semantic side of caught errors); enum `pass|fail|retry`. Covers the semantic side of event type 2 (caught-error / gate pass-fail) from the six-event-type table. Recorded by the orchestrator at teardown on the relevant entry.
+- `tier` — **optional-but-recorded** (existing entries without it remain fully valid — additive, not mandatory): the task-risk tier decision for the relevant task; enum `T1|T2|T3`. Covers event type 3 (tier decision) from the six-event-type table. Recorded by the orchestrator at teardown on the relevant entry.
+- `outcome` — the verification/result status (including the semantic side of caught errors); enum `pass|fail|retry`. Covers the semantic side of event type 2 (caught-error / gate pass-fail) from the six-event-type table. Recorded by the orchestrator at teardown on the relevant entry. **Mandatory on every `role: implementation-verifier` and `role: task-checker` entry** — every such entry must carry `outcome`. On all other (non-verifier) entries it remains **optional-but-recorded** — existing entries without it remain fully valid.
+
+A third, wholly **optional-but-recorded** frontmatter field may also appear (existing entries without it remain fully valid — additive, not mandatory), recorded **once per initiative, at final teardown only** (see "Exiting the workspace" / "Teardown" below — not at every checkpoint):
+
+- `felt` — the operator's own self-rated feel for the initiative as a whole; three integer sub-fields, each `1–5`:
+  - `waiting` — how much idle/blocked waiting was felt.
+  - `rework` — how much rework/redo was felt.
+  - `steering` — how much steering/correction effort was felt.
+  Plus one free-text line giving brief context for the ratings.
 
 Example entry:
 
@@ -226,6 +234,8 @@ On entering a project, **read the registry `.workspace/initiatives.md` first** t
 
 **Index-bloat guard check (prompt-gated, never automatic — see "Index-bloat guard" above).** Once the active slug is resolved and `index.md` is read below, derive its byte size (e.g. `wc -c`) and compare it to the index threshold (see "Consolidation policy › Index-bloat guard" above). If size ≥ threshold, surface the one-line prompt: `index is N KB ≥ threshold T — re-derive it lean (pointers + short summaries only)? y/n`. As with the registry check, this only proceeds on "y" — never automatic. This check is advisory only and never blocks or delays the required index read below.
 
+**Repeated-FAIL guard check (advisory-only, never-gating — see "Consolidation policy › Repeated-FAIL guard" above).** Once the journal tail is read below, derive the active initiative's `outcome: fail` count via `grep -cE '^outcome: fail'` over `.workspace/<active-slug>/memory/journal.md` and compare it to the same tunable threshold (see "Consolidation policy › Repeated-FAIL guard" above). If the count ≥ threshold, surface the identical one-line notice: `this initiative has N outcome: fail entries — check for a task looping between generator and verifier instead of a single fix-and-recheck pass`. This notice never gates on a "y" and never blocks or delays Bootstrap.
+
 Once the active slug is resolved, the memory read is **required**, not optional, for any participant in memory (you at session start; `context-recovery` on re-sync) and is **scoped to the active initiative's** `.workspace/<active-slug>/memory/`. Read in this order, then stop:
 
 1. the registry `.workspace/initiatives.md` (resolve the ACTIVE slug).
@@ -238,13 +248,17 @@ Once the active slug is resolved, the memory read is **required**, not optional,
 
 ### Teardown — persist state (required, assume interruption)
 
-At session end **and at safe checkpoints**, you **must** (this is mandatory, not discretionary): (1) **append a journal entry** (per the schema above) recording what was done/decided, and (2) **refresh the index** (overwrite it to reflect the new state-of-world). Frame every checkpoint as **"assume interruption"**: state must be durable at every teardown, not only at final completion, so a reset/compaction mid-project loses nothing. When a task has an associated tier decision and a verification outcome, **record `tier` and `outcome`** on the relevant journal entry at teardown — `tier` records the task-risk decision (T1/T2/T3) and `outcome` records the pass/fail/retry result (including the semantic side of any caught error).
+At session end **and at safe checkpoints**, you **must** (this is mandatory, not discretionary): (1) **append a journal entry** (per the schema above) recording what was done/decided, and (2) **refresh the index** (overwrite it to reflect the new state-of-world). Frame every checkpoint as **"assume interruption"**: state must be durable at every teardown, not only at final completion, so a reset/compaction mid-project loses nothing. When a task has an associated tier decision, **record `tier`** (T1/T2/T3) on the relevant journal entry at teardown, if applicable. **`outcome` is mandatory, not conditional, on every `implementation-verifier`/`task-checker` entry**: whenever you append a journal entry for one of those roles, it **must** carry `outcome` (`pass|fail|retry`, including the semantic side of any caught error) — never optional for those roles. On non-verifier entries `outcome` remains optional-but-recorded, as before.
+
+**Felt self-rating — final teardown only, once per initiative (not per-checkpoint).** Unlike the rest of this Teardown section, which is checkpoint-repeatable ("assume interruption" — run at every safe checkpoint, not only at completion), the `felt` rating is scoped **only** to the initiative's **final** teardown (e.g. the "Exiting the workspace" verb's mandatory teardown step, or whichever checkpoint you and the user treat as the initiative's true close). At that one point, ask the user to rate `waiting`, `rework`, and `steering` (each `1–5`) plus a short free-text note, and record it as `felt` on the closing journal entry (per the journal schema above). Do **not** record `felt` at every intermediate checkpoint — recording it more than once per initiative is out of scope for v1.
 
 **Registry consolidation check (same trigger, at teardown too — AC3, AC4).** As at bootstrap, derive `.workspace/initiatives.md`'s byte size and compare it to the same tunable threshold (see "Consolidation policy" above). If size ≥ threshold, surface the identical one-line prompt: `registry is N KB ≥ threshold T — consolidate completed/superseded entries to the archive? y/n`. As at bootstrap, consolidation **never** runs automatically at teardown either — it always waits on the human's answer, and only proceeds (per the procedure above) on "y".
 
 **Index-bloat guard check (same trigger, at teardown too — see "Index-bloat guard" above).** As at bootstrap, derive the just-refreshed `.workspace/<active-slug>/memory/index.md`'s byte size and compare it to the same index threshold (see "Consolidation policy › Index-bloat guard" above). If size ≥ threshold, surface the identical one-line prompt: `index is N KB ≥ threshold T — re-derive it lean (pointers + short summaries only)? y/n`. As at bootstrap, this only proceeds on "y" — never automatic. This check is advisory only and never blocks or delays the required index refresh above.
 
 **Epic/granularity guard check (same trigger, at teardown too — see "Epic/granularity guard" above).** At teardown, derive the active initiative's journal entry count via `grep -c '^timestamp:'` over `.workspace/<active-slug>/memory/journal.md` and compare it to the same tunable threshold (see "Consolidation policy › Epic/granularity guard" above). If the count ≥ threshold, surface the identical one-line notice: `this initiative has grown to N — it may be Epic-sized; consider splitting into tighter initiatives`. Unlike the registry and index-bloat checks above, this notice never gates on a "y" — it is a pure advisory notice that never blocks or delays teardown; teardown proceeds regardless of the count.
+
+**Repeated-FAIL guard check (same trigger, at teardown too — see "Consolidation policy › Repeated-FAIL guard" above).** At teardown, derive the active initiative's `outcome: fail` count via `grep -cE '^outcome: fail'` over `.workspace/<active-slug>/memory/journal.md` and compare it to the same tunable threshold (see "Consolidation policy › Repeated-FAIL guard" above). If the count ≥ threshold, surface the identical one-line notice: `this initiative has N outcome: fail entries — check for a task looping between generator and verifier instead of a single fix-and-recheck pass`. This notice never gates on a "y" and never blocks or delays teardown.
 
 ### Consolidation policy — orchestrator-owned, dual-trigger, non-destructive
 
@@ -288,6 +302,13 @@ At session end **and at safe checkpoints**, you **must** (this is mandatory, not
 - **Archives nothing:** there is no superseded detail to relocate here — the guard only counts existing journal entries and surfaces a notice; it never moves, rewrites, or deletes anything in `journal.md`, `archive/`, or elsewhere.
 - **Ownership and mechanism unchanged:** the orchestrator remains the sole actor; this adds **no new agent** (canonical 8-agent set unchanged), **no new env var**, and **no inference/similarity/embedding/semantic** signal — it reuses the existing consolidation-policy vocabulary/machinery exactly as the registry and index-bloat generalizations above do.
 
+**Repeated-FAIL guard — generalizing this policy to a known foot-gun (telemetry AC8).** This same policy generalizes to a known operational foot-gun: a task bouncing between the same generator and verifier repeatedly instead of the lean flow's single FAIL→fix→re-check pass (Hard Rule #5, "no multi-round loops"). It never archives anything and never gates on a "y" — a pure advisory notice, exactly like the Epic/granularity guard above.
+
+- **Trigger — a single deterministic signal:** the count of `outcome: fail` lines in the active initiative's `.workspace/<slug>/memory/journal.md`, measured with `grep -cE '^outcome: fail'` — no inference, similarity, or semantic judgement. This count is compared against a **single named, documented, tunable threshold: default 3 FAILs**. As with the other guards above, this is a documented starting point, not a data-derived pick — **measure-then-decide**: only retune it once real per-initiative FAIL counts in practice warrant it.
+- **On-crossing action — advisory notice at Bootstrap/Teardown, no gate:** if the count ≥ threshold, surface the one-line notice: `this initiative has N outcome: fail entries — check for a task looping between generator and verifier instead of a single fix-and-recheck pass`. Like the Epic/granularity guard, this notice is **not** phrased as a `y/n` question and requires no answer — it never blocks, delays, or gates Bootstrap or Teardown.
+- **Advisory only — never acts on its own:** this guard never fixes, re-routes, or edits anything; it is strictly informational, left for the human to act on (or ignore).
+- **Ownership and mechanism unchanged:** the orchestrator remains the sole actor; this adds **no new agent**, **no new env var**, **no new firing mechanism**, and **no inference/similarity/embedding/semantic** signal — it reuses the identical prompt-gated-advisory pattern and the existing Bootstrap/Teardown trigger points as the registry/index-bloat/Epic guards above.
+
 ### Efficiency-metric grep/count recipes (AC8, INV12)
 
 The following deterministic one-line recipes derive each claimed efficiency metric from `events.jsonl` and/or `journal.md`. All are grep/count — no inference. Recipes use the path `.workspace/<slug>/memory/` — substitute the active initiative's slug.
@@ -315,6 +336,12 @@ Lists all `outcome:` values (pass/fail/retry) recorded at teardown. One value pe
 grep -cE '^outcome: (fail|retry)' .workspace/<slug>/memory/journal.md
 ```
 Counts all `fail` or `retry` outcomes; scoped to a task by bounding on the `refs` field and `timestamp` range in the surrounding entries.
+
+**Metric 4b — Steering effort (v1 deterministic signal)**: a verifier-scoped, fail-only variant of Metric 4 — where Metric 4 counts `fail` OR `retry` across **all** journal entries, this variant scopes to `role: implementation-verifier` entries only and counts `fail` only, since each FAIL structurally routes back to the generator (Hard Rule #2):
+```sh
+grep -B4 -E '^outcome: fail' .workspace/<slug>/memory/journal.md | grep -c '^role: implementation-verifier'
+```
+v1 "steering effort" = this count. **Out of scope for v1:** mid-task user-correction (steering-turn) logging — no deterministic signal exists today for it, so it is not attempted here.
 
 **Metric 5 — Git push count** (from `events.jsonl`):
 ```sh

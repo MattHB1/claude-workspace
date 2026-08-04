@@ -5,6 +5,38 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-08-04
+
+### Added
+- **Telemetry v1** — a lean, per-initiative "improvement signal" for directional reassurance and
+  regression-catching (explicitly not a causal go/no-go gate). Almost entirely reuse of existing
+  machinery; no new agent, env var, hook, or run-log file:
+  - **`felt:` operator self-rating** — an optional-but-recorded journal frontmatter block
+    (`waiting`/`rework`/`steering`, each 1–5, plus a free-text line), recorded once per initiative at
+    final teardown, wired into the mandatory teardown flow so it is not skipped.
+  - **Mandatory verifier `outcome:`** — `outcome: pass|fail|retry` is now required on every
+    `implementation-verifier`/`task-checker` journal entry (previously conditional), making the
+    rework signal usable.
+  - **Metric 4b — steering effort** — a verifier-scoped, fail-only variant of the efficiency-metric
+    recipes; mid-task user-correction logging is explicitly out of scope for v1.
+  - **Repeated-FAIL guardrail** — a deterministic `grep`/`wc` advisory guard under the Consolidation
+    policy, fired at the existing Bootstrap/Teardown trigger points (no new firing mechanism).
+  - **Artefact-classed edit events** — the autolog hook now tags each `edit` event with an additive
+    `artefact_class` field (deterministic path classification), so code-file churn is separable from
+    the ~94% planning/journaling noise. Strictly additive: the seven existing event fields are
+    unchanged.
+  - **`benchmark/reference-task.md`** — one fixed, re-runnable reference task (pinned to a named
+    baseline commit/tag) to sense same-task deltas across pipeline versions, reusing the per-initiative
+    `journal.md`/`events.jsonl` as its run-home.
+
+### Changed
+- `.gitignore` now excludes Python bytecode (`__pycache__/`, `*.pyc`).
+
+### Notes
+- Per-task token/cost and per-dispatch `duration_ms` remain deliberately out of scope; INV12 (per-task
+  wall-clock/tokens not derivable) is unchanged. Deferred pending evidence the felt signal is
+  insufficient.
+
 ## [1.13.0] - 2026-08-04
 
 ### Added

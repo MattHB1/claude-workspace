@@ -69,6 +69,36 @@ def is_tracked_path(path: str) -> bool:
     return bool(TRACKED_PATTERNS.search(path))
 
 
+# T8 (AC3, AC4): deterministic artefact-class for edit events, derived purely
+# from string-matching the file_path. No inference/similarity/semantic checks.
+_CODE_EXTS = (
+    ".py", ".sh", ".js", ".ts", ".json", ".yml", ".yaml", ".toml",
+)
+
+
+def classify_artefact(path: str) -> str:
+    """Classify a file_path into a stable artefact class via deterministic
+    path-string matching only."""
+    name = path.rsplit("/", 1)[-1]
+    if name == "proposal.md":
+        return "spec"
+    if name == "tasks.md":
+        return "plan"
+    if name in ("initiatives.md", "initiatives-archive.md"):
+        return "registry"
+    if "/memory/" in path or path.startswith("memory/"):
+        return "memory"
+    if name in ("ideation.md", "purpose.md"):
+        return "memory"
+    if "/docs/" in path or path.startswith("docs/"):
+        return "docs"
+    if name.upper().startswith("README") or name.upper().startswith("CHANGELOG"):
+        return "docs"
+    if name.endswith(_CODE_EXTS):
+        return "code"
+    return "other"
+
+
 def truncate(s: str, n: int = 160) -> str:
     s = s.replace("\n", " ").strip()
     return s if len(s) <= n else s[: n - 1] + "…"
@@ -90,9 +120,15 @@ def emit(
     slug: str,
     agent_id,
     agent_type,
+    artefact_class=None,
 ) -> None:
-    """Emit the AC17 schema line: {ts, session, event, detail, slug, agent_id, agent_type}."""
-    append_jsonl(log_file, {
+    """Emit the AC17 schema line: {ts, session, event, detail, slug, agent_id, agent_type}.
+
+    T8 (AC3, AC4): optional additive `artefact_class` field, only populated for
+    edit events; all other callers/consumers of the original seven fields are
+    unaffected.
+    """
+    record = {
         "ts": ts,
         "session": session,
         "event": event,
@@ -100,7 +136,10 @@ def emit(
         "slug": slug,
         "agent_id": agent_id,
         "agent_type": agent_type,
-    })
+    }
+    if artefact_class is not None:
+        record["artefact_class"] = artefact_class
+    append_jsonl(log_file, record)
 
 
 def handle_post_tool_use(event: dict, log_file: Path, slug: str) -> None:
@@ -125,7 +164,10 @@ def handle_post_tool_use(event: dict, log_file: Path, slug: str) -> None:
         file_path = inp.get("file_path", "")
         if not is_tracked_path(file_path):
             return
-        emit(log_file, ts, session, "edit", file_path, slug, agent_id, agent_type)
+        emit(
+            log_file, ts, session, "edit", file_path, slug, agent_id, agent_type,
+            artefact_class=classify_artefact(file_path),
+        )
 
     elif tool == "Bash":
         command = inp.get("command", "")
