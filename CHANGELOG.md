@@ -5,6 +5,27 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-08-04
+
+### Added
+- Per-agent reasoning-effort levels: every one of the 8 subagents now pins an `effort:`
+  in its frontmatter, set to the minimum its role needs — a drift-containment lever, since
+  surplus effort gives an agent latitude to reason past its single-responsibility boundary.
+  Write-capable generators are capped (implementer `low`; proposal-writer/task-planner
+  `medium`); read-only adversaries get `high` (task-checker, implementation-verifier —
+  no write tools, so more reasoning only deepens scrutiny); read-only reporters/movers stay
+  `low` (context-recovery, archivist); the read-only generative synthesiser research-harvester
+  is `medium`.
+
+### Changed
+- The 4 opus agents (proposal-writer, task-planner, task-checker, implementation-verifier)
+  are pinned from the floating `opus` alias to the exact version `claude-opus-4-8`. The
+  alias now floats to Opus 5, on which `high` effort enables deep extended thinking —
+  undesirable for these roles and a second drift vector. Pinning to 4.8 keeps `high` in
+  ordinary scrutiny mode. Invariant: the two adversaries must stay BOTH `claude-opus-4-8`
+  AND `high` (reverting to the alias while keeping `high` would silently re-enable
+  Opus-5 deep-thinking). The 4 non-opus agents keep their `sonnet`/`haiku` aliases.
+
 ## [1.11.1] - 2026-07-15
 
 ### Fixed
