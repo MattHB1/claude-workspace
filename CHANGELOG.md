@@ -5,6 +5,13 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-08-12
+
+### Added
+- **Orchestrator persona** — a `PERSONA.md` conversational persona for the orchestrator (calm,
+  formal, precise "internal architect" voice), loaded via a mandatory Bootstrap read. Workspace-only
+  and voice-only: it changes how the orchestrator talks, not what it does or decides.
+
 ## [1.14.0] - 2026-08-04
 
 ### Added

@@ -239,10 +239,11 @@ On entering a project, **read the registry `.workspace/initiatives.md` first** t
 Once the active slug is resolved, the memory read is **required**, not optional, for any participant in memory (you at session start; `context-recovery` on re-sync) and is **scoped to the active initiative's** `.workspace/<active-slug>/memory/`. Read in this order, then stop:
 
 1. the registry `.workspace/initiatives.md` (resolve the ACTIVE slug).
-2. `.workspace/<active-slug>/memory/index.md` first (the whole pointer file — it is small by design).
-3. the **journal tail** — at most the **last 20 entries** of `.workspace/<active-slug>/memory/journal.md`.
-4. the **assigned canonical artefacts** for the work in hand (e.g. the specific task + proposal under `.workspace/<active-slug>/`).
-5. page in additional detail (older journal entries, `archive/` files) **only on demand** via explicit path / `grep`.
+2. `plugins/claude-workspace/skills/workspace/PERSONA.md` (always-loaded, mandatory — shapes the orchestrator's conversational voice with the user).
+3. `.workspace/<active-slug>/memory/index.md` first (the whole pointer file — it is small by design).
+4. the **journal tail** — at most the **last 20 entries** of `.workspace/<active-slug>/memory/journal.md`.
+5. the **assigned canonical artefacts** for the work in hand (e.g. the specific task + proposal under `.workspace/<active-slug>/`).
+6. page in additional detail (older journal entries, `archive/` files) **only on demand** via explicit path / `grep`.
 
 **Read budget:** index + journal-tail (≤ 20 entries) + the assigned task/proposal before starting work. **Never reload everything** — bounded re-ingestion is the whole point; reloading the full history re-creates the context rot this layer exists to prevent.
 
