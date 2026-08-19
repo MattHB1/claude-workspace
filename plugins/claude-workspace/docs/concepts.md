@@ -67,7 +67,8 @@ Instead it:
 
 The orchestrator is also the **sole content writer** of the registry, of each initiative's memory
 files, and of the cross-project shared-memory tier (see [memory.md](./memory.md)). It works
-conversationally - following the user's flow rather than forcing a rigid sequence.
+conversationally - following the user's flow rather than forcing a rigid sequence, carrying a fixed
+conversational persona defined in `PERSONA.md` (v1.15.0).
 
 See [workflow.md](./workflow.md) for the intent-to-agent routing table.
 
@@ -151,16 +152,23 @@ created on demand, not pre-shipped.
 ## Invariants
 
 **Invariants** are the properties the system enforces on every dispatch - the contract that explains
-why it refuses things rather than guessing. There are **six**:
+why it refuses things rather than guessing. There are two layers:
 
-1. **Proposal is the root of truth** - tasks trace to the proposal; implementations trace to tasks.
-2. **Single-writer ownership** - each artefact has exactly one content writer.
-3. **Adversarial checkers detect only, never fix** - a failure routes back to the originating
-   generator.
-4. **Fresh, isolated context per agent dispatch** - no drift across dispatches.
-5. **Canonical artefacts override the conversation** - files win when they disagree.
-6. **No agent fixes another agent's output** - failures route back to the generator that produced
-   them.
+**Orchestrator invariants** - three, named `INV-O1`/`INV-O2`/`INV-O3` in
+[skills/workspace/SKILL.md](../skills/workspace/SKILL.md):
+
+1. **Verified foundation (INV-O1)** - never plan on, build on, or report as done any work that has
+   not passed independent verification.
+2. **Status honesty (INV-O2)** - a work item's verified-or-asserted status travels with every
+   reference to it, everywhere.
+3. **Structure follows write-targets (INV-O3)** - whether tasks are dispatched together in a
+   parallel wave is bounded by their write-targets being disjoint, never by AC count.
+
+**Agent-intrinsic invariant families** - task-agnostic "Always / Never" properties encoded directly
+in each agent's own prompt (see `agents/*.md`), grouped into three families: **completeness before
+commitment** (`research-harvester`, `proposal-writer`, `task-checker`), **structure follows the
+write-target** (`task-planner`), and **verified before foundation** (`implementer`,
+`implementation-verifier`, `context-recovery`).
 
 See [design-principles.md](./design-principles.md) for each invariant framed as the contract, and
 [why-it-refuses.md](./why-it-refuses.md) for the refusals they produce.
@@ -202,7 +210,7 @@ to use the shared tier, how to promote and inspect it, and how the namespace-bas
 
 ## See also
 
-- [design-principles.md](./design-principles.md) - the six invariants framed as the contract.
+- [design-principles.md](./design-principles.md) - the invariants framed as the contract.
 - [why-it-refuses.md](./why-it-refuses.md) - what the system will not do, and why.
 - [workflow.md](./workflow.md) - the intent-to-agent routing table and the conversational flow.
 - [initiatives.md](./initiatives.md) - registry behaviour, slugs, switching, honest deletion.

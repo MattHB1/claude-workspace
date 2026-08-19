@@ -56,7 +56,9 @@ correct output and is not a substitute for human review.
 
 ## How it feels to use
 
-You invoke the orchestrator with `/claude-workspace:workspace` and then just talk to it.
+You invoke the orchestrator with `/claude-workspace:workspace` and then just talk to it. The
+orchestrator follows a written conversational persona (`skills/workspace/PERSONA.md`) so it
+talks plainly and stays in voice across the session.
 
 Say "research this idea" -- the Researcher agent reads the relevant context and surfaces what
 it finds. Then "spec it out" -- the Spec Writer turns the research into a written proposal
@@ -98,14 +100,14 @@ and command table.
 
 | Agent | What it does for you |
 |---|---|
-| Orchestrator | Routes your instructions to the right specialist; keeps artefacts as the source of truth throughout the session. |
-| Researcher | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
-| Spec Writer | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
-| Planner | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
-| Task Checker | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the Planner. |
-| Implementation Agent | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
-| Verifier | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the Implementation Agent. |
-| Journal Agent | Maintains the per-initiative journal and index so sessions stay coherent across reloads. |
+| `research-harvester` | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
+| `proposal-writer` | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
+| `task-planner` | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
+| `task-checker` | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the task-planner. |
+| `implementer` | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
+| `implementation-verifier` | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the implementer. |
+| `context-recovery` | Rebuilds project state when context is lost or drifting; read-only, reports only what IS. |
+| `archivist` | Keeps the file tree clean and predictable; moves, renames, creates directories, never edits file content. |
 
 ---
 
@@ -193,7 +195,7 @@ The full guide is split into focused pages under `docs/`:
 | [docs/initiatives.md](docs/initiatives.md) | Initiative naming, slugs, switching, the registry and single-active rule, and honest (manual) deletion. |
 | [docs/memory.md](docs/memory.md) | The per-initiative and cross-project memory tiers: when to use, how to promote and inspect, and namespace opt-out. |
 | [docs/safety-and-compliance.md](docs/safety-and-compliance.md) | The safety posture as a feature: PII gates, distribution gates, repo-wide greps, and SAC-style checks. |
-| [docs/install.md](docs/install.md) | Full operational guide: private marketplace add, auth, manual vs background updates, permissions, distribution. Per-agent models (cost-optimized: opus / sonnet / haiku per agent) with override and degradation instructions. |
+| [docs/install.md](docs/install.md) | Full operational guide: private marketplace add, auth, manual vs background updates, permissions, distribution. Most agents use bare aliases (opus / sonnet / haiku); 4 opus-tier agents are pinned to claude-opus-4-8, with override and degradation instructions. |
 | [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows the active initiative in your Claude Code prompt. |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Fixes for permission errors, missing tools, marketplace auth, and the two "why did it refuse" cases. |
 | [docs/limitations.md](docs/limitations.md) | Known gaps and what the system is NOT (no semantic retrieval, no auto-promotion, no built-in delete, and more). |

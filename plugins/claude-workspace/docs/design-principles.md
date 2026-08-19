@@ -13,10 +13,20 @@ Read this page as the answer to "why won't it just do the thing?". The companion
 page [./why-it-refuses.md](./why-it-refuses.md) walks through the concrete refusals
 that fall out of these principles.
 
-This page lists **exactly six** invariants. Every one is backed by a real,
-enforced mechanism - a "Hard rule you enforce" or an ownership table in the skill,
-or a tool lock baked into an agent's definition. None is aspirational, and none is
-invented.
+This page walks through the six longest-standing orchestrator invariants below.
+Every one is backed by a real, enforced mechanism - a "Hard rule you enforce" or an
+ownership table in the skill, or a tool lock baked into an agent's definition. None
+is aspirational, and none is invented.
+
+Beyond these six, the skill also names three further orchestrator invariants -
+verified foundation (INV-O1), status honesty (INV-O2), and structure-follows-write-
+targets (INV-O3) - and each agent definition carries its own agent-intrinsic
+invariant family (for example INV-R1 in `research-harvester`, INV-C1 in
+`task-checker`, INV-T1 in `task-planner`, INV-I1/INV-I2 in `implementer`,
+INV-CR1 in `context-recovery`). The total count of invariants in the system is not
+fixed at six; it grows as the skill and agent definitions grow. What is fixed is
+the guarantee that every invariant, old or new, traces to a real enforced
+mechanism.
 
 ```
             +-----------------------------------------------------+
@@ -181,11 +191,12 @@ structurally impossible for them to alter anyone's output in the first place.
 
 ---
 
-## Why these six, and only these six
+## Why these are trustworthy, not why there are six
 
 Each invariant above maps to a mechanism that is actually enforced - a numbered
 Hard rule, a single-writer ownership table, or an agent tool lock - not to a wish
-about good behaviour. That is why the list is exactly six and no longer: the
-contract only contains promises the system can keep by construction. For the
-day-to-day consequences of these principles - the specific things the workspace
-will decline to do - see [./why-it-refuses.md](./why-it-refuses.md).
+about good behaviour. That holds for these six, for the orchestrator's INV-O1/
+INV-O2/INV-O3, and for every agent-intrinsic invariant family too: the contract
+only contains promises the system can keep by construction, however many of them
+there are. For the day-to-day consequences of these principles - the specific
+things the workspace will decline to do - see [./why-it-refuses.md](./why-it-refuses.md).

@@ -96,22 +96,28 @@ single-responsibility subagents:
 
 | Agent | What it does for you |
 |---|---|
-| Orchestrator | Routes your instructions to the right specialist; keeps artefacts as the source of truth throughout the session. |
-| Researcher | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
-| Spec Writer | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
-| Planner | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
-| Task Checker | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the Planner. |
-| Implementation Agent | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
-| Verifier | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the Implementation Agent. |
-| Journal Agent | Maintains the per-initiative journal and index so sessions stay coherent across reloads. |
+| Research Harvester | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
+| Proposal Writer | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
+| Task Planner | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
+| Task Checker | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the Task Planner. |
+| Implementer | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
+| Implementation Verifier | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the Implementer. |
+| Context Recovery | Rebuilds project state when context is lost or drifting; read-only, reports only what IS. |
+| Archivist | Keeps the file tree clean and predictable -- moves, renames, creates directories, never edits file content. |
 
-Read-only agents (Task Checker, Verifier) are tool-locked from writing to your codebase --
+Read-only agents (Task Checker, Implementation Verifier) are tool-locked from writing to your codebase --
 the one mechanical guardrail. For the agent contract, see
 [why it refuses](plugins/claude-workspace/docs/why-it-refuses.md) and
 [design principles](plugins/claude-workspace/docs/design-principles.md).
 
-Models use bare aliases (opus / sonnet / haiku); for the full mapping, override instructions,
+Most agents use bare model aliases (opus / sonnet / haiku); four agents that carry the most
+risk if they drift -- Proposal Writer, Task Planner, Task Checker, and Implementation Verifier --
+are pinned to a fixed model ID (`claude-opus-4-8`). For the full mapping, override instructions,
 and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
+
+The orchestrator also carries a conversational persona (see `PERSONA.md` in the workspace
+skill) that shapes tone and voice, separate from the routing and artefact logic described
+above.
 
 ---
 

@@ -91,6 +91,18 @@ initiative is ACTIVE, then operates under that initiative's
 `.workspace/<active-slug>/` paths. The active initiative is what every later
 action resolves against until you switch.
 
+**Age-gated `/clear` reminder.** Create and switch both check how long the
+session has been running. Past a threshold (default 2 hours), the orchestrator
+offers an advisory reminder: type `/clear` or `/compact`, then re-invoke the
+workspace to land back on the now-active initiative. Below the threshold, or if
+the session age can't be read, the reminder stays silent and the verb completes
+as normal.
+
+**Guard checks on create/switch.** Create and switch both also run the
+index-bloat guard (checks the newly-active initiative's `memory/index.md`
+size) and the Epic/granularity guard (checks its `memory/journal.md` entry
+count). Both are advisory only -- they never block or delay create or switch.
+
 ## How the registry is stored
 
 The registry is a single, orchestrator-owned, parseable file at the

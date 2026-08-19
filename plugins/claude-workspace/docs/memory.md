@@ -47,6 +47,19 @@ It is created on demand the first time an initiative uses memory.
   deleted in place. The `trust` marker is `verified` (re-derived or re-run against
   reality) or `asserted` (claimed only), so readers know what to re-check rather
   than blindly trust.
+
+  Three more fields can appear in an entry's frontmatter:
+
+  - `tier` -- the task-risk tier decision (`T1`/`T2`/`T3`). Optional-but-recorded:
+    existing entries without it stay valid. Recorded at teardown on the relevant
+    entry.
+  - `outcome` -- the verification/result status (`pass`/`fail`/`retry`).
+    **Mandatory on every `implementation-verifier` and `task-checker` entry**;
+    optional-but-recorded on all other entries. Recorded at teardown.
+  - `felt` -- the operator's own self-rated feel for the initiative as a whole:
+    `waiting`, `rework`, and `steering`, each `1-5`, plus a short free-text note.
+    Recorded **once**, only on the initiative's **final** teardown -- never at
+    intermediate checkpoints.
 - **`index.md` -- the overwritten pointer.** A small, machine-maintained structured
   file (a YAML/frontmatter list, JSON-like) that you **overwrite** on each refresh.
   It holds **pointers (paths/anchors) and short summaries only -- never the
@@ -72,6 +85,31 @@ copies the payload.
 
 It all lives inside the git-controlled `.workspace/` tree, so every write is
 versioned and revertible from git -- no parallel versioning mechanism.
+
+### Advisory guards
+
+Four size/count checks watch for memory growing past what the layer is
+designed for. All are **advisory** -- none of them run automatically, and none
+of them ever block Bootstrap, Teardown, Switch, or Create:
+
+- **Index-bloat guard** -- fires at Bootstrap, Teardown, Switch, and Create. Compares
+  `index.md`'s byte size to a tunable threshold. If it is over, it prompts:
+  `index is N KB >= threshold T -- re-derive it lean (pointers + short
+  summaries only)? y/n`. Only proceeds on "y".
+- **Epic/granularity guard** -- fires at Teardown, Switch, and
+  Create. Compares the journal's entry count to a tunable threshold (default
+  ~30). If it is over, it surfaces a notice that the initiative may be
+  Epic-sized and worth splitting. It never asks a yes/no question and never
+  gates anything.
+- **Repeated-FAIL guard** -- fires at Bootstrap and Teardown. Compares the
+  count of `outcome: fail` journal entries to a tunable threshold (default 3).
+  If it is over, it surfaces a notice suggesting a task may be looping between
+  generator and verifier instead of a single fix-and-recheck pass. It never
+  gates anything.
+- **Registry-consolidation prompt-gate** -- fires at Bootstrap and Teardown.
+  Compares `.workspace/initiatives.md`'s byte size to a tunable threshold. If
+  it is over, it prompts: `registry is N KB >= threshold T -- consolidate
+  completed/superseded entries to the archive? y/n`. Only proceeds on "y".
 
 ---
 
