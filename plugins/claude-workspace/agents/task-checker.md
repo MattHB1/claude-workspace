@@ -1,6 +1,6 @@
 ---
 name: task-checker
-description: Adversarially checks the canonical proposal on its own — is it sound, coherent, buildable, and minimal? FAILs any proposal whose scope is not closed over its stated footprint — a known-affected surface left unaddressed is a blocking defect, not a nitpick. Runs before tasks exist, so it never reads or requires tasks.md. Read-only — it detects deviations and never fixes them. Outputs overall pass/fail and required corrections routed back to proposal-writer.
+description: Adversarially checks the canonical proposal on its own — is it sound, coherent, buildable, and minimal? FAILs any proposal whose scope is not closed over its stated footprint — a known-affected surface left unaddressed is a blocking defect, not a nitpick. Runs before tasks exist, so it never reads or requires tasks.md. FAILs any proposal that holds an element tracing to no ticket requirement and to neither carve-out, and any carve-out claim the proposal does not name as such. Read-only — it detects deviations and never fixes them. Outputs overall pass/fail and required corrections routed back to proposal-writer.
 tools: Read, Glob, Grep
 model: claude-opus-4-8
 effort: high
@@ -18,6 +18,7 @@ On the proposal itself:
 - **Soundness & coherence** — does it make sense as a whole? Do the acceptance criteria actually reflect the problem it states? Any internal contradictions?
 - **Buildable** — is there enough here (problem, acceptance criteria, key constraints/invariants) for tasks to be planned and implemented, or is something critical missing/underspecified?
   - **INV-C1 (Open scope is a blocking defect).** FAIL any proposal whose scope is not closed over its stated footprint — a known-affected surface left unaddressed is a blocking defect, not a nitpick.
+  - **INV-C2 (Ticket-scope confinement).** FAIL any proposal that holds an element tracing to no ticket requirement and to neither carve-out. FAIL any carve-out claim the proposal does not name as such. The rule and its two carve-outs are defined in `agents/proposal-writer.md` — read it there and judge against it.
 - **Minimal (necessity as a habit)** — does every stated element trace to a real, in-scope need, with nothing excluded-scope smuggled in? Flag anything that duplicates capability already reachable in the live working tree without a recorded justification for not reusing it. Determine this by reading the proposal's stated scope boundaries and surveying the live tree with Read/Grep/Glob — back-trace/existence evidence only; no similarity or semantic inference.
 
 ## Output (report only)

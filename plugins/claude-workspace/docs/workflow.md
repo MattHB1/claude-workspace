@@ -64,6 +64,53 @@ themselves stay path-agnostic.
 
 ---
 
+## From ticket to pull request (orchestrator actions)
+
+The create verb takes a **ticket identifier**, and that identifier is used as the
+initiative slug; a numeric slug is valid. The orchestrator reads the ticket with
+a tracker tool when one is available, and otherwise asks you to paste the ticket
+text. The ticket text is saved as a file under the initiative's `research/`.
+
+The branch is resolved at create time, from one of two sources and no other: the
+branch name the tracker supplies, or the initiative slug when the tracker
+supplies none. No branch name is derived from the ticket title or any other
+guess.
+
+Branch, commit, push, and open-PR are **orchestrator actions**. No agent performs
+a git action, and git is never an agent's write-target. These ride the existing
+flow points and add no new stage and no extra dispatch:
+
+| Moment | What the orchestrator does |
+|---|---|
+| create the initiative | resolves the branch name and creates the branch |
+| after a task passes verification | commits, with no prompt |
+| after that commit | asks `push <branch> to origin? y/n`, and pushes only on "y" |
+| after the push | asks `open a PR for <branch>? y/n`, and opens it only on "y" |
+
+Push and opening a pull request leave your machine and are visible to your team,
+so each is always asked for first.
+
+Tracker write-back fires at exactly **two** moments: when work starts, and when
+the pull request is opened (the handoff). Each is a one-line `y/n` prompt, in the
+same style as the registry-consolidation prompt, and each writes to the tracker
+only on "y". There is no third moment, and no tracker write happens without a
+"y".
+
+The plugin hardcodes no state name. The real states are read from your tracker
+the first time a write-back prompt fires in a project; you choose which state
+each of the two moments maps to, and the answers are recorded in the
+project-level `.workspace/tracker-states` file. Every later prompt and every
+later ticket reads that file, so you are not asked again.
+
+When no tracker tool is available, every tracker step is skipped silently - no
+prompt, no notice, no error - and the verb completes exactly as it would without
+the step.
+
+The authoritative rules live in the orchestrator skill (`SKILL.md`, "Git actions"
+and "Tracker write-back").
+
+---
+
 ## Exiting the workspace
 
 There is no "kill switch" command, because the orchestrator is not a running

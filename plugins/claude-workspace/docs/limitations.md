@@ -101,6 +101,18 @@ does not run a build/test pipeline for you on a schedule. Verification happens w
 them. Versioning comes "for free" from git -- there is no separate versioning
 mechanism.
 
+## It brings no tracker connection of its own
+
+The plugin does **not** supply or configure a connection to a ticket tracker. It
+uses a tracker tool only when your environment already provides one and it is
+already authorized. With no such tool, the flow still works: you paste the ticket
+text, and you make the tracker updates by hand.
+
+## It never closes a ticket
+
+The plugin proposes no close transition and no move to a Done state. Closing
+follows review and merge, and that call belongs to a person.
+
 ## It is NOT a substitute for human review
 
 The adversarial checkers reduce mistakes; they do not eliminate them, and they are

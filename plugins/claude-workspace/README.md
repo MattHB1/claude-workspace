@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.15.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.16.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
 in plain language; it researches your idea, turns it into a spec, plans the work, and builds
@@ -72,6 +72,36 @@ task definition. If it finds a gap, the failure goes back to the Implementation 
 not to the Verifier to quietly patch.
 
 You run only the stages you need. It's a map, not a track.
+
+---
+
+## Tickets, branches, and your tracker
+
+An initiative starts from a ticket. You give the orchestrator the ticket
+identifier, and that identifier becomes the initiative slug -- a number is a
+valid slug. The orchestrator reads the ticket with your tracker tool if one is
+connected, and otherwise asks you to paste the ticket text; either way the text
+is saved into the initiative's `research/`.
+
+The branch name comes from one of two places, with no guessing in between: the
+name your tracker supplies, or the initiative slug when the tracker supplies
+none. The orchestrator never invents a branch name from the ticket title.
+
+Git actions belong to the orchestrator, never to an agent. After a task passes
+verification the orchestrator commits without asking. It asks first -- a
+one-line `y/n` -- before it pushes, and again before it opens a pull request,
+because those two leave your machine and your team can see them.
+
+Your tracker is updated at two moments only: when work starts, and when the
+pull request is opened. Each one is a `y/n` prompt, and nothing is written to
+the tracker unless you say yes. The plugin holds no state names of its own; it
+reads the real states from your tracker the first time you are asked, records
+your choice for the project, and never asks again. If no tracker tool is
+connected, every tracker step is skipped in silence -- no prompt, no notice, no
+error.
+
+The plugin proposes no close or Done transition. Closing a ticket follows review
+and merge, and that is another person's decision to make.
 
 ---
 

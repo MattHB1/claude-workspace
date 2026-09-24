@@ -167,6 +167,32 @@ truth everything traces to.
 
 ---
 
+## 5. It refuses work the ticket did not ask for
+
+The ticket sets the boundary of the work. When a proposal holds something the ticket
+never asked for, `task-checker` FAILs it. That can feel harsh when the extra item is
+a good idea. It is how scope quietly grows: each addition looks small on its own, and
+together they turn a small ticket into a large, unreviewed change.
+
+Two ways past the boundary stay open. Something the ticket truly cannot be finished
+without is in scope. So is repairing what this change itself makes wrong. Both must
+be named in the proposal as what they are, so you can see the extra work and agree to
+it. Silence about it is also a FAIL. The rule and its two exceptions live in one
+place: `agents/proposal-writer.md`.
+
+**What this looks like:**
+
+- The proposal tidies a nearby module the ticket never mentioned. The checker FAILs
+  it and the fix routes back to `proposal-writer`.
+- The proposal includes a genuine dependency and stays silent about it. The checker
+  FAILs it because the claim is missing.
+
+**What to do instead:** take the extra item out and give it its own ticket, or, if it
+belongs to one of the two exceptions, have `proposal-writer` say so plainly in the
+proposal.
+
+---
+
 ## In short
 
 | You see this | Why | Do this |
@@ -175,6 +201,7 @@ truth everything traces to.
 | It asks you to clarify | Roles are not collapsed; it won't guess | Clarify, or fix the proposal's acceptance criteria |
 | It won't "search by meaning" or auto-remember | Deterministic, keyword-only retrieval; no auto-promotion | Use explicit paths/keywords; promote explicitly |
 | It trusts the file over the chat | Canonical artefacts are authoritative | Update the artefact so it reflects reality |
+| It won't build what the ticket didn't ask for | The ticket sets the scope boundary | Raise a separate ticket, or name the exception in the proposal |
 
 Refusal here is the system keeping its promises. For the invariants behind every one
 of these behaviours, read [design-principles.md](./design-principles.md).

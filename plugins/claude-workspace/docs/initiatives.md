@@ -40,6 +40,10 @@ The slug is the stable handle for the initiative: the registry refers to it, the
 on-disk subfolder is named after it, and the switch verb names it when changing
 which initiative is active.
 
+The slug can be a ticket or issue number. When you create an initiative from a
+ticket, the ticket identifier becomes the slug, and a **numeric slug is valid** --
+`.workspace/4821/` is a normal initiative subfolder.
+
 ## How collisions are avoided
 
 Because a project can hold several initiatives at once, their artefacts could in
@@ -55,6 +59,7 @@ The per-initiative artefacts that live under `<slug>/` include:
   initiatives.md       # the registry (project-level, shared)
   file-structure.md    # project-level layout (shared, one per project)
   namespaces           # project-level shared-memory declaration (shared)
+  tracker-states       # project-level transition-point -> tracker state-name mapping (shared)
   <slug>/              # one subfolder PER INITIATIVE -- non-colliding
     proposal.md        # this initiative's root of truth
     tasks.md           # this initiative's task list
@@ -63,10 +68,11 @@ The per-initiative artefacts that live under `<slug>/` include:
     memory/            # this initiative's working-memory + journal
 ```
 
-Only three artefacts live at the `.workspace/` root and are shared across all of
+Only four artefacts live at the `.workspace/` root and are shared across all of
 a project's initiatives: the registry `initiatives.md`, the project-level
-`file-structure.md`, and the project-level `namespaces` declaration. Everything
-else is initiative-scoped under `<slug>/`. Because each initiative's
+`file-structure.md`, the project-level `namespaces` declaration, and the
+project-level `tracker-states` mapping. Everything else is initiative-scoped
+under `<slug>/`. Because each initiative's
 `proposal.md`, `tasks.md`, `research/`, `verification/`, and `memory/` resolve
 inside a distinct `<slug>/` directory, naming collisions between initiatives
 cannot happen by construction.

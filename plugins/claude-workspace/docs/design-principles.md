@@ -21,12 +21,22 @@ is aspirational, and none is invented.
 Beyond these six, the skill also names three further orchestrator invariants -
 verified foundation (INV-O1), status honesty (INV-O2), and structure-follows-write-
 targets (INV-O3) - and each agent definition carries its own agent-intrinsic
-invariant family (for example INV-R1 in `research-harvester`, INV-C1 in
-`task-checker`, INV-T1 in `task-planner`, INV-I1/INV-I2 in `implementer`,
-INV-CR1 in `context-recovery`). The total count of invariants in the system is not
-fixed at six; it grows as the skill and agent definitions grow. What is fixed is
-the guarantee that every invariant, old or new, traces to a real enforced
-mechanism.
+invariant family (for example INV-R1 in `research-harvester`, INV-C1 and INV-C2 in
+`task-checker`, INV-P1 in `proposal-writer`, INV-T1 in `task-planner`,
+INV-I1/INV-I2 in `implementer`, INV-CR1 in `context-recovery`). The total count of
+invariants in the system is not fixed at six; it grows as the skill and agent
+definitions grow. What is fixed is the guarantee that every invariant, old or new,
+traces to a real enforced mechanism.
+
+Two of those names, INV-P1 and INV-C1, answer different questions and together give
+one position on scope. **The ticket decides what gets built. Footprint closure
+decides how completely that thing gets built.** The ticket draws the boundary, and
+inside that boundary the work must be complete: every surface the change itself
+makes stale, contradictory, or wrong is part of the change, because repairing the
+wake of a change is finishing it. INV-P1 in `proposal-writer` states the rule, with
+its carve-outs and the question that separates them; INV-C2 in `task-checker` is
+the gate that fails a proposal which goes past its ticket. The rule text lives in
+one place only - see [../agents/proposal-writer.md](../agents/proposal-writer.md).
 
 ```
             +-----------------------------------------------------+

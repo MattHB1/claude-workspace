@@ -70,6 +70,15 @@ files, and of the cross-project shared-memory tier (see [memory.md](./memory.md)
 conversationally - following the user's flow rather than forcing a rigid sequence, carrying a fixed
 conversational persona defined in `PERSONA.md` (v1.15.0).
 
+**Ticket-driven work.** An initiative can start from a ticket. The ticket identifier becomes the
+slug, and the ticket text is taken from an available tracker tool or from text you paste, then saved
+under the initiative's `research/`. The branch name is the one the tracker supplies, else the slug.
+The orchestrator also runs the git actions: it commits with no prompt, and asks a one-line `y/n`
+before it pushes and before it opens a pull request. It offers a tracker write-back at two moments
+only - work started, and pull request opened - each behind the same one-line `y/n`. It proposes no
+close, because closing follows review and merge. With no tracker tool available every tracker step
+is skipped with no prompt, no notice, and no error.
+
 See [workflow.md](./workflow.md) for the intent-to-agent routing table.
 
 ---
@@ -123,7 +132,7 @@ The core per-initiative artefacts:
 
 ### The `.workspace/<slug>/` layout
 
-Each initiative's artefacts live under its own `<slug>/` subfolder. Only three items live at the
+Each initiative's artefacts live under its own `<slug>/` subfolder. Only four items live at the
 `.workspace/` root, shared by all of a project's initiatives.
 
 ```
@@ -131,6 +140,7 @@ Each initiative's artefacts live under its own `<slug>/` subfolder. Only three i
   initiatives.md       # registry: every initiative + which is ACTIVE (project-level)
   file-structure.md    # the project's intended/current file tree (project-level, one per project)
   namespaces           # the project's cross-project namespace membership (project-level)
+  tracker-states       # the project's transition-point -> tracker state-name mapping (project-level)
   <slug>/              # one subfolder PER INITIATIVE - its complete, non-colliding artefact set
     proposal.md          # root of truth (proposal-writer)
     tasks.md             # atomic task list (task-planner)
@@ -144,8 +154,10 @@ Each initiative's artefacts live under its own `<slug>/` subfolder. Only three i
 
 `file-structure.md` is one file tree **per project** (never per-initiative), and `namespaces` is the
 project's cross-project membership shared by **all** its initiatives (never duplicated per
-initiative). Everything else is initiative-scoped under `<slug>/`. Per-initiative artefacts are
-created on demand, not pre-shipped.
+initiative). `tracker-states` holds the project's mapping from each transition point to the tracker
+state name the user picked - two lines, one per transition point, and no per-ticket state. It is
+also shared by all the project's initiatives. Everything else is initiative-scoped under `<slug>/`.
+Per-initiative artefacts are created on demand, not pre-shipped.
 
 ---
 
@@ -165,10 +177,12 @@ why it refuses things rather than guessing. There are two layers:
    parallel wave is bounded by their write-targets being disjoint, never by AC count.
 
 **Agent-intrinsic invariant families** - task-agnostic "Always / Never" properties encoded directly
-in each agent's own prompt (see `agents/*.md`), grouped into three families: **completeness before
+in each agent's own prompt (see `agents/*.md`), grouped into four families: **completeness before
 commitment** (`research-harvester`, `proposal-writer`, `task-checker`), **structure follows the
-write-target** (`task-planner`), and **verified before foundation** (`implementer`,
-`implementation-verifier`, `context-recovery`).
+write-target** (`task-planner`), **verified before foundation** (`implementer`,
+`implementation-verifier`, `context-recovery`), and **scope confinement to the request**
+(`proposal-writer`, `task-checker`). The last family sets the outer boundary of an initiative: the
+ticket decides what gets built. Its rule text has one home, in `agents/proposal-writer.md`.
 
 See [design-principles.md](./design-principles.md) for each invariant framed as the contract, and
 [why-it-refuses.md](./why-it-refuses.md) for the refusals they produce.
