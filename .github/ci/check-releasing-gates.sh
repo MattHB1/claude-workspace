@@ -30,6 +30,7 @@ FAILURES=()
 #   - .github/ci/     (C6: this dir contains detection literals as strings)
 #   - .workspace/     (local, git-ignored dev state; never tracked/shipped, and
 #                      its journals legitimately contain project names/paths)
+#   - .idea/          (local, git-ignored IDE settings; never tracked/shipped)
 # Allowance: case-insensitive "matthb" that is exactly the public handle MattHB1
 #             in README install commands is permitted.
 #             The exact marketplace token "pocdoc-workspace" is also permitted
@@ -44,6 +45,7 @@ gate_a_pii() {
     --exclude-dir='.git' \
     --exclude-dir='.github' \
     --exclude-dir='.workspace' \
+    --exclude-dir='.idea' \
     . 2>/dev/null || true)
 
   # Re-scan .github/ but exclude .github/ci/ (CI machinery contains detection literals)
