@@ -3,7 +3,7 @@
 ## 1. Purpose
 
 A single fixed pipeline exercise, re-run under successive pipeline versions, to sense
-same-task deltas in operator-felt friction (waiting/rework/steering). It exists for
+same-task deltas in pipeline friction (rework and steering). It exists for
 directional reassurance and regression-catching, NOT as a causal gate. This is ONE task —
 explicitly NOT a multi-task bench.
 
@@ -46,14 +46,12 @@ run telemetry is captured by that slug's EXISTING per-initiative `journal.md` an
 - NO new format
 - NO new script
 
-The captured signals are exactly what the existing pipeline already produces: the felt
-self-rating (recorded once at teardown), the artefact-classed edit-churn, and the verifier's
-`outcome:` field.
+The captured signals are exactly what the existing pipeline already produces: the
+artefact-classed edit-churn and the verifier's `outcome:` field.
 
 ## 5. What to compare across runs
 
 Eyeball the following deterministic signals run-over-run:
-- Felt waiting / rework / steering (self-rating at teardown)
 - Code-class edit-churn (from classed events)
 - Verifier fail count / steering (FAIL-routes recorded in the trace)
 - Agent-dispatch count

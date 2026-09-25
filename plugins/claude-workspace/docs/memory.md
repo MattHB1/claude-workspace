@@ -56,10 +56,6 @@ It is created on demand the first time an initiative uses memory.
   - `outcome` -- the verification/result status (`pass`/`fail`/`retry`).
     **Mandatory on every `implementation-verifier` and `task-checker` entry**;
     optional-but-recorded on all other entries. Recorded at teardown.
-  - `felt` -- the operator's own self-rated feel for the initiative as a whole:
-    `waiting`, `rework`, and `steering`, each `1-5`, plus a short free-text note.
-    Recorded **once**, only on the initiative's **final** teardown -- never at
-    intermediate checkpoints.
 - **`index.md` -- the overwritten pointer.** A small, machine-maintained structured
   file (a YAML/frontmatter list, JSON-like) that you **overwrite** on each refresh.
   It holds **pointers (paths/anchors) and short summaries only -- never the
