@@ -5,6 +5,13 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.1] - 2026-09-25
+
+### Changed
+- **Opus pin lifted to Opus 5.5** — the four pinned Opus agents (`proposal-writer`, `task-planner`,
+  `task-checker`, `implementation-verifier`) now use `claude-opus-5-5` in place of `claude-opus-4-8`.
+  The README files and `docs/install.md` name the new ID.
+
 ## [1.15.0] - 2026-08-12
 
 ### Added
