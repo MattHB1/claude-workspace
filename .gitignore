@@ -6,3 +6,6 @@
 # Python bytecode (generated when hooks are executed; never shipped)
 __pycache__/
 *.pyc
+
+# macOS Finder metadata
+.DS_Store
