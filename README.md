@@ -112,7 +112,7 @@ the one mechanical guardrail. For the agent contract, see
 
 Most agents use bare model aliases (opus / sonnet / haiku); four agents that carry the most
 risk if they drift -- Proposal Writer, Task Planner, Task Checker, and Implementation Verifier --
-are pinned to a fixed model ID (`claude-opus-4-8`). For the full mapping, override instructions,
+are pinned to a fixed model ID (`claude-opus-5-5`). For the full mapping, override instructions,
 and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
 
 The orchestrator also carries a conversational persona (see `PERSONA.md` in the workspace

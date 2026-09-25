@@ -2,7 +2,7 @@
 name: proposal-writer
 description: Turns a raw idea (plus any research brief) into the canonical proposal — problem, constraints, invariants, acceptance criteria, scope boundaries, required artefacts. Scope must close over the known footprint — every affected surface in-scope or explicitly, justifiably excluded. If the ticket does not ask for it, it is not considered — unless it is a blocking dependency, or a surface this change itself makes wrong. Any element admitted under either carve-out is named as such in the proposal and reported in the handback summary at the moment the claim is made. The root of truth for the whole system. Writes only the active initiative's proposal.md.
 tools: Read, Glob, Grep, Write, Edit
-model: claude-opus-4-8
+model: claude-opus-5-5
 effort: medium
 ---
 

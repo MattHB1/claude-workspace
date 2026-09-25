@@ -186,23 +186,23 @@ and stay tracked in version control.
 
 Each agent ships with a deliberately chosen model tier set via its frontmatter `model:`
 field. Four agents -- the ones doing planning or adversarial verification -- are pinned to
-the specific model ID `claude-opus-4-8`, not the `opus` alias. The rest use the bare
+the specific model ID `claude-opus-5-5`, not the `opus` alias. The rest use the bare
 aliases `sonnet` / `haiku`. The intent is cost-aware: cheap, fast tiers for mechanical
 roles and the strongest reasoning tier, pinned, for the planning and
 adversarial-verification roles.
 
 | Agent | Model | Effort | Rationale |
 |---|---|---|---|
-| `proposal-writer` | `claude-opus-4-8` (pinned) | `medium` | High-reasoning authoring of the root-of-truth spec. |
-| `task-planner` | `claude-opus-4-8` (pinned) | `medium` | High-reasoning decomposition; correctness-critical. |
-| `task-checker` | `claude-opus-4-8` (pinned) | `high` | Adversarial spec enforcement; reasoning-critical. |
-| `implementation-verifier` | `claude-opus-4-8` (pinned) | `high` | Adversarial review; reasoning-critical. |
+| `proposal-writer` | `claude-opus-5-5` (pinned) | `medium` | High-reasoning authoring of the root-of-truth spec. |
+| `task-planner` | `claude-opus-5-5` (pinned) | `medium` | High-reasoning decomposition; correctness-critical. |
+| `task-checker` | `claude-opus-5-5` (pinned) | `high` | Adversarial spec enforcement; reasoning-critical. |
+| `implementation-verifier` | `claude-opus-5-5` (pinned) | `high` | Adversarial review; reasoning-critical. |
 | `implementer` | `sonnet` | `low` | Mechanical execution of a fully-specified task; fast/cheaper. |
 | `research-harvester` | `sonnet` | `medium` | Read + web gathering; fast/cheaper. |
 | `context-recovery` | `sonnet` | `low` | State reconstruction; fast/cheaper. |
 | `archivist` | `haiku` | `low` | Pure file moves; cheapest/fastest. |
 
-Totals: 4 pinned `claude-opus-4-8` / 3 `sonnet` / 1 `haiku`. The cost rationale in one
+Totals: 4 pinned `claude-opus-5-5` / 3 `sonnet` / 1 `haiku`. The cost rationale in one
 line: cheap/fast on the mechanical roles, stronger (and pinned) on planning plus
 adversarial verification.
 
@@ -224,7 +224,7 @@ point and adjust the `model:` line.
 
 ### Graceful degradation (no Opus access)
 
-The 4 opus-tier agents are pinned to the model ID `claude-opus-4-8`, so they do **not**
+The 4 opus-tier agents are pinned to the model ID `claude-opus-5-5`, so they do **not**
 fall back to an alias if Opus access is unavailable: an installer without access to that
 model will see the call fail rather than silently downgrade. The remaining agents (using
 the `sonnet` / `haiku` aliases) do degrade gracefully - if an installer lacks access to a

@@ -2,7 +2,7 @@
 name: implementation-verifier
 description: Adversarially checks an implementation against its task spec. Read + run-tests only (no Edit/Write) — it detects deviations and never fixes them. Verdicts come from the actual tree, not the implementer's claims, and a Split-AC (`Shares AC:`) task is verified by exercising the union effect, not the local slice alone. Outputs pass/fail, deviations with evidence, and required corrections for the implementer.
 tools: Read, Glob, Grep, Bash
-model: claude-opus-4-8
+model: claude-opus-5-5
 effort: high
 ---
 

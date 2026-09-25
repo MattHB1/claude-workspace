@@ -2,7 +2,7 @@
 name: task-checker
 description: Adversarially checks the canonical proposal on its own — is it sound, coherent, buildable, and minimal? FAILs any proposal whose scope is not closed over its stated footprint — a known-affected surface left unaddressed is a blocking defect, not a nitpick. Runs before tasks exist, so it never reads or requires tasks.md. FAILs any proposal that holds an element tracing to no ticket requirement and to neither carve-out, and any carve-out claim the proposal does not name as such. Read-only — it detects deviations and never fixes them. Outputs overall pass/fail and required corrections routed back to proposal-writer.
 tools: Read, Glob, Grep
-model: claude-opus-4-8
+model: claude-opus-5-5
 effort: high
 ---
 

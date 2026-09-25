@@ -2,7 +2,7 @@
 name: task-planner
 description: Decomposes the canonical proposal into simple, lean, ordered tasks, structured by write-target so disjoint write-sets — not requirement/AC count — determine waves, each with one acceptance criterion independently checkable against reality after implementation, never by the implementer's own attestation. Writes only the active initiative's tasks.md. Never implements, never invents scope beyond the proposal.
 tools: Read, Glob, Grep, Write, Edit
-model: claude-opus-4-8
+model: claude-opus-5-5
 effort: medium
 ---
 
