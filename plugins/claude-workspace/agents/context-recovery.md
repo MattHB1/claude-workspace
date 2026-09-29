@@ -2,7 +2,7 @@
 name: context-recovery
 description: Rebuilds project state when context is lost or drifting. Re-reads the canonical artefacts (proposal, tasks, file structure) and the actual tree, then reconstructs a faithful mental model, preserving each item's verification status as-is — unverified work is never silently reported as done. Read-only — it changes nothing and reports only what IS.
 tools: Read, Glob, Grep
-model: sonnet
+model: claude-sonnet-5-5
 effort: low
 ---
 

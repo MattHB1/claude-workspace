@@ -110,9 +110,10 @@ the one mechanical guardrail. For the agent contract, see
 [why it refuses](plugins/claude-workspace/docs/why-it-refuses.md) and
 [design principles](plugins/claude-workspace/docs/design-principles.md).
 
-Most agents use bare model aliases (opus / sonnet / haiku); four agents that carry the most
-risk if they drift -- Proposal Writer, Task Planner, Task Checker, and Implementation Verifier --
-are pinned to a fixed model ID (`claude-opus-5-5`). For the full mapping, override instructions,
+Seven agents are pinned to a fixed model ID. The four that carry the most risk if they drift --
+Proposal Writer, Task Planner, Task Checker, and Implementation Verifier -- use `claude-opus-5-5`.
+Research Harvester, Implementer, and Context Recovery use `claude-sonnet-5-5`. The Archivist uses
+the bare `haiku` alias. For the full mapping, override instructions,
 and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
 
 The orchestrator also carries a conversational persona (see `PERSONA.md` in the workspace

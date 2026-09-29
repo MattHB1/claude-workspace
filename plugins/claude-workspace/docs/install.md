@@ -186,8 +186,9 @@ and stay tracked in version control.
 
 Each agent ships with a deliberately chosen model tier set via its frontmatter `model:`
 field. Four agents -- the ones doing planning or adversarial verification -- are pinned to
-the specific model ID `claude-opus-5-5`, not the `opus` alias. The rest use the bare
-aliases `sonnet` / `haiku`. The intent is cost-aware: cheap, fast tiers for mechanical
+the specific model ID `claude-opus-5-5`, not the `opus` alias. Three agents are pinned to
+`claude-sonnet-5-5`, not the `sonnet` alias. The `archivist` uses the bare alias `haiku`.
+The intent is cost-aware: cheap, fast tiers for mechanical
 roles and the strongest reasoning tier, pinned, for the planning and
 adversarial-verification roles.
 
@@ -197,12 +198,12 @@ adversarial-verification roles.
 | `task-planner` | `claude-opus-5-5` (pinned) | `medium` | High-reasoning decomposition; correctness-critical. |
 | `task-checker` | `claude-opus-5-5` (pinned) | `high` | Adversarial spec enforcement; reasoning-critical. |
 | `implementation-verifier` | `claude-opus-5-5` (pinned) | `high` | Adversarial review; reasoning-critical. |
-| `implementer` | `sonnet` | `low` | Mechanical execution of a fully-specified task; fast/cheaper. |
-| `research-harvester` | `sonnet` | `medium` | Read + web gathering; fast/cheaper. |
-| `context-recovery` | `sonnet` | `low` | State reconstruction; fast/cheaper. |
+| `implementer` | `claude-sonnet-5-5` (pinned) | `low` | Mechanical execution of a fully-specified task; fast/cheaper. |
+| `research-harvester` | `claude-sonnet-5-5` (pinned) | `medium` | Read + web gathering; fast/cheaper. |
+| `context-recovery` | `claude-sonnet-5-5` (pinned) | `low` | State reconstruction; fast/cheaper. |
 | `archivist` | `haiku` | `low` | Pure file moves; cheapest/fastest. |
 
-Totals: 4 pinned `claude-opus-5-5` / 3 `sonnet` / 1 `haiku`. The cost rationale in one
+Totals: 4 pinned `claude-opus-5-5` / 3 pinned `claude-sonnet-5-5` / 1 `haiku`. The cost rationale in one
 line: cheap/fast on the mechanical roles, stronger (and pinned) on planning plus
 adversarial verification.
 
@@ -222,14 +223,14 @@ entirely, so it must contain the complete agent definition (name, description, t
 body), not just the `model:` line you want to change. Copy the plugin agent as a starting
 point and adjust the `model:` line.
 
-### Graceful degradation (no Opus access)
+### Graceful degradation (no model access)
 
-The 4 opus-tier agents are pinned to the model ID `claude-opus-5-5`, so they do **not**
-fall back to an alias if Opus access is unavailable: an installer without access to that
-model will see the call fail rather than silently downgrade. The remaining agents (using
-the `sonnet` / `haiku` aliases) do degrade gracefully - if an installer lacks access to a
-given tier, the alias falls back to the inherited/default model for that session/account
-instead of erroring.
+The 4 opus-tier agents are pinned to the model ID `claude-opus-5-5`, and the 3 sonnet-tier
+agents are pinned to `claude-sonnet-5-5`. Pinned agents do **not** fall back to an alias if
+access to that model is unavailable: an installer without access will see the call fail
+rather than silently downgrade. Only the `archivist` (using the `haiku` alias) degrades
+gracefully - if an installer lacks access to that tier, the alias falls back to the
+inherited/default model for that session/account instead of erroring.
 
 Advanced levers (documented here as options; not the mechanism this plugin relies on):
 

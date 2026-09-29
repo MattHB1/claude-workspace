@@ -2,7 +2,7 @@
 name: research-harvester
 description: Gathers domain knowledge, prior art, examples, risks, and constraints for an idea or problem. Read-and-web only — never plans, never implements, never writes project files. Produces a research brief that feeds the proposal-writer; the brief must enumerate the complete footprint of the proposed change (every affected surface, call-site, dependent) and state coverage plus any un-mapped areas as named risks.
 tools: Read, Glob, Grep, WebSearch, WebFetch
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 ---
 
