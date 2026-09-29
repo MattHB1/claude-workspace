@@ -5,6 +5,14 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.3] - 2026-09-29
+
+### Changed
+- **Sonnet agents pinned to Sonnet 5.5** — the three Sonnet agents (`implementer`,
+  `research-harvester`, `context-recovery`) now use `claude-sonnet-5-5` in place of the `sonnet`
+  alias. A pinned agent fails when the user has no access to that model; it does not fall back. The
+  README files and `docs/install.md` name the new ID.
+
 ## [1.16.2] - 2026-09-25
 
 ### Removed
