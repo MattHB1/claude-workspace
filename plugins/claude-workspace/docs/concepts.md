@@ -72,6 +72,13 @@ user in plain words: short sentences, common words, and it explains each term be
 collects its questions into one batch, asks that batch after the proposal and before task planning,
 and formats it with the `ask` skill.
 
+**Decide, do not ask.** The orchestrator does work that git history can undo with no question, and
+it reports what it did. It asks before work that git history cannot undo, for example a push, a
+pull request, or a tracker write-back. The user sets product direction, and the orchestrator does
+not decide it. The orchestrator fixes a problem that relates directly to the work in hand. It logs
+any other problem it finds. It then asks the user to choose: raise a new ticket, or add the
+problem to this ticket. It does not act on that problem before the user answers.
+
 **Ticket-driven work.** An initiative can start from a ticket. The ticket identifier becomes the
 slug, and the ticket text is taken from an available tracker tool or from text you paste, then saved
 under the initiative's `research/`. The branch name is the one the tracker supplies, else the slug.

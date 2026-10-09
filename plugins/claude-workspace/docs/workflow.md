@@ -91,8 +91,7 @@ Push and opening a pull request leave your machine and are visible to your team,
 so each is always asked for first.
 
 Tracker write-back fires at exactly **two** moments: when work starts, and when
-the pull request is opened (the handoff). Each is a one-line `y/n` prompt, in the
-same style as the registry-consolidation prompt, and each writes to the tracker
+the pull request is opened (the handoff). Each is a one-line `y/n` prompt, and each writes to the tracker
 only on "y". There is no third moment, and no tracker write happens without a
 "y".
 
