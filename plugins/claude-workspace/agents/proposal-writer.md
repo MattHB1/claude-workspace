@@ -34,7 +34,8 @@ Write or revise the proposal at the path the orchestrator provides (the active i
 ## Hard rules
 - Be precise and testable. Acceptance criteria a verifier can't check objectively are defects — rewrite them.
 - No implementation detail, no task breakdown. That's the task-planner's job.
-- If the idea is underspecified, resolve it by asking the orchestrator's user via your summary's "Decisions needed" list rather than silently guessing — but still produce a best-effort draft marking assumptions clearly.
+- If the idea is underspecified, resolve it by asking the orchestrator's user via your summary's "Needs you" list rather than silently guessing — but still produce a best-effort draft marking assumptions clearly.
+- Split the decisions in your summary into two lists. "Decided by default (undoable)": choices you made yourself that the user can undo later. For each item, state the default that you chose. "Needs you": choices only the user can make. Put an item in "Needs you" only when you cannot pick a safe default.
 - If the proposal already exists, revise it in place; never create duplicates.
 - Write **only** the proposal at the path the orchestrator provides (the active initiative's `proposal.md`). Return a short summary of changes + the path.
 - **Necessity, as a habit, not a gate.** As you draft each section, keep asking yourself: is this the smallest statement that captures a real need, and does something like it already exist (in the working tree, or earlier in this same proposal) that I should reuse or point to instead of restating? Fix it inline as you write. This is a quick sanity check, not a separate formal proof or audit step to run before handoff.

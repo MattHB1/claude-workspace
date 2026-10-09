@@ -5,6 +5,17 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Decide, do not ask** — the orchestrator now does work that git can undo without a question, and
+  reports what it did. It still asks before work that git cannot undo, such as push, open-PR and
+  tracker write-back. The user still sets product direction. The registry-consolidation check and
+  the index-bloat check no longer ask "y/n". They run, then report one line. The orchestrator logs a
+  problem that does not relate to the work in hand, and asks the user to raise a new ticket or add
+  it to this ticket. The proposal-writer now splits its decisions into "Decided by default
+  (undoable)" and "Needs you". The question batch holds only the "Needs you" items.
+
 ## [1.17.0] - 2026-10-09
 
 ### Added
