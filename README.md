@@ -1,6 +1,6 @@
 # Claude Workspace
 
-![version](https://img.shields.io/badge/version-1.16.2-brightgreen)
+![version](https://img.shields.io/badge/version-1.17.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
 in plain language; it researches your idea, turns it into a spec, plans the work, and builds
@@ -116,9 +116,9 @@ Research Harvester, Implementer, and Context Recovery use `claude-sonnet-5-5`. T
 the bare `haiku` alias. For the full mapping, override instructions,
 and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
 
-The orchestrator also carries a conversational persona (see `PERSONA.md` in the workspace
-skill) that shapes tone and voice, separate from the routing and artefact logic described
-above.
+The orchestrator follows a plain-voice rule. It speaks in plain words: short sentences,
+common words, and each term explained before use. It collects its questions into one batch
+after the proposal and before task planning, and formats them with the `ask` skill.
 
 ---
 

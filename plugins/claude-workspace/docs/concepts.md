@@ -67,8 +67,10 @@ Instead it:
 
 The orchestrator is also the **sole content writer** of the registry, of each initiative's memory
 files, and of the cross-project shared-memory tier (see [memory.md](./memory.md)). It works
-conversationally - following the user's flow rather than forcing a rigid sequence, carrying a fixed
-conversational persona defined in `PERSONA.md` (v1.15.0).
+conversationally - following the user's flow rather than forcing a rigid sequence. It speaks to the
+user in plain words: short sentences, common words, and each term explained before it is used. It
+collects its questions into one batch, asks that batch after the proposal and before task planning,
+and formats it with the `ask` skill.
 
 **Ticket-driven work.** An initiative can start from a ticket. The ticket identifier becomes the
 slug, and the ticket text is taken from an available tracker tool or from text you paste, then saved

@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.16.2-brightgreen)
+![version](https://img.shields.io/badge/version-1.17.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
 in plain language; it researches your idea, turns it into a spec, plans the work, and builds
@@ -57,8 +57,9 @@ correct output and is not a substitute for human review.
 ## How it feels to use
 
 You invoke the orchestrator with `/claude-workspace:workspace` and then just talk to it. The
-orchestrator follows a written conversational persona (`skills/workspace/PERSONA.md`) so it
-talks plainly and stays in voice across the session.
+orchestrator follows a plain-voice rule. It uses short sentences and common words, and it
+explains each term before it uses the term. It batches its questions with the `ask` skill.
+Your own style instructions win over this rule.
 
 Say "research this idea" -- the Researcher agent reads the relevant context and surfaces what
 it finds. Then "spec it out" -- the Spec Writer turns the research into a written proposal
@@ -143,7 +144,7 @@ and command table.
 
 ## Skills
 
-Four methodology skills ship with the plugin. Invoke them directly in a Claude Code session:
+The table below lists seven skills. Invoke them directly in a Claude Code session:
 
 | Skill | What it does |
 |---|---|
@@ -151,8 +152,11 @@ Four methodology skills ship with the plugin. Invoke them directly in a Claude C
 | `/claude-workspace:decide` | Decision process: surface options, stress-test, and converge on a recorded choice. |
 | `/claude-workspace:plan` | Planning methodology: decompose a goal into a traceable, reviewable task structure. |
 | `/claude-workspace:reflect` | Reflection methodology: review what happened, extract learnings, and record them. |
+| `/claude-workspace:ask` | Sets the format for questions, so you can read and answer them with ease. |
+| `/claude-workspace:write-issue` | Writes or updates an issue in your tracker, with a short title, a short problem statement and checkable acceptance criteria. |
+| `/claude-workspace:plain` | Rewrites the last output in plain words. Only you start this skill, when the last output is hard to read. |
 
-These are general-purpose methodology skills. They are independent of any active initiative and can be invoked at any time.
+The first four skills (`ideate`, `decide`, `plan` and `reflect`) are general-purpose methodology skills. All seven skills are independent of any active initiative and you can invoke them at any time.
 
 ---
 
