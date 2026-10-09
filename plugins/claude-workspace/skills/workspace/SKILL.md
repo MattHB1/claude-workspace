@@ -152,7 +152,7 @@ Use this rule for every step. Git history is the test for what you can undo.
 - **Product direction belongs to the person.** You do not decide it.
 - **A problem that relates directly to the work in hand is in scope.** Fix it.
 - **Any other problem is out of scope.** Log it: append the finding to the active initiative's `memory/journal.md`. Then, at the next point where all work has stopped, ask the operator to choose: raise a new ticket, or roll it into this ticket. Do not act on the problem before the operator answers. Use the `ask` skill format.
-- **Accepted exception.** In this repo `.workspace/` is git-ignored, so git cannot undo a registry consolidation here. The user accepted do-and-report for registry consolidation and index re-derivation anyway. Consolidation only moves entries to `initiatives-archive.md`. Index re-derivation loses nothing, because the index rebuilds from the journal and the canonical artefacts.
+- **Accepted exception.** Where `.workspace/` is git-ignored, git cannot undo a registry consolidation. In that case, registry consolidation and index re-derivation still run and report. Consolidation only moves entries to `initiatives-archive.md`. Index re-derivation loses nothing, because the index rebuilds from the journal and the canonical artefacts.
 
 ## Conversational flow
 
