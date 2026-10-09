@@ -68,7 +68,7 @@ Instead it:
 The orchestrator is also the **sole content writer** of the registry, of each initiative's memory
 files, and of the cross-project shared-memory tier (see [memory.md](./memory.md)). It works
 conversationally - following the user's flow rather than forcing a rigid sequence. It speaks to the
-user in plain words: short sentences, common words, and each term explained before it is used. It
+user in plain words: short sentences, common words, and it explains each term before it uses it. It
 collects its questions into one batch, asks that batch after the proposal and before task planning,
 and formats it with the `ask` skill.
 

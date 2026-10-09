@@ -9,7 +9,7 @@ Follow these instructions when you write or update an issue.
 
 1. Write a short title, a short problem statement, and a short list of acceptance criteria. Make each criterion checkable.
 2. Link another issue only when it blocks this issue or this issue blocks it.
-3. Include no suggested implementation. Describe the problem and the result, not the way to build it.
+3. Include no suggested implementation. Describe the problem and the result. Leave the way to build it to the implementer.
 4. Use the tracker tool that is available. Read the field names and states from that tool.
 5. Show the text to the user. Write to the tracker only after the user says "y".
 6. If no tracker tool is available, hand the text back to the user.
