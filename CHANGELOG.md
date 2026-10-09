@@ -5,6 +5,31 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2026-10-09
+
+### Added
+- **`ask` skill** — formats questions for the user. It starts when the user must answer a question
+  or make a choice. Outside the workspace it is best effort, because Claude chooses when to start it.
+- **`write-issue` skill** — writes issues for a tracker. It asks for a "y" before it writes. It
+  assigns each new issue to the person who uses the skill, unless the user names another assignee.
+- **`plain` skill** — rewrites the last output in plain words. The user starts it with
+  `/claude-workspace:plain`. Claude does not start it by itself.
+- **Question batch rule** — the orchestrator now collects all questions for the user, including the
+  proposal-writer's "Decisions needed", into one batch. It asks the batch after research and the
+  proposal, and before task planning. It formats the batch with the `ask` skill.
+- The three new skills are in the README skills tables and in the CI frontmatter check
+  (`.github/ci/check-skills.sh`).
+
+### Changed
+- **Plain-voice rule** — the orchestrator now speaks to the user in plain words: short sentences,
+  common words, and each term explained before use. The README files and `docs/concepts.md`
+  describe this rule.
+- The README badges now show 1.17.0. They showed 1.16.2 while `plugin.json` showed 1.16.3.
+
+### Removed
+- **`PERSONA.md`** — the orchestrator persona of 1.15.0 is gone, with its Bootstrap read. The plain-voice
+  rule replaces it.
+
 ## [1.16.3] - 2026-09-29
 
 ### Changed

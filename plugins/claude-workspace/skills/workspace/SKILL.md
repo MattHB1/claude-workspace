@@ -145,6 +145,7 @@ Every artefact must be the smallest, simplest thing that fully satisfies the rea
 
 ## Conversational flow
 
+- **Questions and plain voice.** Collect every question for the user into one batch. Include the proposal-writer's "Decisions needed". Ask the batch once, after research and the proposal, and before task planning starts. Format the batch with the `ask` skill (`claude-workspace:ask`). Do not ask in many small waves. The one-line `y/n` prompts for push, PR and tracker write-back stay as they are. Speak to the user in plain words. Use short sentences and common words. Explain each term before you use it. The user's own style instructions win over this rule.
 - Build independent tasks in parallel (multi-agent) where they have no dependency; serialise only genuine dependencies. After each task is built, run its one lean adversarial check.
 - **Structure follows write-targets (INV-O3).** Whether tasks are dispatched together in a parallel wave is always bounded by their write-targets being disjoint, never forced merely by how many acceptance criteria or requirements they carry. A large AC/requirement count is never on its own a reason to fan a dispatch out into more parallel waves; overlapping write-targets always force serialisation regardless of how few ACs are involved. Rationale: concurrent writers to the same target are the real hazard parallel dispatch must avoid — AC count is not a proxy for that hazard.
 - **Split-AC closure (cross-task verification).** A per-task check only confirms each task's own slice; it cannot catch a gap where one proposal AC is split across tasks. So when `tasks.md` shows a `Shares AC:` marker, on the **last** contributing task's verification pass the full proposal AC text + the sibling task IDs to `implementation-verifier` and require it to confirm the **union** closes the whole AC. One check, no extra dispatch in the common case, no loop.
@@ -258,11 +259,10 @@ On entering a project, **read the registry `.workspace/initiatives.md` first** t
 Once the active slug is resolved, the memory read is **required**, not optional, for any participant in memory (you at session start; `context-recovery` on re-sync) and is **scoped to the active initiative's** `.workspace/<active-slug>/memory/`. Read in this order, then stop:
 
 1. the registry `.workspace/initiatives.md` (resolve the ACTIVE slug).
-2. `plugins/claude-workspace/skills/workspace/PERSONA.md` (always-loaded, mandatory — shapes the orchestrator's conversational voice with the user).
-3. `.workspace/<active-slug>/memory/index.md` first (the whole pointer file — it is small by design).
-4. the **journal tail** — at most the **last 20 entries** of `.workspace/<active-slug>/memory/journal.md`.
-5. the **assigned canonical artefacts** for the work in hand (e.g. the specific task + proposal under `.workspace/<active-slug>/`).
-6. page in additional detail (older journal entries, `archive/` files) **only on demand** via explicit path / `grep`.
+2. `.workspace/<active-slug>/memory/index.md` first (the whole pointer file — it is small by design).
+3. the **journal tail** — at most the **last 20 entries** of `.workspace/<active-slug>/memory/journal.md`.
+4. the **assigned canonical artefacts** for the work in hand (e.g. the specific task + proposal under `.workspace/<active-slug>/`).
+5. page in additional detail (older journal entries, `archive/` files) **only on demand** via explicit path / `grep`.
 
 **Read budget:** index + journal-tail (≤ 20 entries) + the assigned task/proposal before starting work. **Never reload everything** — bounded re-ingestion is the whole point; reloading the full history re-creates the context rot this layer exists to prevent.
 
