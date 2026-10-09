@@ -107,7 +107,13 @@ as normal.
 **Guard checks on create/switch.** Create and switch both also run the
 index-bloat guard (checks the newly-active initiative's `memory/index.md`
 size) and the Epic/granularity guard (checks its `memory/journal.md` entry
-count). Both are advisory only -- they never block or delay create or switch.
+count). Neither guard blocks or delays create or switch.
+The index-bloat guard acts alone. If the index is at or over its size limit, the
+orchestrator re-derives the index lean itself and reports one line. It asks no
+y/n question.
+The Epic/granularity guard is advisory only. It shows one line of notice. It
+does not split the initiative, does not act, and asks no question.
+If a check finds nothing, it stays silent.
 
 ## How the registry is stored
 
