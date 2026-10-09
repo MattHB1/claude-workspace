@@ -82,16 +82,19 @@ copies the payload.
 It all lives inside the git-controlled `.workspace/` tree, so every write is
 versioned and revertible from git -- no parallel versioning mechanism.
 
-### Advisory guards
+### Size and health checks
 
 Four size/count checks watch for memory growing past what the layer is
-designed for. All are **advisory** -- none of them run automatically, and none
-of them ever block Bootstrap, Teardown, Switch, or Create:
+designed for. None of them blocks Bootstrap, Teardown, Switch, or Create. Two
+of them (index-bloat and registry consolidation) do the clean-up and report it.
+The other two only show a notice:
 
-- **Index-bloat guard** -- fires at Bootstrap, Teardown, Switch, and Create. Compares
-  `index.md`'s byte size to a tunable threshold. If it is over, it prompts:
-  `index is N KB >= threshold T -- re-derive it lean (pointers + short
-  summaries only)? y/n`. Only proceeds on "y".
+- **Index-bloat check (do-and-report)** -- fires at Bootstrap, Teardown, Switch,
+  and Create. Compares `index.md`'s byte size to a tunable threshold. If it is
+  at or over the threshold, the orchestrator re-derives the index lean
+  (pointers + short summaries only) and reports one line. It asks no y/n
+  question. Re-derivation loses nothing, because the index rebuilds from
+  `journal.md` and the canonical artefacts.
 - **Epic/granularity guard** -- fires at Teardown, Switch, and
   Create. Compares the journal's entry count to a tunable threshold (default
   ~30). If it is over, it surfaces a notice that the initiative may be
@@ -102,10 +105,12 @@ of them ever block Bootstrap, Teardown, Switch, or Create:
   If it is over, it surfaces a notice suggesting a task may be looping between
   generator and verifier instead of a single fix-and-recheck pass. It never
   gates anything.
-- **Registry-consolidation prompt-gate** -- fires at Bootstrap and Teardown.
-  Compares `.workspace/initiatives.md`'s byte size to a tunable threshold. If
-  it is over, it prompts: `registry is N KB >= threshold T -- consolidate
-  completed/superseded entries to the archive? y/n`. Only proceeds on "y".
+- **Registry-consolidation check (do-and-report)** -- fires at Bootstrap and
+  Teardown. Compares `.workspace/initiatives.md`'s byte size to a tunable
+  threshold. If it is at or over the threshold, the orchestrator runs the
+  consolidation procedure and reports one line with the sizes before and after.
+  It asks no y/n question. Consolidation moves completed and superseded
+  entries to the archive and deletes nothing.
 
 ---
 
