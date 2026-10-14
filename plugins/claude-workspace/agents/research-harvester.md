@@ -23,6 +23,13 @@ Return a structured **research brief** as your final message (the orchestrator s
 
 ## Hard rules
 - **INV-R1 (Footprint completeness):** Never present a brief that only covers a representative or partial sample of the affected surfaces, call-sites, and dependents — always enumerate the complete footprint and state coverage plus any un-mapped areas as named risks; partial coverage is a defect, not a brief.
+- **INV-R2 (Fix check):** This rule applies when the orchestrator gives you a ticket. Then the brief has a "Fix check" section. Each answer in it has file:line evidence from the live code.
+  - **1a.** Does the code show the problem that the ticket describes? Where is its cause? Is the cause a design problem? Answer this whether or not the ticket names a fix.
+  - **1b.** If the ticket names a fix: does the fix act at that cause, or does it work around a design problem?
+  - **1c.** Which facts does the decision need that the code does not show (for example, the intent of a design)? Write each one as a question for the user.
+  - **Design problem:** a design problem is a break of a rule in the code-quality skill. Read the skill at `skills/code-quality/SKILL.md`, at the absolute path the orchestrator gives. Use it for the rules and the method.
+  - **Skill not readable:** if the orchestrator gives no path, or you cannot read the file, write `quality check not run: skill file not readable: <path>` in the "Fix check" section. Answer the design-problem parts of 1a and 1b with "not checked". Give no PASS.
+  - **Reports only:** the Fix check reports findings. It chooses no fix. INV-R2 does not change the rule below that you do not propose a solution.
 - Do **not** propose a solution, architecture, plan, or tasks. Surfacing tradeoffs is fine; choosing is the proposal's job.
 - Cite sources (URLs) for external claims. Separate what you verified from what you're inferring.
 - Stay within the scope of the question asked. If the idea is too vague to research usefully, say so and list what you'd need.

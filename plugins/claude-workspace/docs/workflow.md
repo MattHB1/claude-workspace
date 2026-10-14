@@ -27,7 +27,7 @@ match the orchestrator's routing table.
 | "research / look into / what's known about..." | `claude-workspace:research-harvester` | sonnet | gathers prior art and risks (read + web only); the orchestrator saves its brief into the active initiative's `research/` |
 | "spec it / write the proposal / define the problem" | `claude-workspace:proposal-writer` | opus | writes the active initiative's `proposal.md` (its root of truth) |
 | "plan it / break it down / make tasks" | `claude-workspace:task-planner` | opus | decomposes the proposal into atomic tasks in `tasks.md` |
-| "check the plan / does the plan match the spec" | `claude-workspace:task-checker` | opus | read-only adversary; checks tasks against the proposal (detect-only); the orchestrator saves its report into `verification/` |
+| "check the plan / does the plan match the spec" | `claude-workspace:task-checker` | opus | read-only adversary; checks the proposal (detect-only); the orchestrator saves its report into `verification/` |
 | "build / implement / do task N" | `claude-workspace:implementer` | sonnet | implements exactly one task per dispatch in a fresh session; writes the code itself |
 | "verify / does it match the task" | `claude-workspace:implementation-verifier` | opus | read + run-tests only; adversarially checks the build against the task; the orchestrator saves its report into `verification/` |
 | "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | sonnet | read-only; rebuilds state from the artefacts and memory; the orchestrator persists the result to the active initiative's memory |
@@ -168,10 +168,10 @@ research        ->  claude-workspace:research-harvester
 spec            ->  claude-workspace:proposal-writer
    |
    v
-plan            ->  claude-workspace:task-planner
+check           ->  claude-workspace:task-checker        (gate before building)
    |
    v
-check           ->  claude-workspace:task-checker        (gate before building)
+plan            ->  claude-workspace:task-planner
    |
    v
 build           ->  claude-workspace:implementer         (one task per dispatch)
@@ -195,7 +195,8 @@ Lean is the single default flow for every initiative: propose -> check the
 proposal -> plan into tasks -> build -> check each build. There is no
 complexity-tiering and no separate fast-track lane - every initiative gets
 this same flow unless you deliberately escalate (for example, asking for
-deeper research or extra scrutiny on a task that warrants it). The
+extra scrutiny on a task that warrants it). For a ticket, research is a
+step in the flow. It is not an escalation. The
 authoritative rules live in the orchestrator skill (`SKILL.md`, "Flow - lean
 by default").
 

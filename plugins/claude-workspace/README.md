@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.18.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.19.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
 in plain language; it researches your idea, turns it into a spec, plans the work, and builds
@@ -136,7 +136,7 @@ and command table.
 | `task-planner` | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
 | `task-checker` | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the task-planner. |
 | `implementer` | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
-| `implementation-verifier` | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the implementer. |
+| `implementation-verifier` | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the implementer. A "spec requires break" finding goes to you, the user. |
 | `context-recovery` | Rebuilds project state when context is lost or drifting; read-only, reports only what IS. |
 | `archivist` | Keeps the file tree clean and predictable; moves, renames, creates directories, never edits file content. |
 
@@ -144,7 +144,7 @@ and command table.
 
 ## Skills
 
-The table below lists seven skills. Invoke them directly in a Claude Code session:
+The table below lists eight skills. Invoke them directly in a Claude Code session:
 
 | Skill | What it does |
 |---|---|
@@ -155,8 +155,9 @@ The table below lists seven skills. Invoke them directly in a Claude Code sessio
 | `/claude-workspace:ask` | Sets the format for questions, so you can read and answer them with ease. |
 | `/claude-workspace:write-issue` | Writes or updates an issue in your tracker, with a short title, a short problem statement and checkable acceptance criteria. |
 | `/claude-workspace:plain` | Rewrites the last output in plain words. Only you start this skill, when the last output is hard to read. |
+| `/claude-workspace:code-quality` | Checks code, or a proposal's acceptance criteria, against the code-quality rules of your project. Each finding gives file:line evidence. It only reports and changes no file. It asks you when code and a rule disagree. |
 
-The first four skills (`ideate`, `decide`, `plan` and `reflect`) are general-purpose methodology skills. All seven skills are independent of any active initiative and you can invoke them at any time.
+The first four skills (`ideate`, `decide`, `plan` and `reflect`) are general-purpose methodology skills. All eight skills are independent of any active initiative and you can invoke them at any time.
 
 ---
 

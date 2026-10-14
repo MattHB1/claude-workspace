@@ -23,7 +23,7 @@ EXPECTED_AGENTS=(
 )
 
 # -------------------------------------------------------------------
-# 2. Exact distributable file set (42) — AC11 / I5
+# 2. Exact distributable file set (43) — AC11 / I5
 #    Repo-root-relative paths. Every file here must be present;
 #    no file outside this list may appear in the distributable tree.
 # -------------------------------------------------------------------
@@ -47,6 +47,7 @@ EXPECTED_TREE=(
   plugins/claude-workspace/skills/ask/SKILL.md
   plugins/claude-workspace/skills/write-issue/SKILL.md
   plugins/claude-workspace/skills/plain/SKILL.md
+  plugins/claude-workspace/skills/code-quality/SKILL.md
   plugins/claude-workspace/README.md
   plugins/claude-workspace/docs/concepts.md
   plugins/claude-workspace/docs/design-principles.md

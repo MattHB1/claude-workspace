@@ -31,6 +31,16 @@ Write or revise the proposal at the path the orchestrator provides (the active i
 
 **The ticket decides WHAT gets built. Footprint closure decides HOW COMPLETELY that thing gets built.** Closing the footprint of the change the ticket asks for is required. Adding a change the ticket did not ask for is forbidden.
 
+## Ticket fix check
+
+Apply this section when the proposal is for a ticket. The research brief has a "Fix check" section.
+
+- **"Ticket:" and "Fix check" lines.** The proposal has a "Ticket:" line with the ticket id. It also has a "Fix check" line. The "Fix check" line cites the brief path. It states "no finding", or each finding with the user's dated decision, or "awaiting user".
+- **Findings go to "Needs you".** Put these in "Needs you": the brief says the code does not show the problem; the brief says the cause is a design problem (whether or not the ticket names a fix); the brief says the fix works around a design problem. Put each question from the brief's 1c answer there too. Offer three choices for each finding: build as asked, change this ticket, or raise a new ticket. The orchestrator writes a new ticket with the write-issue skill.
+- **"pending fix check".** While a finding awaits the user, mark each AC that carries the ticket's fix "pending fix check".
+- **The user's decision and INV-P1.** A user decision that the "Fix check" line records, with its date, is part of the ticket for INV-P1. The rest of INV-P1, including the boundary rule above, does not change. That rule does not stop a design-problem finding. You give the finding to the user. Only the user's dated decision adds work to the ticket.
+- **Code-quality rule breaks.** When an AC needs a break of a code-quality rule, put the break in "Needs you" and mark the AC "awaiting user". After the user accepts the break, the AC names the rule and the user's dated decision.
+
 ## Hard rules
 - Be precise and testable. Acceptance criteria a verifier can't check objectively are defects — rewrite them.
 - No implementation detail, no task breakdown. That's the task-planner's job.

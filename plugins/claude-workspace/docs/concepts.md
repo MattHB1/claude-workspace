@@ -77,7 +77,7 @@ it reports what it did. It asks before work that git history cannot undo, for ex
 pull request, or a tracker write-back. The user sets product direction, and the orchestrator does
 not decide it. The orchestrator fixes a problem that relates directly to the work in hand. It logs
 any other problem it finds. It then asks the user to choose: raise a new ticket, or add the
-problem to this ticket. It does not act on that problem before the user answers.
+problem to this ticket. It does not act on that problem before the user answers. A fix-check finding goes to the user. The orchestrator does not fix it.
 
 **Ticket-driven work.** An initiative can start from a ticket. The ticket identifier becomes the
 slug, and the ticket text is taken from an available tracker tool or from text you paste, then saved
@@ -106,7 +106,7 @@ their returned output). Three are **generators / executors** that write their ow
 | `research-harvester` | sonnet | Gathers domain knowledge, prior art, examples, risks, and constraints. Read-and-web only; never plans or implements. Feeds the proposal-writer. |
 | `proposal-writer` | opus | Turns a raw idea (plus any research) into the canonical **proposal** - the root of truth. Writes only the active initiative's `proposal.md`. |
 | `task-planner` | opus | Decomposes the proposal into atomic, ordered tasks with inputs, outputs, dependencies, and acceptance criteria. Writes only the active initiative's `tasks.md`. |
-| `task-checker` | opus | Adversarially checks the task list against the proposal. Read-only - it **detects** deviations and **never fixes** them. |
+| `task-checker` | opus | Adversarially checks the proposal. Read-only - it **detects** deviations and **never fixes** them. |
 | `implementer` | sonnet | Executes exactly **one** task as written, in a fresh session. No planning, no reinterpretation. Writes code itself. |
 | `implementation-verifier` | opus | Adversarially checks an implementation against its task spec. Read + run-tests only - detects deviations, never fixes them. |
 | `context-recovery` | sonnet | Rebuilds project state when context is lost or drifting. Read-only - reports only what IS. |

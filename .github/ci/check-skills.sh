@@ -164,10 +164,10 @@ if ! test -f "$MEMORY_FILE"; then
   fail=1
 fi
 
-# --- Check 3: Skills frontmatter (ideate, decide, plan, reflect, ask, write-issue, plain) ---
+# --- Check 3: Skills frontmatter (ideate, decide, plan, reflect, ask, write-issue, plain, code-quality) ---
 # Each must exist and carry valid YAML frontmatter with non-empty 'name' and 'description'.
 # No 'claude-workspace:' namespace prefix is required in the 'name' field.
-METHODOLOGY_SKILLS=(ideate decide plan reflect ask write-issue plain)
+METHODOLOGY_SKILLS=(ideate decide plan reflect ask write-issue plain code-quality)
 for skill in "${METHODOLOGY_SKILLS[@]}"; do
   mskill_file="plugins/claude-workspace/skills/${skill}/SKILL.md"
   if [ ! -f "$mskill_file" ]; then
@@ -200,5 +200,5 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
-echo "OK: ${SKILL_FILE} present with valid frontmatter (name, description); ${MEMORY_FILE} present; plugins/claude-workspace/skills/{ideate,decide,plan,reflect,ask,write-issue,plain}/SKILL.md present with valid frontmatter."
+echo "OK: ${SKILL_FILE} present with valid frontmatter (name, description); ${MEMORY_FILE} present; plugins/claude-workspace/skills/{ideate,decide,plan,reflect,ask,write-issue,plain,code-quality}/SKILL.md present with valid frontmatter."
 exit 0

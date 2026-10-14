@@ -5,6 +5,36 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] - 2026-10-14
+
+### Added
+- **`code-quality` skill** — checks code, or a proposal's acceptance criteria against the live code,
+  against the project's rules. The rules come from the "Code quality" section of the root
+  `CLAUDE.md`. When the project has no such section, the skill uses two fallback rules: single
+  source of truth, and DRY (do not repeat yourself) for data and code. It gives file:line evidence.
+  It reports only and changes no file. It gives its findings to the user. The user starts it with
+  `/claude-workspace:code-quality`, or the checking agents read it.
+- **Fix check in `research-harvester` (INV-R2)** — for a ticket, the agent now checks, before the
+  proposal, the problem, the cause, and whether the ticket's fix acts at the cause. Facts that the
+  code does not show become questions for the user. The orchestrator saves the ticket text as
+  `research/ticket.md`. Research is a required step for a ticket.
+- **Quality check in the checking agents** — the orchestrator passes the path of the skill. An
+  agent that cannot read the skill reports "quality check not run" and does not give PASS.
+- The new skill is in the CI lists and in the skills table of the plugin README.
+
+### Changed
+- **`proposal-writer`** — a ticket proposal now has a "Ticket:" line and a "Fix check" line. The
+  agent puts findings in "Needs you" with three choices: build as asked, change this ticket, or
+  raise a new ticket. Planning waits while a finding is "awaiting user".
+- **`task-checker`** — new INV-C3 (fix-check gate) and INV-C4 (quality check). A code-quality rule
+  is a stated standard, not a design preference.
+- **`implementation-verifier`** — it now runs a quality check on the changed lines. A "spec
+  requires break" finding goes to the user, not to the implementer.
+- **`write-issue`** — when Claude raises a need itself, it checks the need against the live code
+  before it writes the issue.
+- **Docs** — the docs now describe `task-checker` as a check of the proposal before planning. The
+  flow diagram shows the check before the plan.
+
 ## [1.18.0] - 2026-10-09
 
 ### Changed
