@@ -196,7 +196,7 @@ proposal -> plan into tasks -> build -> check each build. There is no
 complexity-tiering and no separate fast-track lane - every initiative gets
 this same flow unless you deliberately escalate (for example, asking for
 extra scrutiny on a task that warrants it). For a ticket, research is a
-step in the flow. It is not an escalation. The
+step in the flow, and it needs no escalation. The
 authoritative rules live in the orchestrator skill (`SKILL.md`, "Flow - lean
 by default").
 

@@ -31,7 +31,7 @@ Check the target against each rule. The target is code lines, or a proposal's ac
 
 - Each finding gives the rule, its source, and the file:line evidence of each place that the rule names.
 - A duplicate finding cites both places. It also cites the line that shows they hold the same fact. For example, a write that copies one into the other.
-- When you cannot cite that evidence, the item is a question for the user (step 5). It is not a FAIL.
+- When you cannot cite that evidence, the item is a question for the user (step 5). Give no FAIL for it.
 
 ## 4. Report only
 

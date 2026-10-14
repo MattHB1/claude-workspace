@@ -17,7 +17,7 @@ Follow these instructions when you write or update an issue.
 8. If the user's own instructions name a different assignee, use that assignee instead.
 9. Confirm the assignee from the tracker's reply.
 10. Set no state. State changes stay with the workspace skill's tracker write-back rule.
-11. If the need for the issue comes from Claude and not from the user, check the need against the live code before you show the text.
+11. If Claude raises the need itself, check the need against the live code before you show the text.
 12. Put the file:line evidence in the problem statement.
 13. If the code does not show the need, write no issue. Tell the user what you checked.
 14. If no code can show the need, write "need not checked against code" in the text.

@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`task-checker`** — new INV-C3 (fix-check gate) and INV-C4 (quality check). A code-quality rule
   is a stated standard, not a design preference.
 - **`implementation-verifier`** — it now runs a quality check on the changed lines. A "spec
-  requires break" finding goes to the user, not to the implementer.
+  requires break" finding goes to the user. The implementer does not get it.
 - **`write-issue`** — when Claude raises a need itself, it checks the need against the live code
   before it writes the issue.
 - **Docs** — the docs now describe `task-checker` as a check of the proposal before planning. The
