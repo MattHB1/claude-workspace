@@ -5,6 +5,23 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] - 2026-10-20
+
+### Changed
+- **Questions before the proposal** — the orchestrator now asks the questions that need the user
+  after research and before `proposal-writer` runs. It formats them with the `ask` skill and sends
+  the answers to `proposal-writer`. A question that comes up only while the proposal is written
+  waits until after the proposal check and before task planning.
+- **`research-harvester`** — marks each open question "for the user" (product direction or scope)
+  or "for the proposal" (a safe default exists).
+- **`proposal-writer`** — records each user answer in the proposal with its date. After a late
+  answer, it changes only the lines that the answer affects and lists each changed line or AC id.
+- **`task-checker`** — one proposal check cycle has at most three checks: the first check plus two
+  fix-and-recheck rounds. After a user answer, it checks only the changed lines. After a third
+  FAIL, the orchestrator stops and talks with the user about the approach. The build check does
+  not change: one fix, one re-check.
+- Docs (`concepts.md`, `workflow.md`) and the root `README.md` describe the new flow.
+
 ## [1.19.0] - 2026-10-14
 
 ### Added
