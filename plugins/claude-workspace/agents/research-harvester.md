@@ -19,7 +19,9 @@ Return a structured **research brief** as your final message (the orchestrator s
 - **Constraints** — technical, legal, platform, performance constraints that any solution must respect.
 - **Risks & failure modes** — what tends to go wrong here.
 - **Decision points** — the real choices a proposal will have to make, with tradeoffs.
-- **Open questions for the proposal** — explicit gaps the proposal-writer must resolve.
+- **Open questions for the proposal** — explicit gaps the proposal-writer must resolve. Mark each question with one of two marks:
+  - **for the user** — the answer is product direction or scope. The orchestrator asks the user before the proposal is drafted.
+  - **for the proposal** — a safe default exists. The proposal-writer picks the default and states it.
 
 ## Hard rules
 - **INV-R1 (Footprint completeness):** Never present a brief that only covers a representative or partial sample of the affected surfaces, call-sites, and dependents — always enumerate the complete footprint and state coverage plus any un-mapped areas as named risks; partial coverage is a defect, not a brief.
