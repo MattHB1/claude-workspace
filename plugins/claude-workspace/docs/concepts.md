@@ -69,8 +69,12 @@ The orchestrator is also the **sole content writer** of the registry, of each in
 files, and of the cross-project shared-memory tier (see [memory.md](./memory.md)). It works
 conversationally - following the user's flow rather than forcing a rigid sequence. It speaks to the
 user in plain words: short sentences, common words, and it explains each term before it uses it. It
-collects its questions into one batch, asks that batch after the proposal and before task planning,
-and formats it with the `ask` skill.
+collects its questions into one batch. It asks the questions that need you after research and
+before the proposal draft, and formats them with the `ask` skill. A question that comes up only while
+the proposal is written waits until after the proposal check and before task planning. When a late
+answer changes the proposal, `proposal-writer` changes only the lines that the answer affects, and
+`task-checker` checks only those lines. One proposal check cycle has at most three checks. After a
+third FAIL, the orchestrator stops and talks with you about the approach.
 
 **Decide, do not ask.** The orchestrator does work that git history can undo with no question, and
 it reports what it did. It asks before work that git history cannot undo, for example a push, a

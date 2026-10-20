@@ -165,6 +165,9 @@ new initiative
 research        ->  claude-workspace:research-harvester
    |
    v
+ask             ->  you answer the brief's questions (`ask` skill)
+   |
+   v
 spec            ->  claude-workspace:proposal-writer
    |
    v
@@ -196,8 +199,20 @@ proposal -> plan into tasks -> build -> check each build. There is no
 complexity-tiering and no separate fast-track lane - every initiative gets
 this same flow unless you deliberately escalate (for example, asking for
 extra scrutiny on a task that warrants it). For a ticket, research is a
-step in the flow, and it needs no escalation. The
-authoritative rules live in the orchestrator skill (`SKILL.md`, "Flow - lean
+step in the flow, and it needs no escalation.
+
+Questions that need you come before the proposal draft. After research, the
+orchestrator asks them with the `ask` skill and sends your answers to
+`proposal-writer`. A question that comes up only while the proposal is written
+waits until after the proposal check and before task planning. When an answer
+arrives after the proposal exists, `proposal-writer` changes only the lines that
+the answer affects, and `task-checker` checks only those changed lines. One
+proposal check cycle has the first check and at most two fix-and-recheck rounds
+(three checks at most). After a third FAIL, the orchestrator stops and talks
+with you about the approach. The build check does not change: one fix, one
+re-check.
+
+The authoritative rules live in the orchestrator skill (`SKILL.md`, "Flow - lean
 by default").
 
 ---

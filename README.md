@@ -117,8 +117,10 @@ the bare `haiku` alias. For the full mapping, override instructions,
 and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
 
 The orchestrator follows a plain-voice rule. It speaks in plain words: short sentences,
-common words, and each term explained before use. It collects its questions into one batch
-after the proposal and before task planning, and formats them with the `ask` skill.
+common words, and each term explained before use. It collects its questions into one batch.
+It asks the questions that need the user after research and before the proposal draft, and formats
+them with the `ask` skill. A late answer changes only the affected proposal lines, and the check
+covers only those lines. One proposal check cycle has at most three checks.
 
 ---
 
