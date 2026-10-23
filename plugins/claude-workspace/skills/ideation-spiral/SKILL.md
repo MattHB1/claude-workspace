@@ -48,8 +48,8 @@ The spiral sits **before** "research this" and "spec it." When a user says "spec
 visibly vague, you may *offer* the spiral first — but routing precedence is unchanged and the user
 decides. The spiral **never pre-empts or overrides** an explicit "research/spec it" instruction.
 
-**Initiative scoping:** The spiral runs against the ACTIVE initiative and writes to its
-`.workspace/<active-slug>/ideation.md`. It does **not create or switch initiatives** — those remain the
+**Initiative scoping:** The spiral runs against the initiative that this session picked and writes to its
+`.workspace/<slug>/ideation.md`. It does **not create or switch initiatives** — those remain the
 orchestrator's existing registry verbs. A user who wants a new initiative for an idea creates one first,
 then spirals within it.
 

@@ -80,11 +80,11 @@ Read-only agents (`research-harvester`, `task-checker`, `implementation-verifier
 
 **Dedup-on-promotion (pre-write):** before writing, check for an existing claim with the **same or overlapping scope, keyed on namespace/scope + `type`**. If one exists, **update or supersede** it (set the supersedes marker, archive the old) rather than appending a parallel duplicate. A new claim must never create a scope-overlapping duplicate.
 
-## Bootstrap — read the active initiative's memory AND the declared shared namespaces
+## Bootstrap — read the picked initiative's memory AND the declared shared namespaces
 
-When starting a project (after resolving the active initiative from the registry), your bootstrap reads **BOTH**:
+When starting a project (after the user picks an initiative in this session), your bootstrap reads **BOTH**:
 
-1. the active initiative's **per-initiative `.workspace/<active-slug>/memory/`** (per the per-initiative Memory layer bootstrap in SKILL.md), **AND**
+1. the picked initiative's **per-initiative `.workspace/<slug>/memory/`** (per the per-initiative Memory layer bootstrap in SKILL.md), **AND**
 2. per the project's `.workspace/namespaces` declaration file, the **`global/`** namespace **plus its declared project-family namespace(s)** under `~/.claude/shared-memory/`.
 
 These shared reads are **index-first + `grep`/`glob`, namespace-scoped, page-on-demand, with bounded read sizes** — read `shared-memory/index.md` first, then page in only the relevant claim files on demand. **Never "load every project's shared memory."** Omit none of: per-project memory, `global/`, or the declared family namespace(s).
