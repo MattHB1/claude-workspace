@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
-"""Workspace events hook. Appends one JSONL line per event to the active initiative's events.jsonl."""
+"""Workspace events hook. Appends one JSONL line per event to the events.jsonl of the
+initiative that this session picked.
+
+The slug comes only from the slug= line of this session's marker
+(~/.claude/.workspace-active/<session_id>). No marker, or no slug= line, means no
+event. The hook reads no registry row. Events go to
+<shared root>/.workspace/<slug>/memory/events.jsonl. The shared root is the same
+for every worktree of a repo (see get_project_root). This change supersedes the
+old rule that took the root only from $CLAUDE_PROJECT_DIR and the slug from the
+registry ACTIVE row.
+"""
 
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,47 +25,74 @@ TRACKED_PATTERNS = re.compile(
     r"(\.workspace/|skills/workspace/SKILL\.md|\.claude/hooks/)"
 )
 
-# INV9: output root comes ONLY from $CLAUDE_PROJECT_DIR — no __file__ fallback,
-# no cwd derivation, no home fallback.  Returns None when the var is unset/empty;
-# callers treat None as a no-op (INV10).
-def get_project_root():
+def _git(cwd, *args):
+    """Run git in cwd. Return stripped stdout, or None on any error or timeout."""
+    if not cwd:
+        return None
+    try:
+        r = subprocess.run(
+            ["git", *args],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except Exception:
+        return None
+    out = r.stdout.strip()
+    if r.returncode != 0 or not out:
+        return None
+    return out
+
+
+# INV9 (superseded): the old rule said the output root comes ONLY from
+# $CLAUDE_PROJECT_DIR. The multi-live-workspaces change replaces it. The root is
+# now the shared root, so every worktree of a repo uses one .workspace/ folder:
+#   1. the parent of `git rev-parse --path-format=absolute --git-common-dir`
+#      (run from the hook cwd), when that path ends in /.git;
+#   2. else `git rev-parse --show-toplevel` (bare repo or submodule);
+#   3. else $CLAUDE_PROJECT_DIR (outside git);
+#   4. else None.
+# Git errors and timeouts never raise. Callers treat None as a no-op (INV10).
+def get_project_root(cwd=None):
+    common = _git(cwd, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if common:
+        if common.endswith("/.git"):
+            return Path(common).parent
+        top = _git(cwd, "rev-parse", "--show-toplevel")
+        if top:
+            return Path(top)
     env = os.environ.get("CLAUDE_PROJECT_DIR", "")
     if env:
         return Path(env)
     return None
 
 
-def resolve_active_slug(root: Path):
-    """Read <root>/.workspace/initiatives.md and return the active slug per T1 edge-case rules.
+def get_checkout_path(cwd):
+    """Return the checkout path (git toplevel) of cwd, or None outside git."""
+    top = _git(cwd, "rev-parse", "--show-toplevel")
+    return Path(top) if top else None
 
-    Returns the slug string if exactly one (or more — take first) ACTIVE row is found,
-    or None if the directory/file is absent, unreadable, or has zero ACTIVE rows.
-    Degrades gracefully in all error cases (INV9, INV10).
+
+def read_marker(session_id):
+    """Read ~/.claude/.workspace-active/<session_id> as key=value lines.
+
+    Returns a dict. Returns {} when the marker is absent or unreadable.
     """
-    ws_dir = root / ".workspace"
-    if not ws_dir.is_dir():
-        return None
-    registry = ws_dir / "initiatives.md"
+    if not session_id:
+        return {}
     try:
-        text = registry.read_text(encoding="utf-8")
-    except (OSError, IOError):
-        return None
+        text = (Path.home() / ".claude" / ".workspace-active" / session_id).read_text(
+            encoding="utf-8"
+        )
+    except Exception:
+        return {}
+    data = {}
     for line in text.splitlines():
-        # Only consider actual table rows: line must start with '|' (after optional whitespace)
-        if not re.match(r"\s*\|", line):
-            continue
-        # Whole-cell marker match: split on '|', trim each cell, exact-match
-        # '**ACTIVE**'. A mention of the token inside another cell (e.g. a
-        # description) no longer collides. D3: escaped pipes ('\|') inside a
-        # cell are out of scope — such a cell simply won't equal '**ACTIVE**'
-        # (fail-safe non-match, not a crash).
-        if any(cell.strip() == "**ACTIVE**" for cell in line.split("|")):
-            m = re.search(r"`([^`]+)`", line)
-            if m and m.group(1):
-                return m.group(1)
-            # Slug extraction failed — treat as zero-ACTIVE
-            return None
-    return None
+        key, sep, value = line.partition("=")
+        if sep and key.strip() and key.strip() not in data:
+            data[key.strip()] = value.strip()
+    return data
 
 
 def utc_now() -> str:
@@ -221,17 +259,17 @@ def main() -> None:
     except json.JSONDecodeError:
         return
 
-    # INV9/INV10: $CLAUDE_PROJECT_DIR ONLY — no-op if unset
-    root = get_project_root()
-    if root is None:
-        return
-
-    # Delta (a) + INV9: resolve active slug with graceful degradation
-    slug = resolve_active_slug(root)
+    # Slug only from this session's marker; no slug means no event
+    slug = read_marker(event.get("session_id", "")).get("slug", "")
     if not slug:
         return
 
-    # Delta (a): per-initiative destination
+    # Shared root from the hook cwd; None is a no-op (INV10)
+    root = get_project_root(event.get("cwd", ""))
+    if root is None:
+        return
+
+    # Per-initiative destination
     log_file = root / ".workspace" / slug / "memory" / "events.jsonl"
 
     hook = event.get("hook_event_name", "")
