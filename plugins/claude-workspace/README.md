@@ -2,12 +2,7 @@
 
 ![version](https://img.shields.io/badge/version-1.21.0-brightgreen)
 
-Claude Workspace turns any folder into a place where ideas get built right. You talk to it
-in plain language; it researches your idea, turns it into a spec, plans the work, and builds
-it -- and independent, adversarial checks catch when the plan or build drifts from what you
-agreed, before you ship. Every decision lands in a plain file you can read, grep, and revert.
-So the work is traceable, it doesn't drift, and even a multi-day project picks up exactly
-where you left off.
+Claude Workspace turns any folder into a place where ideas get built right. You talk to it in plain language. It researches your idea and turns it into a spec. It plans the work and builds it. Independent, adversarial checks catch a plan or build that drifts from what you agreed, before you ship. Every decision lands in a plain file that you can read, search and revert. The work stays traceable and does not drift. Even a multi-day project picks up where you left off.
 
 **Build the right thing, and prove it.**
 
@@ -15,178 +10,121 @@ where you left off.
 
 ## What it's good for
 
-- **"The AI confidently built the wrong thing."** Claude Workspace refuses to guess. It stops
-  and asks, traces every step back to a written spec, and flags when the build doesn't match
-  what you agreed on -- before you ship.
-- **"I lose the thread on a multi-day project."** Plans, decisions, and progress live in plain
-  files on disk. Drop a project for days; reload exactly where you left off, no re-explaining.
-- **"The plan quietly drifted from the spec."** The proposal is the root of truth. Every task
-  traces to it, and an adversarial checker flags drift before a single line is built.
-- **"I can't trust the output, and there's no way to check."** Every decision is a versioned
-  file with one named owner. The agents that review your work are tool-locked read-only --
-  they literally cannot edit what they review.
+- **"The AI confidently built the wrong thing."** Claude Workspace refuses to guess. It stops and asks. It traces every step back to a written spec. It flags a build that does not match what you agreed on, before you ship.
+- **"I lose the thread on a multi-day project."** Plans, decisions and progress live in plain files on disk. You can drop a project for days and reload it where you left off, with no re-explaining.
+- **"The plan quietly drifted from the spec."** The proposal is the root of truth. Every task traces to it. An adversarial checker flags drift before anyone builds a single line.
+- **"I can't trust the output, and there's no way to check."** Every decision is a versioned file with one named owner. The agents that review your work have read-only tools. They cannot edit what they review.
 
 ---
 
 ## Why not just prompt Claude directly?
 
-Prompting Claude is a conversation; Claude Workspace is a conversation with a memory, a spec,
-an auditor, and a paper trail.
+Prompting Claude is a conversation. Claude Workspace is a conversation with a memory, a spec, an auditor and a paper trail.
 
-Raw prompting has predictable failure modes -- and this is how Claude Workspace addresses each:
+Raw prompting has predictable failure modes. This is how Claude Workspace addresses each one:
 
-- **Drifts over a long session** -- chat loses early decisions. Claude Workspace keeps a
-  written proposal as the single root of truth; every agent answers to it, not to the
-  current conversation.
-- **Guesses when uncertain** -- one agent improvises. Claude Workspace refuses-to-guess by
-  design: agents stop and surface the ambiguity rather than inventing an answer.
-- **No audit trail** -- a transcript is not a record. Every decision is a plain file you can
-  grep and revert; the git history is the audit trail.
-- **Marks its own homework** -- the same agent that writes the plan checks the plan. In
-  Claude Workspace, checkers are entirely separate agents, tool-locked read-only. A FAIL
-  routes back to whoever owns the work; it cannot be silently patched.
-- **Forgets between sessions** -- you re-explain every time. The per-initiative journal and
-  index reload only what matters, so you pick up where you left off.
+- **Drifts over a long session.** Chat loses early decisions. Claude Workspace keeps a written proposal as the single root of truth. Every agent answers to the proposal, not to the current conversation.
+- **Guesses when uncertain.** One agent improvises. Claude Workspace refuses to guess by design. Agents stop and surface the ambiguity. They do not invent an answer.
+- **No audit trail.** A transcript is not a record. Every decision is a plain file that you can search and revert. The git history is the audit trail.
+- **Marks its own homework.** The same agent that writes the plan checks the plan. In Claude Workspace, the checkers are separate agents with read-only tools. A FAIL goes back to the agent that owns the work. Nobody can patch it in silence.
+- **Forgets between sessions.** You re-explain every time. The per-initiative journal and index reload only what matters. You pick up where you left off.
 
-Honest caveat: determinism here is convention-backed discipline plus a few real tool-locks,
-not a sandboxed runtime. Claude Workspace reduces and surfaces errors; it does not guarantee
-correct output and is not a substitute for human review.
+A caveat: the determinism here comes from conventions and discipline, plus a few real tool locks. It is not a sandboxed runtime. Claude Workspace reduces and surfaces errors. It does not guarantee correct output. It does not replace human review.
 
 ---
 
 ## How it feels to use
 
-You invoke the orchestrator with `/claude-workspace:workspace` and then just talk to it. The
-orchestrator follows a plain-voice rule. It uses short sentences and common words, and it
-explains each term before it uses the term. It batches its questions with the `ask` skill.
-Your own style instructions win over this rule.
+You invoke the orchestrator with `/claude-workspace:workspace` and then talk to it. The orchestrator follows a plain-voice rule. It uses short sentences and common words. It explains each term before it uses the term. It batches its questions with the `ask` skill. Your own style instructions win over this rule.
 
-Say "research this idea" -- the Researcher agent reads the relevant context and surfaces what
-it finds. Then "spec it out" -- the Spec Writer turns the research into a written proposal
-you agree on. Next, "plan the work" -- the Planner breaks the spec into a task list that
-traces back to it. Before any building starts, "check the plan" -- the Task Checker (a
-separate, read-only agent) flags anything that has drifted from the proposal.
+Say "research this idea". The Researcher agent reads the relevant context and surfaces what it finds. Then say "spec it out". The Spec Writer turns the research into a written proposal that you agree on. Next, say "plan the work". The Planner breaks the spec into a task list that traces back to it.
 
-Now you build: "implement task 1" -- the Implementation agent writes the code, to spec. Then
-"verify it" -- the Verifier (also read-only, also tool-locked) checks the build against the
-task definition. If it finds a gap, the failure goes back to the Implementation agent to fix,
-not to the Verifier to quietly patch.
+Before the Planner starts, say "check the proposal". The Task Checker is a separate agent with read-only tools. It flags anything in the proposal that is missing or unclear. If it finds a problem, the failure goes back to the Spec Writer.
 
-You run only the stages you need. It's a map, not a track.
+Now you build. Say "implement task 1". The Implementation agent writes the code to spec. Then say "verify it". The Verifier also has read-only tools. It checks the build against the task definition. If it finds a gap, the failure goes back to the Implementation agent to fix. The Verifier does not patch it.
+
+You run only the stages you need. It is a map, not a track.
 
 ---
 
 ## Tickets, branches, and your tracker
 
-An initiative starts from a ticket. You give the orchestrator the ticket
-identifier, and that identifier becomes the initiative slug -- a number is a
-valid slug. The orchestrator reads the ticket with your tracker tool if one is
-connected, and otherwise asks you to paste the ticket text; either way the text
-is saved into the initiative's `research/`.
+An initiative starts from a ticket. You give the orchestrator the ticket identifier. That identifier becomes the initiative slug. A number is a valid slug. The orchestrator reads the ticket with your tracker tool if one is connected. If none is connected, it asks you to paste the ticket text. In both cases the text is saved into the `research/` folder of the initiative.
 
-The branch name comes from one of two places, with no guessing in between: the
-name your tracker supplies, or the initiative slug when the tracker supplies
-none. The orchestrator never invents a branch name from the ticket title.
+The branch name comes from one of two places, and the orchestrator does not guess between them. It uses the name that your tracker supplies. If the tracker supplies none, it uses the initiative slug. The orchestrator never invents a branch name from the ticket title.
 
-Git actions belong to the orchestrator, never to an agent. After a task passes
-verification the orchestrator commits without asking. It asks first -- a
-one-line `y/n` -- before it pushes, and again before it opens a pull request,
-because those two leave your machine and your team can see them.
+Git actions belong to the orchestrator. An agent never runs them. After a task passes verification, the orchestrator commits without asking. Before it pushes, it asks you a one-line `y/n` question. It asks again before it opens a pull request. Those two actions leave your machine, and your team can see them.
 
-Your tracker is updated at two moments only: when work starts, and when the
-pull request is opened. Each one is a `y/n` prompt, and nothing is written to
-the tracker unless you say yes. The plugin holds no state names of its own; it
-reads the real states from your tracker the first time you are asked, records
-your choice for the project, and never asks again. If no tracker tool is
-connected, every tracker step is skipped in silence -- no prompt, no notice, no
-error.
+Your tracker gets an update at two moments only. The first moment is when work starts. The second is when the pull request opens. Each one is a `y/n` prompt. Nothing is written to the tracker unless you say yes.
 
-The plugin proposes no close or Done transition. Closing a ticket follows review
-and merge, and that is another person's decision to make.
+The plugin holds no state names of its own. It reads the real states from your tracker the first time you are asked. It records your choice for the project and does not ask again. If no tracker tool is connected, the plugin skips every tracker step in silence. You see no prompt, no notice and no error.
+
+The plugin proposes no close or Done transition. Closing a ticket follows review and merge. Another person makes that decision.
 
 ---
 
 ## What you get that you can trust
 
-- **Detect-only, tool-locked checkers.** The agents that review your plan and build cannot
-  edit what they review. A failure routes back to the generator -- no silent patching.
-- **Single-writer + git audit trail.** Every decision is a versioned file with one named
-  owner. The git history is the audit trail; every change is attributable and revertible.
-- **Proposal as root of truth.** One spec that everything answers to. "Done" means the same
-  thing at every stage. Traceability is structural, not a convention you hope people follow.
-- **Artefacts win over chat.** Your written record is stable across session resets and
-  context compaction. The artefact is the source of truth; the transcript is a byproduct.
-- **No infra to babysit.** Everything is flat markdown files in git. Nothing to install,
-  run, or maintain beyond the plugin itself.
-- **Refuses to guess.** When an agent hits an ambiguity it can't resolve from the artefacts,
-  it stops and asks rather than inventing an answer.
+- **Detect-only checkers with read-only tools.** The agents that review your proposal and build cannot edit what they review. A failure goes back to the agent that made the work. Nobody patches it in silence.
+- **Single writer and a git audit trail.** Every decision is a versioned file with one named owner. The git history is the audit trail. You can attribute and revert every change.
+- **Proposal as root of truth.** One spec is the authority for everything. "Done" means the same thing at every stage. Traceability is part of the structure. You do not need to hope that people follow a convention.
+- **Artefacts win over chat.** Your written record stays stable across session resets and context compaction. The artefact is the source of truth. The transcript is a byproduct.
+- **No infrastructure to maintain.** Everything is flat markdown files in git. You install the plugin and do nothing else to run or maintain it.
+- **Refuses to guess.** When an agent hits an ambiguity that it cannot resolve from the artefacts, it stops and asks. It does not invent an answer.
 
 ---
 
 ## The agents
 
-Each agent has a single job. Read-only agents are tool-locked so they cannot write to your
-codebase even if prompted to. See [docs/workflow.md](docs/workflow.md) for the full intent
-and command table.
+Each agent has a single job. The read-only agents have tool locks, so they cannot write to your codebase even if you ask them to. See [docs/workflow.md](docs/workflow.md) for the full intent and command table.
 
 | Agent | What it does for you |
 |---|---|
-| `research-harvester` | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
-| `proposal-writer` | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
-| `task-planner` | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
-| `task-checker` | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the task-planner. |
-| `implementer` | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
-| `implementation-verifier` | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the implementer. A "spec requires break" finding goes to you, the user. |
-| `context-recovery` | Rebuilds project state when context is lost or drifting; read-only, reports only what IS. |
-| `archivist` | Keeps the file tree clean and predictable; moves, renames, creates directories, never edits file content. |
+| `research-harvester` | Reads and surfaces relevant context, such as docs, existing code and prior decisions, so the spec has a firm base. |
+| `proposal-writer` | Turns research into a written proposal that you agree on. This proposal is the root of truth for every later step. |
+| `task-planner` | Breaks the proposal into a traceable task list. Each task maps back to an acceptance criterion in the proposal. |
+| `task-checker` | Read-only tools. Checks the proposal before planning starts. A failure goes to the `proposal-writer`. |
+| `implementer` | Builds to spec, one task at a time. The proposal and the task definition are the only authorities. |
+| `implementation-verifier` | Read-only tools. Checks the build against the task definition after implementation. A failure goes back to the implementer. A "spec requires break" finding goes to you. |
+| `context-recovery` | Rebuilds project state when context is lost or drifting. It is read-only and reports only what exists. |
+| `archivist` | Keeps the file tree clean and predictable. It moves and renames files and creates directories. It never edits file content. |
 
 ---
 
 ## Skills
 
-The table below lists eight skills. Invoke them directly in a Claude Code session:
+The table below lists nine skills. Invoke them directly in a Claude Code session. The orchestrator skill, `/claude-workspace:workspace`, is the tenth skill.
 
 | Skill | What it does |
 |---|---|
 | `/claude-workspace:ideate` | Structured ideation: Frame → Diverge → Adversarial-challenge → Converge. |
-| `/claude-workspace:decide` | Decision process: surface options, stress-test, and converge on a recorded choice. |
-| `/claude-workspace:plan` | Planning methodology: decompose a goal into a traceable, reviewable task structure. |
-| `/claude-workspace:reflect` | Reflection methodology: review what happened, extract learnings, and record them. |
+| `/claude-workspace:ideation-spiral` | Turns a vague idea into a clear, testable concept and a test plan for each hypothesis. The skill gives the result. The orchestrator saves it to `ideation.md` in the initiative folder. |
+| `/claude-workspace:decide` | Decision process: list the options, test each one hard, and settle on a recorded choice. |
+| `/claude-workspace:plan` | Planning method: split a goal into a task structure that you can trace and review. |
+| `/claude-workspace:reflect` | Reflection method: review what happened, pull out the lessons, and record them. |
 | `/claude-workspace:ask` | Sets the format for questions, so you can read and answer them with ease. |
 | `/claude-workspace:write-issue` | Writes or updates an issue in your tracker, with a short title, a short problem statement and checkable acceptance criteria. |
 | `/claude-workspace:plain` | Rewrites the last output in plain words. Only you start this skill, when the last output is hard to read. |
-| `/claude-workspace:code-quality` | Checks code, or a proposal's acceptance criteria, against the code-quality rules of your project. Each finding gives file:line evidence. It only reports and changes no file. It asks you when code and a rule disagree. |
+| `/claude-workspace:code-quality` | Checks code, or the acceptance criteria of a proposal, against the code-quality rules of your project. Each finding gives file:line evidence. It only reports and changes no file. It asks you when code and a rule disagree. |
 
-The first four skills (`ideate`, `decide`, `plan` and `reflect`) are general-purpose methodology skills. All eight skills are independent of any active initiative and you can invoke them at any time.
+The skills `ideate`, `decide`, `plan` and `reflect` are general-purpose method skills. They need no initiative. The skill `ideation-spiral` runs in the initiative that this session picked.
 
 ---
 
 ## What this is NOT
 
-- **Not a sandboxed runtime.** The determinism here is convention-backed discipline plus a
-  few real tool-locks (the read-only agents). There is no mechanical isolation around the
-  full build. Reduces and surfaces errors; does not guarantee correctness.
-- **Not a substitute for human review.** Adversarial checks catch common failure modes; they
-  do not catch everything. You still review the output.
-- **Not total recall.** Session memory is bounded: the journal reloads approximately the
-  most recent entries plus an index. Retrieval is keyword-based (grep-style), not semantic.
-  There is no semantic search.
-- **One initiative per session, no built-in delete.** Each session picks one initiative. Two
-  sessions cannot pick the same initiative in the same repo. Closing an initiative is a manual
-  step.
-- **Not automatic cross-project learning.** Promoting a pattern from one project to another
-  is a deliberate, manual step. Nothing propagates automatically; you choose what carries
-  over and re-validate it.
-- **Not open for modification.** This plugin is centrally maintained by the author. Do not
-  modify your local copy -- local changes are overwritten on update. It is not open for
-  contributions, pull requests, or forks. (Updating is a different matter; see below.)
+- **Not a sandboxed runtime.** The determinism here comes from conventions and discipline, plus a few real tool locks on the read-only agents. Nothing isolates the full build. It reduces and surfaces errors. It does not guarantee correctness.
+- **Not a substitute for human review.** Adversarial checks catch common failure modes. They do not catch everything. You still review the output.
+- **Not total recall.** Session memory has a limit. The journal reloads about the most recent entries, plus an index. Retrieval matches keywords, as grep does. There is no semantic search.
+- **One initiative per session, no built-in delete.** Each session picks one initiative. Two sessions cannot pick the same initiative in the same repo. You close an initiative by hand.
+- **No automatic cross-project learning.** Promoting a pattern from one project to another is a deliberate, manual step. Nothing propagates automatically. You choose what carries over and you check it again.
+- **Closed to modification.** The author maintains this plugin centrally. Do not modify your local copy, because an update overwrites local changes. The plugin accepts no contributions, pull requests or forks. Updating is a different matter. See below.
 
 ---
 
 ## Quickstart
 
-Full setup guide (auth, permissions, per-agent models, distribution model) is in
-[docs/install.md](docs/install.md). Here is the short version.
+The full setup guide is in [docs/install.md](docs/install.md). It covers auth, permissions, per-agent models and the distribution model. Here is the short version.
 
 In a Claude Code session, run the three install commands:
 
@@ -204,17 +142,14 @@ Then start the orchestrator:
 
 ### Staying current
 
-This plugin is centrally maintained by the author. To stay current, run:
+The author maintains this plugin centrally. To stay current, run:
 
 ```
-/plugin marketplace update
+/plugin marketplace update pocdoc-workspace
 /reload-plugins
 ```
 
-Updating is encouraged -- new versions fix issues and improve agents. What is discouraged is
-modifying your local copy: local changes are overwritten on update, and the plugin is not
-open for contributions, pull requests, or forks. Install, use, update -- that is the intended
-workflow.
+We encourage updates, because new versions fix issues and improve agents. We discourage changes to your local copy. An update overwrites local changes. The plugin accepts no contributions, pull requests or forks. The intended workflow is install, use, update.
 
 ---
 
@@ -224,16 +159,16 @@ The full guide is split into focused pages under `docs/`:
 
 | Page | What it covers |
 |---|---|
-| [docs/concepts.md](docs/concepts.md) | Glossary of core terms; how a project differs from an initiative and how the registry maps them. |
-| [docs/design-principles.md](docs/design-principles.md) | The six invariants stated as the contract that explains why the system behaves and refuses as it does. |
-| [docs/why-it-refuses.md](docs/why-it-refuses.md) | What the system will NOT do -- unsafe, ambiguous, and non-deterministic requests -- and why refusal is expected. |
-| [docs/workflow.md](docs/workflow.md) | The intent/command table (what you say -> which agent) and the optional, conversational stage flow. |
-| [docs/initiatives.md](docs/initiatives.md) | Initiative naming, slugs, switching, the registry, the session pick, and honest (manual) deletion. |
-| [docs/memory.md](docs/memory.md) | The per-initiative and cross-project memory tiers: when to use, how to promote and inspect, and namespace opt-out. |
-| [docs/safety-and-compliance.md](docs/safety-and-compliance.md) | The safety posture as a feature: PII gates, distribution gates, repo-wide greps, and SAC-style checks. |
-| [docs/install.md](docs/install.md) | Full operational guide: private marketplace add, auth, manual vs background updates, permissions, distribution. 4 opus-tier agents are pinned to claude-opus-5-5 and 3 sonnet-tier agents to claude-sonnet-5-5; the archivist uses the haiku alias. Includes override and degradation instructions. |
-| [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows this session's initiative in your Claude Code prompt. |
+| [docs/concepts.md](docs/concepts.md) | Glossary of core terms. How a project differs from an initiative, and how the registry maps them. |
+| [docs/design-principles.md](docs/design-principles.md) | The six invariants. They are the contract that explains why the system behaves and refuses as it does. |
+| [docs/why-it-refuses.md](docs/why-it-refuses.md) | What the system will NOT do (unsafe, ambiguous and non-deterministic requests), and why refusal is expected. |
+| [docs/workflow.md](docs/workflow.md) | The intent and command table (what you say, and which agent acts), and the optional stage flow. |
+| [docs/initiatives.md](docs/initiatives.md) | Initiative naming, slugs, switching, the registry, the session pick, and manual deletion. |
+| [docs/memory.md](docs/memory.md) | The per-initiative and cross-project memory tiers. When to use them, how to promote and inspect, and how to opt out of a namespace. |
+| [docs/safety-and-compliance.md](docs/safety-and-compliance.md) | The safety rules as a feature: gates for personal data, distribution gates, repo-wide searches, and checks against specific acceptance criteria. |
+| [docs/install.md](docs/install.md) | Full operational guide: private marketplace add, auth, manual and background updates, permissions, distribution. Each agent has its own model, set in its agent file. See the section [Per-agent models / cost](docs/install.md#per-agent-models--cost). It also has override and fallback steps. |
+| [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows the initiative of this session in your Claude Code prompt. |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Fixes for permission errors, missing tools, marketplace auth, and the two "why did it refuse" cases. |
 | [docs/limitations.md](docs/limitations.md) | Known gaps and what the system is NOT (no semantic retrieval, no auto-promotion, no built-in delete, and more). |
-| [docs/ideation-spiral.md](docs/ideation-spiral.md) | How to use the ideation spiral (triggers, the Frame→Diverge→Challenge→Converge loop, convergence gate), its capabilities and boundaries, and how to thread `ideation.md` downstream into the pipeline or export it externally. |
+| [docs/ideation-spiral.md](docs/ideation-spiral.md) | How to use the ideation spiral: its triggers, the Frame→Diverge→Challenge→Converge loop and the convergence gate. It also covers its limits, and how to pass `ideation.md` on to the pipeline or export it. |
 | [CHANGELOG.md](../../CHANGELOG.md) | Release history and notable changes per version. |
