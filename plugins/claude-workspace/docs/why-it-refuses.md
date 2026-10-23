@@ -1,195 +1,108 @@
 # Why it refuses things (this is expected)
 
-Claude Workspace is deliberately strict. When you ask it to do something unsafe,
-something ambiguous, or something that would break its determinism guarantees, it
-will **push back** instead of guessing. It will also defer to the written artefacts
-over anything said in chat. This is a **feature, not the system "being difficult."**
-The whole point of the workspace is that the same inputs produce the same,
-auditable outputs, and that no agent quietly invents an answer to keep things
-moving.
+Claude Workspace is strict on purpose. Sometimes you ask it to do something unsafe or ambiguous. Sometimes the request would break its determinism guarantees. In these cases it **pushes back** and does not guess. It also trusts the written artefacts over anything said in chat. This is a **feature. The system is not "being difficult."** The same inputs must give the same outputs, and you must be able to audit them. No agent may quietly invent an answer to keep things moving.
 
-If you hit one of the refusals below, nothing is broken. The system is doing
-exactly what it was built to do. Each section says what triggers the pushback and
-what to do instead.
+If you hit one of the refusals below, nothing is broken. The system does what it was built to do. Each section says what triggers the pushback and what to do instead.
 
-The underlying rules that cause these refusals are the system's invariants. See
-[design-principles.md](./design-principles.md) for the full contract.
+The rules behind these refusals are the system's invariants (rules that always hold). See [design-principles.md](./design-principles.md) for the full contract.
 
 ---
 
-## 1. It refuses (or pushes back on) unsafe plans
+## 1. It refuses (or pushes back on) unsafe proposals and plans
 
-The orchestrator does not just rubber-stamp a plan and start building. Two
-adversarial, read-only checkers exist specifically to find problems before they
-ship:
+The orchestrator does not rubber-stamp a proposal or a plan and start to build. Two adversarial, read-only checkers look for problems before they ship:
 
-- `task-checker` reviews whether the plan actually matches the proposal.
-- `implementation-verifier` reviews whether built work actually matches its task.
+- `task-checker` checks the proposal before planning starts. It asks if the proposal is sound, complete and minimal.
+- `implementation-verifier` checks whether built work matches its task.
 
-These checkers **only detect** deviations. They never patch what they find. When a
-checker FAILs something, the system does **not** quietly fix it in place; the
-correction is routed **back to the generator** that produced it. A failed plan goes
-back to `task-planner`; a failed implementation goes back to `implementer`. The
-verifier never fixes its own findings, and the orchestrator does not hand-patch
-them either.
+These checkers **only detect** deviations. They never patch what they find. When a checker FAILs something, the system does **not** quietly fix it in place. The correction goes **back to the generator** that made it. A failed proposal goes back to `proposal-writer`. A failed implementation goes back to `implementer`. The verifier never fixes its own findings, and the orchestrator does not hand-patch them either.
 
-The workflow also prefers **gates before progress**: running `task-checker` after
-planning, and `implementation-verifier` after each task. The system surfaces the
-gate and lets you decide to proceed or skip, rather than barrelling ahead.
+The workflow also prefers **gates before progress**. It runs `task-checker` on the proposal before planning, and it runs `implementation-verifier` after each task. The system shows you the gate and lets you decide to proceed or skip. It does not rush ahead.
 
 **What this looks like:**
 
-- You ask it to build a task whose plan was just FAILed by `task-checker`. It will
-  surface the violations and route the fix back to `task-planner` first, rather than
-  building on top of a broken plan.
-- A verification FAILs. Instead of editing the verifier's report into a pass, the
-  system summarises the violations and sends the work back to `implementer`.
+- You ask it to plan a proposal that `task-checker` just FAILed. It shows you the violations and sends the fix back to `proposal-writer` first. It does not build on a broken proposal.
+- A verification FAILs. The system does not edit the verifier's report into a pass. It summarises the violations and sends the work back to `implementer`.
 
-**What to do instead:** let the fix go back to the originating generator and re-run
-the check. Don't ask the checker or the orchestrator to "just fix it" -- that role
-separation is intentional.
+**What to do instead:** let the fix go back to the generator that made it, and run the check again. Do not ask the checker or the orchestrator to "just fix it". The separation of roles is intentional.
 
 ---
 
 ## 2. It refuses ambiguous or under-specified instructions
 
-The system runs on a strict division of labour: research, proposal-writing,
-planning, checking, implementing, and verifying are **separate roles**, and roles
-are never collapsed. The implementer does not plan; the planner does not implement.
-Specialist work is dispatched to the specialist, never improvised by the
-orchestrator.
+The system uses a strict division of labour. Research, proposal-writing, planning, checking, implementing and verifying are **separate roles**. The system never merges roles. The implementer does not plan, and the planner does not implement. The orchestrator sends specialist work to the specialist and does not improvise it.
 
-A direct consequence: when an instruction is ambiguous, the system would have to
-**guess** which role does what, or invent missing detail, to proceed. It is built
-not to do that. The proposal's acceptance criteria are meant to be the unambiguous
-contract that planning and implementation trace to; when that contract is unclear or
-missing, the honest move is to stop and clarify rather than fabricate it.
+This has a direct result. When an instruction is ambiguous, the system would have to **guess** which role does what, or invent missing detail, to proceed. It is built not to do that. The acceptance criteria in the proposal are the clear contract that planning and implementation trace to. When that contract is unclear or missing, the system stops and asks you to clarify. It does not make one up.
 
 **What this looks like:**
 
-- You say "just build it" but there is no proposal, or the proposal has no
-  acceptance criteria covering what you asked. The system asks for a spec first,
-  because there is nothing for the work to trace to.
-- A task is under-specified or conflicts with what the implementer finds. The
-  implementer stops and reports the ambiguity instead of inventing an
-  interpretation.
+- You say "just build it" but there is no proposal. Or the proposal has no acceptance criteria for what you asked. The system asks for a spec first, because the work has nothing to trace to.
+- A task is under-specified, or it conflicts with what the implementer finds. The implementer stops and reports the ambiguity. It does not invent an interpretation.
 
-**What to do instead:** clarify the instruction, or fix the proposal so the
-acceptance criteria say exactly what "done" means. If the proposal itself needs to
-change, that is a `proposal-writer` job, and the plan should be re-checked
-afterward. Tightening the spec is the fix -- not pressuring the agent to guess.
+**What to do instead:** clarify the instruction. Or fix the proposal so that the acceptance criteria say exactly what "done" means. A change to the proposal is a job for `proposal-writer`, and `task-checker` then checks the proposal again. Tighten the spec. Do not pressure the agent to guess.
 
 ---
 
 ## 3. It refuses anything that violates determinism
 
-Determinism, auditability, and zero hidden infrastructure are core promises. The
-system will decline requests that would break them.
+Determinism, auditability and zero hidden infrastructure are core promises. The system declines requests that would break them.
 
-- **Retrieval is deterministic.** Memory and shared knowledge are retrieved by
-  explicit path, filename/directory convention, or `grep`/`glob` over plain files --
-  **never** by embeddings, vectors, similarity ranking, or semantic search. The loss
-  of semantic retrieval is an **accepted tradeoff** for determinism and
-  auditability. Asking it to "search by meaning" or to stand up a vector/embedding
-  store for memory runs against this on purpose.
-- **No automatic promotion.** Durable knowledge enters the shared cross-project tier
-  **only by an explicit promotion decision** made by the orchestrator. There is **no
-  automatic / on-recurrence promotion** mechanism of any kind. Read-only agents may
-  surface a "this looks reusable" candidate, but they never write it; you decide and
-  the orchestrator persists.
-- **No new runtime for memory.** Initiative memory is flat files -- no database, no
-  vector/graph/embedding store, no daemon, no external service. Requests to add one
-  for memory are out of scope by design.
-- **Single-writer ownership.** Each artefact has exactly one content writer. The
-  read-only agents (research-harvester, task-checker, implementation-verifier,
-  context-recovery, archivist) are tool-locked out of writing artefacts. Asking a
-  read-only agent to write its own output, or asking one agent to fix another
-  agent's output, is refused -- the orchestrator persists read-only output, and
-  failures route back to the originating generator.
+- **Retrieval is deterministic.** The system retrieves memory and shared knowledge by explicit path, by filename or directory convention, or by `grep` or `glob`. It never uses embeddings, vectors, similarity ranking or semantic search. We accept the loss of semantic retrieval as a tradeoff for determinism and auditability. If you ask it to "search by meaning", or to set up a vector or embedding store for memory, it refuses on purpose.
+- **No automatic promotion.** Durable knowledge enters the shared cross-project tier **only by an explicit promotion decision** from the orchestrator. The system has **no automatic or on-recurrence promotion** of any kind. Read-only agents may suggest a "this looks reusable" candidate, but they never write it. You decide, and the orchestrator saves it.
+- **No new runtime for memory.** Initiative memory is flat files. It uses no database, no vector, graph or embedding store, no daemon and no external service. Requests to add one for memory are out of scope by design.
+- **Single-writer ownership.** Each artefact has exactly one content writer. The read-only agents are `research-harvester`, `task-checker`, `implementation-verifier`, `context-recovery` and `archivist`. Their tools lock them out of writing artefacts. The system refuses two kinds of request. One asks a read-only agent to write its own output. The other asks one agent to fix the output of another agent. The orchestrator saves read-only output, and failures go back to the generator that made them.
 
 **What this looks like:**
 
-- "Make the workspace remember this across all my projects automatically." There is
-  no auto-promotion; the system asks you to promote explicitly instead.
-- "Have the verifier rewrite the failing code." The verifier is detect-only; the fix
-  routes back to the implementer.
+- "Make the workspace remember this across all my projects automatically." There is no automatic promotion. The system asks you to promote it explicitly.
+- "Have the verifier rewrite the failing code." The verifier only detects. The fix goes back to the implementer.
 
-**What to do instead:** use the explicit, deterministic path -- name the file or
-keyword to retrieve, ask for an explicit promotion, or route the fix to the right
-generator.
+**What to do instead:** use the explicit, deterministic path. Name the file or keyword to retrieve. Ask for an explicit promotion. Or send the fix to the right generator.
 
 ---
 
 ## 4. When the artefacts disagree with the conversation, the artefacts win
 
-This is the case people are most surprised by. The canonical, on-disk artefacts --
-the initiative's `proposal.md`, `tasks.md`, `verification/`, and the source files --
-are the **single source of truth**. The chat history is not.
+This case surprises people most. The canonical artefacts on disk are the **single source of truth**. They are the initiative's `proposal.md`, `tasks.md`, `verification/` and the source files. The chat history is not a source of truth.
 
-The rule is explicit: **artefacts in `.workspace/` are authoritative -- when in
-doubt, read them, don't rely on conversation memory.** Where memory and a canonical
-artefact disagree, **the canonical artefact wins**; memory is never a competing
-source of truth. The memory layer only **references** canonical content by
-path/anchor and must not restate or copy the authoritative payload.
+The rule is explicit: **artefacts in `.workspace/` are authoritative. When in doubt, read them. Do not rely on conversation memory.** When memory and a canonical artefact disagree, **the canonical artefact wins**. Memory never competes with it as a source of truth. The memory layer only **points to** canonical content by path or anchor. It must not restate or copy the authoritative content.
 
 **Why the artefacts win, and why this is good:**
 
-- **They are durable and auditable.** A long session forgets its early history as
-  the context window fills; a file does not. Trusting the file over fuzzy recall is
-  what keeps the system consistent across days, resets, and compactions.
-- **They are versioned.** Artefacts live in git, so every change is reviewable and
-  revertible. Conversation is not.
-- **It prevents drift.** If chat could silently override the spec, two runs of the
-  "same" instruction could diverge. Pinning truth to the written artefact is what
-  makes the system deterministic.
+- **They are durable and auditable.** A long session forgets its early history as the context window fills. A file does not. A file you can trust over fuzzy recall keeps the system consistent across days, resets and compactions.
+- **They are versioned.** Artefacts live in git, so you can review and revert every change. Conversation is not versioned.
+- **It prevents drift.** If chat could silently override the spec, two runs of the "same" instruction could differ. Pinning truth to the written artefact makes the system deterministic.
 
-When a claim disagrees with an artefact, the conflict is **surfaced, never silently
-merged or auto-resolved.** This holds for every conflict kind the system tracks:
-a shared claim vs. the live working tree, a shared claim vs. the canonical artefact,
-a shared claim vs. the initiative's own memory, and two shared claims that
-contradict each other. No instruction permits silently adopting or merging an
-unverified claim over what the artefacts say.
+When a claim disagrees with an artefact, the system **shows the conflict. It never silently merges or auto-resolves it.** This holds for every kind of conflict the system tracks:
+
+- a shared claim against the live working tree
+- a shared claim against the canonical artefact
+- a shared claim against the initiative's own memory
+- two shared claims that contradict each other
+
+No instruction permits the system to silently adopt or merge an unverified claim over what the artefacts say.
 
 **What this looks like:**
 
-- You remember agreeing in chat to a scope that the proposal does not contain. The
-  system goes by the proposal and flags the mismatch, rather than acting on the
-  remembered version.
-- A shared lesson from another project contradicts this initiative's `proposal.md`.
-  The system surfaces the conflict for you to resolve; it does not quietly merge the
-  outside claim.
+- You remember that you agreed in chat to a scope that the proposal does not contain. The system goes by the proposal and flags the mismatch. It does not act on the remembered version.
+- A shared lesson from another project contradicts the `proposal.md` of this initiative. The system shows you the conflict so that you can resolve it. It does not quietly merge the outside claim.
 
-**What to do instead:** if the conversation is right and the artefact is stale,
-**update the artefact** -- that is the fix. Changing the proposal is a
-`proposal-writer` job, after which the plan should be re-checked. Once the artefact
-reflects the new reality, the disagreement is gone, because the artefact is now the
-truth everything traces to.
+**What to do instead:** if the conversation is right and the artefact is out of date, **update the artefact**. That is the fix. A change to the proposal is a job for `proposal-writer`, and `task-checker` then checks the proposal again. When the artefact matches the new facts, the disagreement is gone. Everything now traces to the updated artefact.
 
 ---
 
 ## 5. It refuses work the ticket did not ask for
 
-The ticket sets the boundary of the work. When a proposal holds something the ticket
-never asked for, `task-checker` FAILs it. That can feel harsh when the extra item is
-a good idea. It is how scope quietly grows: each addition looks small on its own, and
-together they turn a small ticket into a large, unreviewed change.
+The ticket sets the boundary of the work. Sometimes a proposal holds something that the ticket never asked for. Then `task-checker` FAILs it. This can feel harsh when the extra item is a good idea. But this is how scope grows without notice. Each addition looks small on its own. Together they turn a small ticket into a large change that nobody reviewed.
 
-Two ways past the boundary stay open. Something the ticket truly cannot be finished
-without is in scope. So is repairing what this change itself makes wrong. Both must
-be named in the proposal as what they are, so you can see the extra work and agree to
-it. Silence about it is also a FAIL. The rule and its two exceptions live in one
-place: `agents/proposal-writer.md`.
+Two ways past the boundary stay open. Something that the ticket cannot be finished without is in scope. So is a repair of what this change itself makes wrong. The proposal must name both as what they are. Then you can see the extra work and agree to it. Silence about it is also a FAIL. The rule and its two exceptions live in one place: `agents/proposal-writer.md`.
 
 **What this looks like:**
 
-- The proposal tidies a nearby module the ticket never mentioned. The checker FAILs
-  it and the fix routes back to `proposal-writer`.
-- The proposal includes a genuine dependency and stays silent about it. The checker
-  FAILs it because the claim is missing.
+- The proposal tidies a nearby module that the ticket never mentioned. The checker FAILs it, and the fix goes back to `proposal-writer`.
+- The proposal includes a true dependency and says nothing about it. The checker FAILs it because the claim is missing.
 
-**What to do instead:** take the extra item out and give it its own ticket, or, if it
-belongs to one of the two exceptions, have `proposal-writer` say so plainly in the
-proposal.
+**What to do instead:** take the extra item out and give it its own ticket. Or, if it belongs to one of the two exceptions, have `proposal-writer` say so plainly in the proposal.
 
 ---
 
@@ -197,11 +110,10 @@ proposal.
 
 | You see this | Why | Do this |
 |---|---|---|
-| It won't build on a FAILed plan | Gates before progress; checkers detect only | Let the fix route back to the generator, then re-check |
-| It asks you to clarify | Roles are not collapsed; it won't guess | Clarify, or fix the proposal's acceptance criteria |
-| It won't "search by meaning" or auto-remember | Deterministic, keyword-only retrieval; no auto-promotion | Use explicit paths/keywords; promote explicitly |
-| It trusts the file over the chat | Canonical artefacts are authoritative | Update the artefact so it reflects reality |
-| It won't build what the ticket didn't ask for | The ticket sets the scope boundary | Raise a separate ticket, or name the exception in the proposal |
+| It will not plan or build on a FAILed proposal | Gates before progress. Checkers only detect. | Let the fix go back to the generator, then check again |
+| It asks you to clarify | Roles stay separate. It will not guess. | Clarify, or fix the acceptance criteria in the proposal |
+| It will not "search by meaning" or remember on its own | Retrieval uses keywords only. There is no automatic promotion. | Use explicit paths or keywords. Promote explicitly. |
+| It trusts the file over the chat | Canonical artefacts are authoritative | Update the artefact so that it matches the facts |
+| It will not build what the ticket did not ask for | The ticket sets the scope boundary | Raise a separate ticket, or name the exception in the proposal |
 
-Refusal here is the system keeping its promises. For the invariants behind every one
-of these behaviours, read [design-principles.md](./design-principles.md).
+Each refusal is the system keeping its promises. For the invariants behind these behaviours, read [design-principles.md](./design-principles.md).
