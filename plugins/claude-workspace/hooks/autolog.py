@@ -36,8 +36,9 @@ def _git(cwd, *args):
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
-    except Exception:
+    except (OSError, subprocess.SubprocessError, ValueError):
         return None
     out = r.stdout.strip()
     if r.returncode != 0 or not out:
@@ -93,7 +94,7 @@ def read_marker(session_id):
         return {}
     try:
         text = marker_path(session_id).read_text(encoding="utf-8")
-    except Exception:
+    except (OSError, ValueError):
         return {}
     data = {}
     for line in text.splitlines():

@@ -4,16 +4,12 @@
 Reads <shared root>/.workspace/initiatives.md (root from autolog.get_project_root, using the
 SessionStart event `cwd`) and — only when it can UNAMBIGUOUSLY
 recognise a known drift form and identify the single active initiative row — rewrites the
-file to the canonical format pinned in plugins/claude-workspace/skills/workspace/SKILL.md
-(lines ~44-51):
+file. It handles old `**ACTIVE**` rows only. The plugin never adds an ACTIVE marker.
 
-    Active row:     | `<slug>` | <description> | <status> | **ACTIVE** |
-    Non-active row: | `<slug>` | <description> | <status> |             |
-
-The ONLY transforms performed are (C7/INV5): (i) backtick-wrapping the slug cell (first
-column) of data rows, and (ii) placing the literal `**ACTIVE**` marker in the (previously
-blank) Active cell of the single identified active row. Every other byte — descriptions,
-statuses, row order, header, separator, and surrounding prose — is left untouched.
+The ONLY transform performed is (C7/INV5): backtick-wrapping the slug cell (first column)
+of data rows, when the file already holds a whole-cell `**ACTIVE**` marker. Every other
+byte — descriptions, statuses, row order, header, separator, and surrounding prose — is
+left untouched.
 
 Zero `**ACTIVE**` cells (M7/AC11): the plugin adds no ACTIVE marker. With zero whole-cell
 `**ACTIVE**` markers the file is left byte-untouched and no notice is shown. A prose
@@ -54,7 +50,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import autolog  # noqa: E402
+import autolog
 
 # The root comes from autolog.get_project_root(cwd): the shared root of the repo, the same
 # for the main checkout and every linked worktree. This file keeps no root logic of its own.
@@ -66,12 +62,12 @@ STATUS_ACTIVE_RE = re.compile(r"ACTIVE\s*[—–-]\s*.+", re.DOTALL)
 PROSE_ACTIVE_RE = re.compile(r"\*\*ACTIVE:\s*`?([A-Za-z0-9][A-Za-z0-9_-]*)`?\s*\*\*")
 
 CONFORM_NOTICE_TMPL = (
-    "conform-registry: conformed .workspace/initiatives.md — active row set to `{slug}` "
-    "(canonical format, SKILL.md 44-51)."
+    "conform-registry: conformed .workspace/initiatives.md — old `**ACTIVE**` row for "
+    "`{slug}` updated."
 )
 NOOP_DRIFT_NOTICE = (
     "conform-registry: .workspace/initiatives.md has unrecognised/ambiguous active-row "
-    "drift — left unchanged (see SKILL.md 44-51 for the canonical format; git diff is the "
+    "drift — left unchanged (see SKILL.md, section Initiative registry, for the canonical format; git diff is the "
     "backstop)."
 )
 
@@ -98,20 +94,12 @@ def _backtick_wrap(raw: str) -> str:
     return f"{lead}`{core}`{trail}"
 
 
-def _set_canonical_marker(raw: str) -> str:
-    core = raw.strip()
-    if core == "**ACTIVE**":
-        return raw  # already canonical — unchanged (idempotence)
-    # Blank cell being filled: use the canonical template's padding exactly.
-    return " **ACTIVE** "
-
-
 def _oracle_would_resolve(text: str, expected_slug: str) -> bool:
     """Pre-write INV3 gate — see the call site's comment for why this exact shared
     worst-case check (not a re-implementation of either resolver's full contract) is
     sufficient for the reader of the `**ACTIVE**` row post-transform.
 
-    AC25: mirrors the anchored resolvers' whole-cell marker test exactly — split the
+    AC25: tests for the marker by whole cell — split the
     line on '|', trim each cell, and require exact equality to '**ACTIVE**' (not a
     substring). A mention of the token inside another cell (e.g. a description) no
     longer counts as a match here either."""
@@ -251,13 +239,13 @@ def conform(original: str):
             return original, NOOP_DRIFT_NOTICE  # canonical vs. status-cell disagree
         active_idx = candidate
 
-    # Build the conformed rows: backtick-wrap every slug cell; place the canonical marker
-    # ONLY on the identified active row. Every other cell is passed through unchanged.
+    # Build the conformed rows: backtick-wrap every slug cell; leave the Active cell
+    # as is. Every other cell is passed through unchanged.
     new_data_lines = []
     for i, r in enumerate(rows):
         cells = r["cells"]
         new_slug = _backtick_wrap(cells[0])
-        new_active = _set_canonical_marker(cells[3]) if i == active_idx else cells[3]
+        new_active = cells[3]
         new_line = r["prefix"] + "|" + new_slug + "|" + cells[1] + "|" + cells[2] + "|" + new_active + "|" + r["suffix"]
         new_data_lines.append(new_line)
 
