@@ -52,68 +52,26 @@ function gitBranch(dir) {
   return '';
 }
 
-// Walk up from `startDir` looking for `.workspace/initiatives.md`.
-// Returns the file path if found, or null.
-function findInitiativesFile(startDir) {
-  let current = startDir;
-  while (true) {
-    const candidate = path.join(current, '.workspace', 'initiatives.md');
-    try {
-      fs.accessSync(candidate, fs.constants.R_OK);
-      return candidate;
-    } catch (_) {
-      // not found here; go up
-    }
-    const parent = path.dirname(current);
-    if (parent === current) break; // reached filesystem root
-    current = parent;
-  }
-  return null;
-}
-
-// Extract the ACTIVE slug from the initiatives.md content.
-// Slug = first backtick-delimited cell of the row containing '**ACTIVE**'.
-function extractActiveSlug(content) {
-  const lines = content.split('\n');
-  for (const line of lines) {
-    // Whole-cell marker match: split on '|', trim each cell, exact-match
-    // '**ACTIVE**'. A mention of the token inside another cell (e.g. a
-    // description) no longer collides. D3: escaped pipes ('\|') inside a
-    // cell are out of scope — such a cell simply won't equal '**ACTIVE**'
-    // (fail-safe non-match, not a crash).
-    const isActiveRow = line.split('|').some((cell) => cell.trim() === '**ACTIVE**');
-    if (isActiveRow) {
-      // Match first backticked cell: | `slug` |
-      const m = line.match(/^\s*\|\s*`([^`]+)`/);
-      if (m) return m[1];
-    }
-  }
-  return null;
-}
-
-// Resolve the active initiative slug from cwd.
-function resolveSlug(cwd) {
-  const file = findInitiativesFile(cwd);
-  if (!file) return null;
-  try {
-    const content = fs.readFileSync(file, 'utf8');
-    return extractActiveSlug(content);
-  } catch (_) {
-    return null;
-  }
-}
-
-// Determine whether the workspace-orchestrator session is "active" for the
-// given session_id: a pure-existence marker file at
-// ~/.claude/.workspace-active/<session_id>. Missing session_id, missing dir,
-// or any read error all degrade to "inactive" — never an error.
-function isSessionActive(sessionId) {
-  if (!sessionId || typeof sessionId !== 'string') return false;
+// Read this session's marker at ~/.claude/.workspace-active/<session_id>.
+// The marker holds plain key=value lines: root=, checkout=, slug= (this change
+// supersedes the old pure-existence marker rule). Returns an object of the
+// keys found ({} for an empty marker), or null when the marker is absent,
+// the session_id is missing, or on any read error. Never throws.
+function readMarker(sessionId) {
+  if (!sessionId || typeof sessionId !== 'string') return null;
   try {
     const markerPath = path.join(os.homedir(), '.claude', '.workspace-active', sessionId);
-    return fs.existsSync(markerPath);
+    const text = fs.readFileSync(markerPath, 'utf8');
+    const out = {};
+    for (const line of text.split('\n')) {
+      const i = line.indexOf('=');
+      if (i <= 0) continue;
+      const key = line.slice(0, i).trim();
+      if (!(key in out)) out[key] = line.slice(i + 1).trim();
+    }
+    return out;
   } catch (_) {
-    return false;
+    return null;
   }
 }
 
@@ -202,10 +160,12 @@ function main() {
     ? json.model.display_name
     : '';
 
-  // Resolve session_id and the session-marker gate. Missing session_id (or
-  // any error resolving the marker) is treated as "no marker" → inactive.
+  // Resolve session_id and read this session's marker. A present marker means
+  // active. Missing session_id (or any error reading the marker) is treated
+  // as "no marker" → inactive.
   const sessionId = (typeof json.session_id === 'string') ? json.session_id : null;
-  const active = isSessionActive(sessionId);
+  const marker = readMarker(sessionId);
+  const active = marker !== null;
 
   // Takeover + delegate (C3/INV3/AC3): when inactive and NOT in --segment
   // mode (--segment remains a developer/compose affordance, never the
@@ -218,8 +178,9 @@ function main() {
     if (delegated) return; // process.exit(0) already called inside.
   }
 
-  // Resolve active initiative slug only when the session is marker-active.
-  const slug = active ? resolveSlug(cwd) : null;
+  // The slug comes only from the `slug=` line of this session's marker.
+  // No marker, or no `slug=` line, means no slug segment.
+  const slug = (marker && marker.slug) ? marker.slug : null;
 
   if (segmentMode) {
     // --segment: print ONLY ⚡<slug> or nothing.
