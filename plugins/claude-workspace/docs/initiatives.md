@@ -18,8 +18,7 @@ they are the whole surface area:
 
 - **Create a new initiative** -- "new initiative <name>", "start a new
   initiative", "spin up an initiative for...".
-- **Switch the active initiative** -- "switch to <name>", "make <name> active",
-  "work on <name>".
+- **Switch this session's initiative** -- "switch to <name>", "work on <name>".
 - **List initiatives** -- "list initiatives", "what's in this workspace", "what
   initiatives do we have".
 
@@ -38,7 +37,7 @@ subtree. Every artefact that belongs to that initiative resolves under its own
 
 The slug is the stable handle for the initiative: the registry refers to it, the
 on-disk subfolder is named after it, and the switch verb names it when changing
-which initiative is active.
+which initiative this session works on.
 
 The slug can be a ticket or issue number. When you create an initiative from a
 ticket, the ticket identifier becomes the slug, and a **numeric slug is valid** --
@@ -77,35 +76,67 @@ under `<slug>/`. Because each initiative's
 inside a distinct `<slug>/` directory, naming collisions between initiatives
 cannot happen by construction.
 
-## How switching works (the ACTIVE marker)
+## How the session pick works (the per-session marker)
 
-The registry records which initiative is **ACTIVE**. The rule is strict:
+Each session picks its own initiative. The registry does not store the pick.
 
-> **Single-active rule:** whenever at least one initiative exists, exactly one is
-> ACTIVE -- never zero, never more than one. The only time none is active is in an
-> empty workspace before any initiative has been created.
+> **Session pick:** when you start the workspace, the orchestrator reads the
+> registry and lists every open initiative, plus "new initiative". It then waits.
+> You pick one. The orchestrator loads no initiative memory before you pick.
 
-- **Creating** an initiative marks the new one ACTIVE and demotes whichever was
-  previously active, so exactly one stays active.
-- **Switching** changes the ACTIVE marker in the registry to the named
-  initiative's slug. **No files move** -- switching is purely a change of which
-  slug is marked active. The artefacts of every initiative stay exactly where
-  they are under their own `<slug>/`.
+The pick lives in a per-session marker file,
+`~/.claude/.workspace-active/<session_id>`. It holds plain `key=value` lines:
 
-When the orchestrator enters a project it reads the registry first to learn which
-initiative is ACTIVE, then operates under that initiative's
-`.workspace/<active-slug>/` paths. The active initiative is what every later
-action resolves against until you switch.
+- `root=` -- the shared root of the repo (the folder that holds `.workspace/`).
+- `checkout=` -- the checkout path of this session (the repo or a worktree).
+- `slug=` -- the initiative this session picked.
+
+The orchestrator writes `root=` and `checkout=` when the session starts. It writes
+`slug=` after your pick passes the checks below. It never changes a marker that
+already has content, except to write the pick.
+
+- **Creating** an initiative picks the new one for this session. It writes no
+  `**ACTIVE**` marker in the registry.
+- **Switching** changes the `slug=` line in this session's marker. **No files
+  move.** The artefacts of every initiative stay exactly where they are under
+  their own `<slug>/`.
+- **Exit** deletes this session's marker. The next session picks again.
+
+**Block on the same initiative.** Before it writes `slug=`, the orchestrator scans
+the markers of the other sessions. If another live session has the same `root=`
+and `slug=`, the pick fails. The message names the initiative. Your marker does
+not change. This holds for Create-pick and for Switch.
+
+**Stale marker.** A crash can leave a marker behind. If a block names a session
+that has ended, tell the orchestrator that the other session has ended. It
+deletes that marker and continues. Without your statement, the block stays.
+
+**Main-locked and main-allowed repos.** By default, a repo is **main-locked**.
+Parallel sessions then use different branches.
+When two live sessions share one checkout, the orchestrator makes a git worktree
+at `<root>/.claude/worktrees/<slug>` for the new session.
+
+To make a repo **main-allowed**, write the single word `allowed` to
+`<repo>/.workspace/main-commits`:
+
+```
+echo allowed > <repo>/.workspace/main-commits
+```
+
+With no file, the repo is main-locked. In a main-allowed repo, the plugin never
+makes or enters a worktree. It allows one live workspace session at a time. A
+second session that shares the `root=` gets a block that says so, and it writes
+no slug. The orchestrator reads this state only from that file.
 
 **Age-gated `/clear` reminder.** Create and switch both check how long the
 session has been running. Past a threshold (default 2 hours), the orchestrator
 offers an advisory reminder: type `/clear` or `/compact`, then re-invoke the
-workspace to land back on the now-active initiative. Below the threshold, or if
+workspace and pick again. Below the threshold, or if
 the session age can't be read, the reminder stays silent and the verb completes
 as normal.
 
 **Guard checks on create/switch.** Create and switch both also run the
-index-bloat guard (checks the newly-active initiative's `memory/index.md`
+index-bloat guard (checks the newly-picked initiative's `memory/index.md`
 size) and the Epic/granularity guard (checks its `memory/journal.md` entry
 count). Neither guard blocks or delays create or switch.
 The index-bloat guard acts alone. If the index is at or over its size limit, the
@@ -123,16 +154,16 @@ in the project. Each entry carries exactly three fields:
 
 - **slug** -- the initiative's `<slug>/` subfolder name.
 - **one-line description** -- a short human-readable summary of the initiative.
-- **status** -- including which one is ACTIVE.
+- **status** -- the lifecycle state of the initiative.
 
-The registry is the authoritative record of which initiatives exist and which is
-active. The **orchestrator is its sole content writer** -- no read-only agent
-writes the registry. The List verb simply reports from this file: every
-initiative's slug, one-line description, and status, highlighting the ACTIVE one.
+The registry is the authoritative record of which initiatives exist. It does not
+record which one a session works on. The session marker holds that. The **orchestrator is the registry's sole content writer** -- no
+read-only agent writes the registry. The List verb simply reports from this
+file: every initiative's slug, one-line description, and status.
 
 If a project has no `.workspace/` at all, the orchestrator creates the directory
 and an empty registry, then guides you through creating the first initiative
-(which creates its `<slug>/` subtree and marks it ACTIVE).
+(which creates its `<slug>/` subtree).
 
 ## Removing an initiative (manual, not a built-in)
 
@@ -148,11 +179,8 @@ perform **by hand**, not a first-class command:
 2. **Remove its directory.** Delete the `.workspace/<slug>/` subfolder, which
    holds that initiative's `proposal.md`, `tasks.md`, `research/`,
    `verification/`, and `memory/`.
-3. **Re-point ACTIVE if needed.** If the initiative you removed was the ACTIVE
-   one, the single-active rule still applies: while at least one initiative
-   remains, exactly one must be ACTIVE. Update the registry so another remaining
-   initiative is marked ACTIVE (or, if it was the last one, the workspace is once
-   again empty with none active).
+3. **Check the session markers.** A marker whose session has ended
+   can stay on disk. Delete it by hand from `~/.claude/.workspace-active/`.
 
 Because `.workspace/` is under git, a manual removal is versioned and revertible
 like any other change. This manual path is the honest reality: removal is a hand

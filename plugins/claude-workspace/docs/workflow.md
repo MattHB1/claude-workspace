@@ -24,13 +24,13 @@ match the orchestrator's routing table.
 
 | You say... | Orchestrator dispatches | Model | Which... |
 |---|---|---|---|
-| "research / look into / what's known about..." | `claude-workspace:research-harvester` | sonnet | gathers prior art and risks (read + web only); the orchestrator saves its brief into the active initiative's `research/` |
-| "spec it / write the proposal / define the problem" | `claude-workspace:proposal-writer` | opus | writes the active initiative's `proposal.md` (its root of truth) |
+| "research / look into / what's known about..." | `claude-workspace:research-harvester` | sonnet | gathers prior art and risks (read + web only); the orchestrator saves its brief into the picked initiative's `research/` |
+| "spec it / write the proposal / define the problem" | `claude-workspace:proposal-writer` | opus | writes the picked initiative's `proposal.md` (its root of truth) |
 | "plan it / break it down / make tasks" | `claude-workspace:task-planner` | opus | decomposes the proposal into atomic tasks in `tasks.md` |
 | "check the plan / does the plan match the spec" | `claude-workspace:task-checker` | opus | read-only adversary; checks the proposal (detect-only); the orchestrator saves its report into `verification/` |
 | "build / implement / do task N" | `claude-workspace:implementer` | sonnet | implements exactly one task per dispatch in a fresh session; writes the code itself |
 | "verify / does it match the task" | `claude-workspace:implementation-verifier` | opus | read + run-tests only; adversarially checks the build against the task; the orchestrator saves its report into `verification/` |
-| "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | sonnet | read-only; rebuilds state from the artefacts and memory; the orchestrator persists the result to the active initiative's memory |
+| "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | sonnet | read-only; rebuilds state from the artefacts and memory; the orchestrator persists the result to the picked initiative's memory |
 | "tidy / organise / move these files" | `claude-workspace:archivist` | haiku | moves and organises files (never edits content); the orchestrator records its map to the project-level `file-structure.md` |
 
 Models use bare aliases (opus / sonnet / haiku); for the full mapping, override instructions, graceful degradation, and advanced levers see [install.md](install.md).
@@ -54,12 +54,13 @@ of them dispatches a subagent or introduces a new agent. The verbs are exactly
 
 | You say... | What happens |
 |---|---|
-| "new initiative <name>" / "start a new initiative" | creates `.workspace/<slug>/`, adds a registry entry, and marks it active (demoting whichever was previously active) |
-| "switch to <name>" / "make <name> active" / "work on <name>" | moves the ACTIVE marker in the registry to that initiative; no files move |
-| "list initiatives" / "what's in this workspace" | reports every initiative's slug, one-line description, and status from the registry, highlighting the active one |
+| "new initiative <name>" / "start a new initiative" | creates `.workspace/<slug>/`, adds a registry entry, and picks it for this session (no `**ACTIVE**` marker is written) |
+| "switch to <name>" / "work on <name>" | changes the `slug=` line in this session's marker to that initiative; refused if another live session works on it; no files move |
+| "list initiatives" / "what's in this workspace" | reports every initiative's slug, one-line description, and status from the registry |
 
-Whenever at least one initiative exists, exactly one is ACTIVE. The orchestrator
-resolves the active initiative's paths and hands them to each agent; the agents
+When the workspace starts, the orchestrator lists the open initiatives and waits
+for your pick. The pick lives in your session's marker. The orchestrator
+resolves the picked initiative's paths and hands them to each agent; the agents
 themselves stay path-agnostic.
 
 ---
@@ -118,15 +119,16 @@ in effect until the conversation context itself is cleared, which only **you** c
 do. To leave cleanly:
 
 1. Say **"exit the workspace"** (or "I'm done", "stop orchestrating"). The
-   orchestrator runs a mandatory teardown of the active initiative - appends a
+   orchestrator runs a mandatory teardown of the picked initiative - appends a
    journal entry and refreshes the index - then confirms it is safe to leave.
 2. Type **`/clear`** to fully drop the orchestrator (a fresh conversation), or
    **`/compact`** to keep a summary. This is the step that actually exits.
 
 Nothing is lost. All workspace state lives in the git-controlled `.workspace/`
-tree, and the ACTIVE marker is left untouched - so the next time you invoke the
-workspace skill it re-bootstraps the same initiative from the registry, memory
-index, and journal tail, and you pick up where you left off.
+tree, and the exit deletes your session marker - so the next time you invoke the
+workspace skill it lists the open initiatives. You pick one, and it
+re-bootstraps from the registry, memory index, and journal tail, and you pick up
+where you left off.
 
 ---
 
@@ -134,7 +136,7 @@ index, and journal tail, and you pick up where you left off.
 
 The orchestrator offers the same fresh-start reminder at one more point: the
 first time it is about to dispatch `claude-workspace:implementer` for the
-active initiative after the plan is complete (for example, you say "build it"
+picked initiative after the plan is complete (for example, you say "build it"
 or "do task 1" once `tasks.md` exists). This fires once, at that handoff, not
 before every task.
 
@@ -228,7 +230,7 @@ follows your flow and does not force every stage.
   are we" and the orchestrator dispatches `claude-workspace:context-recovery`
   without touching anything else.
 - The orchestrator does not restart the pipeline from the top each turn. It reads
-  the active initiative's state, then acts on what you ask next.
+  the picked initiative's state, then acts on what you ask next.
 - It keeps you in the loop at each handoff with a one-line status (for example
   "proposal updated -> want me to plan it, or review it first?") and lets your
   reply pick the next move.

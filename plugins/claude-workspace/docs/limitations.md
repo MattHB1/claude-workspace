@@ -33,13 +33,27 @@ What this means for you:
   because claims can be wrong; re-verify rather than trust.
 - There is no external service, daemon, scheduler, or database backing any of this.
 
-## Single active initiative at a time (no parallel-active)
+## Session markers and parallel sessions
 
-The registry (`.workspace/initiatives.md`) enforces a **single-active rule**:
-whenever at least one initiative exists, **exactly one** is ACTIVE -- never two.
-You can hold many initiatives in a project and **switch** between them, but you
-cannot have two active at once and steer them in parallel. Switching only moves the
-ACTIVE marker; no files move. See [initiatives.md](./initiatives.md).
+Each session picks its own initiative. The pick lives in a per-session marker in
+`~/.claude/.workspace-active/`. These limits apply.
+
+- **Stale markers after a crash.** A crash can leave a marker behind. The marker
+  blocks that initiative for other sessions. When the block names a session that
+  has ended, tell the orchestrator that the other session has ended. It deletes the
+  stale marker and continues. Without your statement, the block stays. A normal
+  session end deletes its own marker. The 24-hour sweep removes old markers.
+- **Two sessions cannot work on one initiative.** The block stops the second pick.
+- **Parallel sessions use different branches or worktrees.** Two live sessions
+  never share one checkout. In a main-locked repo, when another live session has the same shared root
+  and the same checkout, the orchestrator makes a git worktree for the second
+  session. It stops and reports when git refuses the
+  worktree. It never forces one.
+- **A main-allowed repo has one live workspace session.** A repo is main-allowed
+  when `.workspace/main-commits` holds the word `allowed`. The plugin never makes a
+  worktree there. A second session gets a block until the first session ends.
+
+See [initiatives.md](./initiatives.md).
 
 ## No first-class delete verb (deletion is manual)
 
