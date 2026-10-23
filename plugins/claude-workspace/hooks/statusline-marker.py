@@ -27,7 +27,11 @@ import time
 # Do not leave hooks/__pycache__/ in the plugin tree.
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import autolog
+try:
+    import autolog
+except Exception:  # noqa: BLE001
+    # Same discipline as below: a missing or broken autolog must never raise.
+    sys.exit(0)
 
 # AC8/INV10: tunable orphan-cleanup threshold. 24h is concurrency-safe — it can never
 # kill a freshly-active parallel session's marker — and harmless even if too generous,
