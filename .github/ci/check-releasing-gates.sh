@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tier-1 gate: four folded-in RELEASING.md gates
+# Tier-1 gate: four release gates
 # Run as: bash .github/ci/check-releasing-gates.sh   (from repo root)
 #
 # Gates:
@@ -89,7 +89,7 @@ gate_a_pii() {
 # ---------------------------------------------------------------------------
 # GATE B — UESA regression (AC9)
 # Both adversary agents must contain the verify-before-blocking / EXTERNAL-STATE rule.
-# Pattern (from RELEASING.md): EXTERNAL.?STATE|file:line|Read/Glob/Grep|WEAK/INFORMATIONAL
+# Pattern: EXTERNAL.?STATE|file:line|Read/Glob/Grep|WEAK/INFORMATIONAL
 # ---------------------------------------------------------------------------
 gate_b_uesa() {
   local task_checker="plugins/claude-workspace/agents/task-checker.md"
@@ -160,7 +160,7 @@ gate_c_no_machinery() {
 # Actual set = every file under plugins/claude-workspace/ PLUS root
 #   .claude-plugin/marketplace.json PLUS root README.md.
 # .github/ is NOT distributable and must NOT be included in the scan.
-# Compare against EXPECTED_TREE from expected.sh — must be exact match (24 paths).
+# Compare against EXPECTED_TREE from expected.sh - must be an exact match.
 # ---------------------------------------------------------------------------
 gate_d_exact_tree() {
   # Collect actual distributable files
