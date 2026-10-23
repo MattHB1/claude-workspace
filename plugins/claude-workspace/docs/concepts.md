@@ -40,13 +40,14 @@ single file at the `.workspace/` root:
 The registry records, for each initiative, exactly three fields: its **slug** (the `<slug>/`
 subfolder name), a **one-line description**, and a **status**.
 
-**Single-active rule:** whenever at least one initiative exists, **exactly one** is ACTIVE - never
-zero, never more than one. (The only moment none is active is an empty workspace before any
-initiative has been created.) The registry is the authoritative record of which initiatives exist
-and which one is currently active.
+**Session pick:** the registry does not mark one initiative as current. The registry is the
+authoritative record of which initiatives exist. Each session picks its initiative when it starts
+work. The pick is stored in that session's marker, not in the registry. Two sessions in the same
+repo cannot pick the same initiative.
 
-When the system enters a project it reads the registry first to resolve the ACTIVE initiative, then
-operates under that initiative's `.workspace/<active-slug>/` paths.
+When the system enters a project it reads the registry first and lists the open initiatives. The
+user picks one (or a new one). The system then operates under that initiative's
+`.workspace/<slug>/` paths.
 
 See [initiatives.md](./initiatives.md) for naming, slugs, collision avoidance, switching, and how
 the (manual, not-a-built-in) deletion path works.
@@ -60,7 +61,7 @@ does **not** personally research, write proposals, plan, implement, verify, or r
 Instead it:
 
 - **routes** the user's natural-language instructions to the right single-responsibility subagent;
-- resolves the ACTIVE initiative from the registry and passes that initiative's absolute paths into
+- uses the initiative that this session picked and passes that initiative's absolute paths into
   every subagent dispatch (subagents are path-agnostic and never read the registry themselves);
 - keeps the canonical on-disk artefacts as the single source of truth;
 - holds the line on determinism and the system's invariants.
@@ -108,8 +109,8 @@ their returned output). Three are **generators / executors** that write their ow
 | Agent | Model | Role |
 |---|---|---|
 | `research-harvester` | sonnet | Gathers domain knowledge, prior art, examples, risks, and constraints. Read-and-web only; never plans or implements. Feeds the proposal-writer. |
-| `proposal-writer` | opus | Turns a raw idea (plus any research) into the canonical **proposal** - the root of truth. Writes only the active initiative's `proposal.md`. |
-| `task-planner` | opus | Decomposes the proposal into atomic, ordered tasks with inputs, outputs, dependencies, and acceptance criteria. Writes only the active initiative's `tasks.md`. |
+| `proposal-writer` | opus | Turns a raw idea (plus any research) into the canonical **proposal** - the root of truth. Writes only the `proposal.md` of this session's initiative. |
+| `task-planner` | opus | Decomposes the proposal into atomic, ordered tasks with inputs, outputs, dependencies, and acceptance criteria. Writes only the `tasks.md` of this session's initiative. |
 | `task-checker` | opus | Adversarially checks the proposal. Read-only - it **detects** deviations and **never fixes** them. |
 | `implementer` | sonnet | Executes exactly **one** task as written, in a fresh session. No planning, no reinterpretation. Writes code itself. |
 | `implementation-verifier` | opus | Adversarially checks an implementation against its task spec. Read + run-tests only - detects deviations, never fixes them. |
@@ -150,7 +151,7 @@ Each initiative's artefacts live under its own `<slug>/` subfolder. Only four it
 
 ```
 .workspace/
-  initiatives.md       # registry: every initiative + which is ACTIVE (project-level)
+  initiatives.md       # registry: every initiative (project-level)
   file-structure.md    # the project's intended/current file tree (project-level, one per project)
   namespaces           # the project's cross-project namespace membership (project-level)
   tracker-states       # the project's transition-point -> tracker state-name mapping (project-level)
@@ -207,7 +208,7 @@ See [design-principles.md](./design-principles.md) for each invariant framed as 
 Three memory tiers **coexist**, with **no mirroring** between them.
 
 **Per-initiative memory**
-: Under the active initiative's `.workspace/<slug>/memory/`. The home for one initiative's
+: Under `.workspace/<slug>/memory/` of this session's initiative. The home for one initiative's
   **episodic** history: a small, **overwritten** `index.md` (state-of-world pointer file), an
   **append-only** `journal.md` (timestamped, attributed, trust-marked decision/progress log), and an
   `archive/` for relocated detail. The orchestrator is its sole writer; it reads this first each

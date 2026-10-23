@@ -171,8 +171,9 @@ The first four skills (`ideate`, `decide`, `plan` and `reflect`) are general-pur
 - **Not total recall.** Session memory is bounded: the journal reloads approximately the
   most recent entries plus an index. Retrieval is keyword-based (grep-style), not semantic.
   There is no semantic search.
-- **Not built for multiple active initiatives.** One initiative is active at a time. There
-  is no built-in delete -- closing an initiative is a manual step.
+- **One initiative per session, no built-in delete.** Each session picks one initiative. Two
+  sessions cannot pick the same initiative in the same repo. Closing an initiative is a manual
+  step.
 - **Not automatic cross-project learning.** Promoting a pattern from one project to another
   is a deliberate, manual step. Nothing propagates automatically; you choose what carries
   over and re-validate it.
@@ -227,11 +228,11 @@ The full guide is split into focused pages under `docs/`:
 | [docs/design-principles.md](docs/design-principles.md) | The six invariants stated as the contract that explains why the system behaves and refuses as it does. |
 | [docs/why-it-refuses.md](docs/why-it-refuses.md) | What the system will NOT do -- unsafe, ambiguous, and non-deterministic requests -- and why refusal is expected. |
 | [docs/workflow.md](docs/workflow.md) | The intent/command table (what you say -> which agent) and the optional, conversational stage flow. |
-| [docs/initiatives.md](docs/initiatives.md) | Initiative naming, slugs, switching, the registry and single-active rule, and honest (manual) deletion. |
+| [docs/initiatives.md](docs/initiatives.md) | Initiative naming, slugs, switching, the registry, the session pick, and honest (manual) deletion. |
 | [docs/memory.md](docs/memory.md) | The per-initiative and cross-project memory tiers: when to use, how to promote and inspect, and namespace opt-out. |
 | [docs/safety-and-compliance.md](docs/safety-and-compliance.md) | The safety posture as a feature: PII gates, distribution gates, repo-wide greps, and SAC-style checks. |
 | [docs/install.md](docs/install.md) | Full operational guide: private marketplace add, auth, manual vs background updates, permissions, distribution. 4 opus-tier agents are pinned to claude-opus-5-5 and 3 sonnet-tier agents to claude-sonnet-5-5; the archivist uses the haiku alias. Includes override and degradation instructions. |
-| [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows the active initiative in your Claude Code prompt. |
+| [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows this session's initiative in your Claude Code prompt. |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Fixes for permission errors, missing tools, marketplace auth, and the two "why did it refuse" cases. |
 | [docs/limitations.md](docs/limitations.md) | Known gaps and what the system is NOT (no semantic retrieval, no auto-promotion, no built-in delete, and more). |
 | [docs/ideation-spiral.md](docs/ideation-spiral.md) | How to use the ideation spiral (triggers, the Frame→Diverge→Challenge→Converge loop, convergence gate), its capabilities and boundaries, and how to thread `ideation.md` downstream into the pipeline or export it externally. |

@@ -70,7 +70,7 @@ copies the payload.
 
 ### When it loads and persists
 
-- **Bootstrap (read):** after resolving the active initiative from the registry,
+- **Bootstrap (read):** after the session picks its initiative from the registry list,
   read `index.md` first (it is small by design), then the **journal tail -- at most
   the last 20 entries** -- then the specific task/proposal for the work in hand.
   Page in older entries or `archive/` files only on demand via explicit path or
@@ -262,7 +262,7 @@ auto-memory.
 ## Related
 
 - [concepts.md](concepts.md) -- glossary, including the memory tiers.
-- [initiatives.md](initiatives.md) -- the registry and the active initiative whose
+- [initiatives.md](initiatives.md) -- the registry and the initiative whose
   memory loads at bootstrap.
 - [design-principles.md](design-principles.md) -- the invariants that make memory
   deterministic and auditable.

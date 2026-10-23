@@ -26,7 +26,7 @@ concept that is already crisp, those verbs still route normally — the spiral n
 explicit "research/spec it" instruction. If the idea is visibly vague, the orchestrator may
 *offer* the spiral first, but you decide.
 
-The spiral runs against the **active initiative** and writes to its `.workspace/<active-slug>/`
+The spiral runs against the **initiative this session picked** and writes to its `.workspace/<slug>/`
 folder. It does not create or switch initiatives — create the initiative first, then spiral
 within it.
 
@@ -111,7 +111,7 @@ The spiral adds no new agent and introduces no row in the orchestrator's routing
 
 ### `ideation.md` structure (five minimum sections)
 
-The orchestrator writes `ideation.md` to `.workspace/<active-slug>/ideation.md` — per-initiative,
+The orchestrator writes `ideation.md` to `.workspace/<slug>/ideation.md` — per-initiative,
 alongside `proposal.md` and `tasks.md`. The skill never self-writes it. The five required
 sections are:
 

@@ -1,6 +1,6 @@
 # Statusline (automatic, session-aware)
 
-The `claude-workspace` plugin ships a statusline that surfaces the active
+The `claude-workspace` plugin ships a statusline that surfaces this session's
 initiative in your Claude Code title bar. It is **automatic and session-aware**:
 once installed it becomes your sole `statusLine`, and it renders the workspace
 segment **only** while a workspace-orchestrator session is live — otherwise it
@@ -15,9 +15,8 @@ Inside a **workspace-orchestrator session** (the `workspace` skill has been
 invoked this session), the statusline prints a single line containing:
 
 - your **shortened working directory** (home prefix replaced with `~`),
-- the **active initiative** as a `⚡<slug>` segment (read from
-  `.workspace/initiatives.md`, the first backtick-delimited cell of the
-  `**ACTIVE**` table row), and
+- the **session's initiative** as a `⚡<slug>` segment (read from the
+  `slug=` line of this session's marker), and
 - the session's **model name**.
 
 Example output (ANSI-coloured; colours omitted here for readability):
@@ -28,9 +27,10 @@ Example output (ANSI-coloured; colours omitted here for readability):
 
 **When it appears:** the moment a `PostToolUse` event fires for the `Skill`
 tool with the invoked skill `workspace`, a marker file is written for that
-session. From then on, every statusline render for that session shows the
-`⚡<slug>` segment — updating automatically if the `**ACTIVE**` row changes
-(no caching, no extra steps).
+session. The `/workspace` command writes the same marker in its first step. The
+segment shows once the session picks an initiative and the marker holds a `slug=`
+line. Every later render for that session shows the `⚡<slug>` segment (no
+caching, no extra steps). The statusline reads no registry row.
 
 **When it disappears:** in any session where the `workspace` skill has never
 been invoked — "vanilla" Claude — there is no marker, and the statusline does
@@ -56,8 +56,9 @@ installer uses a **takeover + delegate** design:
 2. **Takeover.** The workspace statusline script becomes the **sole**
    `statusLine` command in `settings.json`.
 3. **Delegate when inactive.** On every render, the script checks for the
-   session marker. If the marker is present, it renders the `⚡<slug>` line
-   described above. If the marker is **absent**, it re-invokes the captured
+   session marker. If the marker is present, it renders the line
+   described above. The `⚡<slug>` segment shows only when the marker has a
+   `slug=` line. If the marker is **absent**, it re-invokes the captured
    prior command with the same stdin and writes that command's output
    **verbatim** — byte-for-byte the line you had before.
 
@@ -143,9 +144,13 @@ After uninstalling, restart Claude Code.
 
 ## Session-id lifecycle and the marker
 
-The workspace segment's presence is governed entirely by whether a marker file exists at
-`~/.claude/.workspace-active/<session_id>` for the statusline's own stdin `session_id` — nothing else.
-That single fact determines the segment's behaviour across every session-lifecycle event:
+The marker is a plain text file at `~/.claude/.workspace-active/<session_id>`. It holds `key=value`
+lines: `root=<shared root>`, `checkout=<checkout path>` and `slug=<slug>`. Each key occurs at most once.
+The statusline reads only the marker for its own stdin `session_id`. It shows the `⚡<slug>` segment
+only when that marker has a `slug=` line. This supersedes the earlier pure-existence marker rule, where
+an empty marker file was enough. The marker is also the only place that stores a session's initiative.
+The marker `root=` line is the one shared root for all sessions in a repo, including sessions in
+worktrees. This lifecycle determines the segment's behaviour across every session-lifecycle event:
 
 - **`/clear`** starts a brand-new `session_id`. No marker has ever been written for that new id, so the
   segment is **absent** the moment the new session begins — automatically, with no cleanup step required.
@@ -154,6 +159,9 @@ That single fact determines the segment's behaviour across every session-lifecyc
   orphan cleanup once it is >24h old.)
 - **`/compact`** keeps the **same** `session_id`. The marker for that id is untouched by compaction, so the
   segment **persists** across compaction exactly as before.
+- **Ending the session** fires a `SessionEnd` event. The plugin hook deletes that session's marker. A
+  crash or a killed terminal can skip this event and leave a stale marker. The 24-hour sweep below
+  removes it later.
 - **Exiting the workspace conversationally** fires **no Claude Code event of any kind** — there is no hook
   surface for a spoken/typed exit verb. The system does **not** claim to detect this. Two approximations
   exist, both explicitly non-mechanical or non-realtime: (1) the `workspace` SKILL.md exit procedure has an
@@ -162,8 +170,10 @@ That single fact determines the segment's behaviour across every session-lifecyc
   of orphaned markers (never removes anything <24h; never fires on resume/compact).
 
 **Honest summary:** marker *entry* is mechanical (a `PostToolUse` `Skill` event where the skill is
-`workspace`); marker *exit* is not — it is approximated by session-id churn (`/clear`), a compliance-dependent
-SKILL.md step, and a delayed best-effort startup/clear sweep.
+`workspace`, or the first step of the `/workspace` command). A normal session end
+deletes the marker through the `SessionEnd` hook. Only a crash or a conversational
+exit falls back to the compliance-dependent SKILL.md exit step and the delayed
+best-effort 24-hour sweep.
 
 ---
 
