@@ -3,12 +3,11 @@
 ![version](https://img.shields.io/badge/version-1.21.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
-in plain language; it researches your idea, turns it into a spec, plans the work, and builds
-it -- and independent, adversarial checks catch when the plan or build drifts from what you
-agreed, before you ship. Every decision lands in a plain file you can read, grep, and revert.
-So the work is traceable, it doesn't drift, and even a multi-day project picks up exactly
-where you left off. Everything is plain markdown files in git -- nothing to install, run,
-or maintain beyond the plugin itself.
+in plain language. It researches your idea, turns it into a spec, plans the work, and builds
+it. Independent, adversarial checks catch drift from what you agreed, before you ship.
+Every decision lands in a plain file that you can read, search, and revert.
+So the work is traceable and does not drift. A multi-day project picks up where you left off.
+Everything is plain markdown files in git. You install only the plugin and run nothing else.
 
 **Build the right thing, and prove it.**
 
@@ -17,34 +16,34 @@ or maintain beyond the plugin itself.
 ## The pains it kills
 
 - **"The AI confidently built the wrong thing."** Claude Workspace refuses to guess. Every
-  step traces to a written spec; agents stop and ask rather than improvise.
+  step traces to a written spec. Agents stop and ask. They do not improvise.
 - **"I lose the thread on a multi-day project."** Plans, decisions, and progress live in
-  plain files on disk. Drop it for days; reload exactly where you left off, no re-explaining.
+  plain files on disk. Leave it for days. Then reload where you left off, with no re-explaining.
 - **"The plan quietly drifted from the spec."** The proposal is the root of truth. Tasks
-  trace to it, and an adversarial checker flags drift before a single line is built.
+  trace to it. An adversarial checker flags drift in the proposal before anyone plans or builds.
 
 ---
 
 ## Why not just prompt Claude directly?
 
-Prompting Claude is a conversation; Claude Workspace is a conversation with a memory, a spec,
+Prompting Claude is a conversation. Claude Workspace is a conversation with a memory, a spec,
 an auditor, and a paper trail.
 
-Raw prompting has predictable failure modes -- and this is how Claude Workspace addresses each:
+Raw prompting has predictable failure modes. This is how Claude Workspace addresses each one:
 
 - **Drifts over a long session.** Chat loses early decisions. Claude Workspace keeps a
-  written proposal as the single root of truth; every agent answers to it, not to the
+  written proposal as the single root of truth. Every agent answers to it, not to the
   current conversation.
-- **Guesses when uncertain.** One agent improvises. Claude Workspace refuses-to-guess by
-  design: agents stop and surface ambiguities rather than inventing an answer.
-- **No audit trail.** A transcript is not a record. Every decision is a plain file you can
-  grep and revert; the git history is the audit trail.
-- **Marks its own homework.** In Claude Workspace, checkers are entirely separate agents,
-  tool-locked read-only. A FAIL routes back to whoever owns the work -- no silent patching.
+- **Guesses when uncertain.** One agent improvises. Claude Workspace refuses to guess by
+  design. Agents stop and surface ambiguities. They do not invent an answer.
+- **No audit trail.** A transcript is not a record. Every decision is a plain file that
+  you can search and revert. The git history is the audit trail.
+- **Marks its own homework.** In Claude Workspace, checkers are separate agents with
+  read-only tools. A FAIL routes back to whoever owns the work. No one patches it silently.
 
-Honest caveat: the determinism here is convention-backed discipline plus a few real
-tool-locks, not a sandboxed runtime. Claude Workspace reduces and surfaces errors; it does
-not guarantee correct output and is not a substitute for human review.
+A caveat: the control here is convention-backed discipline plus a few tool locks. It is
+not a sandboxed runtime. Claude Workspace reduces and surfaces errors. It does not
+guarantee correct output and is not a substitute for human review.
 
 ---
 
@@ -71,86 +70,89 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 This plugin is centrally maintained by the author. To stay current, run:
 
 ```text
-/plugin marketplace update
+/plugin marketplace update pocdoc-workspace
 /reload-plugins
 ```
 
-Updating is encouraged -- new versions fix issues and improve agents. What is discouraged is
-modifying your local copy: local changes are overwritten on update, and the plugin is not
-open for contributions, pull requests, or forks. Install, use, update -- that is the
-intended workflow.
+We encourage you to update. New versions fix issues and improve agents. Do not change your
+local copy. An update overwrites local changes. The plugin is not open for contributions,
+pull requests, or forks. The intended workflow is to install, use, and update.
 
-For the full operational walkthrough -- private marketplace add, auth, manual vs background
-updates, and the `Write`/`Edit`/`Bash` permissions the executor agents need -- see
-[install](plugins/claude-workspace/docs/install.md). For the big picture, start with
-[concepts](plugins/claude-workspace/docs/concepts.md) and the full docs index at
+The [install guide](plugins/claude-workspace/docs/install.md) has the full steps. It covers
+the private marketplace add, sign-in, manual and background updates, and the `Write`,
+`Edit` and `Bash` permissions that the executor agents need. For the big picture, start with
+[concepts](plugins/claude-workspace/docs/concepts.md). The full docs index is at
 [`plugins/claude-workspace/README.md`](plugins/claude-workspace/README.md).
 
 ---
 
 ## The agents
 
-You drive one orchestrator skill (`/claude-workspace:workspace`) in plain language; it routes
+You drive one orchestrator skill (`/claude-workspace:workspace`) in plain language. It routes
 your requests and keeps the artefacts as the source of truth. Behind it are eight
-single-responsibility subagents:
+subagents, and each has one job. The skills table in
+[`plugins/claude-workspace/README.md`](plugins/claude-workspace/README.md) lists the skills.
 
 | Agent | What it does for you |
 |---|---|
-| Research Harvester | Reads and surfaces relevant context -- docs, existing code, prior decisions -- so the spec is grounded. |
-| Proposal Writer | Turns research into a written proposal you agree on; this becomes the root of truth every subsequent step answers to. |
+| Research Harvester | Reads and surfaces relevant context (docs, existing code, prior decisions), so the spec has a base in fact. |
+| Proposal Writer | Turns research into a written proposal that you agree on. This proposal is the root of truth for every later step. |
 | Task Planner | Breaks the proposal into a traceable task list; each task maps back to a proposal acceptance criterion. |
-| Task Checker | Read-only, tool-locked. Flags drift between the plan and the proposal before any building starts. Failures route to the Task Planner. |
-| Implementer | Builds to spec, one task at a time, with the proposal and task definition as the only authorities. |
-| Implementation Verifier | Read-only, tool-locked. Checks the build against the task definition after implementation. Failures route back to the Implementer. |
-| Context Recovery | Rebuilds project state when context is lost or drifting; read-only, reports only what IS. |
-| Archivist | Keeps the file tree clean and predictable -- moves, renames, creates directories, never edits file content. |
+| Task Checker | Read-only. Checks the proposal for drift and gaps before any planning starts. A FAIL goes to the Proposal Writer. |
+| Implementer | Builds to spec, one task at a time. The proposal and the task definition are the only authorities. |
+| Implementation Verifier | Read-only. Checks the build against the task definition after implementation. A FAIL goes back to the Implementer. |
+| Context Recovery | Rebuilds project state when context is lost or drifting. It is read-only and reports only what exists. |
+| Archivist | Keeps the file tree clean and predictable. It moves and renames files and creates directories. It never edits file content. |
 
-Read-only agents (Task Checker, Implementation Verifier) are tool-locked from writing to your codebase --
-the one mechanical guardrail. For the agent contract, see
+Read-only agents (Task Checker, Implementation Verifier) have no tool to write to your codebase.
+This is the one mechanical guardrail. For the agent contract, see
 [why it refuses](plugins/claude-workspace/docs/why-it-refuses.md) and
 [design principles](plugins/claude-workspace/docs/design-principles.md).
 
-Seven agents are pinned to a fixed model ID. The four that carry the most risk if they drift --
-Proposal Writer, Task Planner, Task Checker, and Implementation Verifier -- use `claude-opus-5-5`.
-Research Harvester, Implementer, and Context Recovery use `claude-sonnet-5-5`. The Archivist uses
-the bare `haiku` alias. For the full mapping, override instructions,
-and graceful degradation see [install](plugins/claude-workspace/docs/install.md).
+Each agent has its own model. The install guide section
+[Per-agent models / cost](plugins/claude-workspace/docs/install.md#per-agent-models--cost)
+gives the source of the values, the override steps, and the fallback rules.
 
-The orchestrator follows a plain-voice rule. It speaks in plain words: short sentences,
-common words, and each term explained before use. It collects its questions into one batch.
-It asks the questions that need the user after research and before the proposal draft, and formats
-them with the `ask` skill. A late answer changes only the affected proposal lines, and the check
+The orchestrator follows a plain-voice rule. It uses short sentences and common words. It
+explains each term before use. It collects its questions into one batch.
+It asks the questions that need you after research and before the proposal draft. It formats
+them with the `ask` skill. A late answer changes only the affected proposal lines. The check
 covers only those lines. One proposal check cycle has at most three checks.
 
 ---
 
-## Honest limits
+## Limits
 
-Claude Workspace is not a sandboxed runtime, does not guarantee correct output, and is not a
+Claude Workspace is not a sandboxed runtime. It does not guarantee correct output. It is not a
 substitute for human review. See
 [What this is NOT](plugins/claude-workspace/README.md#what-this-is-not) in the bundled plugin
-README, or [docs/limitations.md](plugins/claude-workspace/docs/limitations.md) for the full
-list of known gaps.
+README. The full list of known gaps is in
+[docs/limitations.md](plugins/claude-workspace/docs/limitations.md).
 
-This plugin is centrally maintained by the author and is not open for contributions, pull
-requests, or forks. Do not modify your local copy -- local changes are overwritten on update.
+The author maintains this plugin. It is not open for contributions, pull
+requests, or forks. Do not modify your local copy. An update overwrites local changes.
 
 ---
 
 ## Layout
 
-One repo, two roles: a private plugin **marketplace** (`pocdoc-workspace`) and the plugin it
-ships (`claude-workspace`). Full documentation is inside the plugin.
+One repo has two roles. It is a private plugin **marketplace** (`pocdoc-workspace`) and the
+plugin that it ships (`claude-workspace`). The full documentation is inside the plugin.
 
 ```text
 .
 |-- .claude-plugin/
 |   `-- marketplace.json            # marketplace: pocdoc-workspace
+|-- .github/                        # CI checks and workflows
+|-- benchmark/                      # benchmark files
+|-- CHANGELOG.md                    # release history
 `-- plugins/
     `-- claude-workspace/           # the plugin
         |-- .claude-plugin/plugin.json
-        |-- skills/workspace/SKILL.md
+        |-- skills/                 # all 10 skills
         |-- agents/                 # the 8 subagents
+        |-- hooks/                  # hook scripts and hooks.json
+        |-- scripts/                # statusline scripts
         |-- docs/                   # the docs set
         `-- README.md               # bundled docs index
 ```
@@ -159,4 +161,4 @@ ships (`claude-workspace`). Full documentation is inside the plugin.
 
 ## License
 
-Private / all rights reserved (interim). To be revisited if/when this moves to a shared org.
+Private, all rights reserved (interim). We will review this if the plugin moves to a shared organisation.
