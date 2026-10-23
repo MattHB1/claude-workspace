@@ -74,6 +74,16 @@ def get_checkout_path(cwd):
     return Path(top) if top else None
 
 
+def marker_dir():
+    """Return the folder that holds the session markers."""
+    return Path.home() / ".claude" / ".workspace-active"
+
+
+def marker_path(session_id):
+    """Return the marker path of a session. This is the one master of the path."""
+    return marker_dir() / session_id
+
+
 def read_marker(session_id):
     """Read ~/.claude/.workspace-active/<session_id> as key=value lines.
 
@@ -82,9 +92,7 @@ def read_marker(session_id):
     if not session_id:
         return {}
     try:
-        text = (Path.home() / ".claude" / ".workspace-active" / session_id).read_text(
-            encoding="utf-8"
-        )
+        text = marker_path(session_id).read_text(encoding="utf-8")
     except Exception:
         return {}
     data = {}
