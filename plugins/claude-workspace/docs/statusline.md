@@ -1,23 +1,19 @@
 # Statusline (automatic, session-aware)
 
-The `claude-workspace` plugin ships a statusline that surfaces this session's
-initiative in your Claude Code title bar. It is **automatic and session-aware**:
-once installed it becomes your sole `statusLine`, and it renders the workspace
-segment **only** while a workspace-orchestrator session is live — otherwise it
-gets out of the way and reproduces your prior/default statusline exactly, with
-no action from you.
+The `claude-workspace` plugin ships a statusline. It shows the initiative of this session in your Claude Code title bar.
+It is **automatic and session-aware**. After install, it is your only `statusLine`.
+It shows the workspace segment **only** while a workspace-orchestrator session is live.
+At other times it prints your prior or default statusline exactly. You do nothing.
 
 ---
 
 ## What it shows, and when
 
-Inside a **workspace-orchestrator session** (the `workspace` skill has been
-invoked this session), the statusline prints a single line containing:
+Inside a **workspace-orchestrator session** (the `workspace` skill ran in this session), the statusline prints one line. The line holds:
 
-- your **shortened working directory** (home prefix replaced with `~`),
-- the **session's initiative** as a `⚡<slug>` segment (read from the
-  `slug=` line of this session's marker), and
-- the session's **model name**.
+- your **shortened working directory** (the home prefix becomes `~`),
+- the **initiative of the session** as a `⚡<slug>` segment (read from the `slug=` line of the marker of this session), and
+- the **model name** of the session.
 
 Example output (ANSI-coloured; colours omitted here for readability):
 
@@ -25,97 +21,51 @@ Example output (ANSI-coloured; colours omitted here for readability):
 ~/code/myproject ⚡my-feature  Claude Sonnet 4.5
 ```
 
-**When it appears:** the moment a `PostToolUse` event fires for the `Skill`
-tool with the invoked skill `workspace`, a marker file is written for that
-session. The `/workspace` command writes the same marker in its first step. The
-segment shows once the session picks an initiative and the marker holds a `slug=`
-line. Every later render for that session shows the `⚡<slug>` segment (no
-caching, no extra steps). The statusline reads no registry row.
+**When it appears:** a `PostToolUse` event fires for the `Skill` tool with the skill `workspace`. Then the plugin writes a marker file for that session. The `/workspace` command writes the same marker in its first step. The segment shows when the session picks an initiative and the marker holds a `slug=` line. Every later render for that session shows the `⚡<slug>` segment. There is no caching and there are no extra steps. The statusline reads no registry row.
 
-**When it disappears:** in any session where the `workspace` skill has never
-been invoked — "vanilla" Claude — there is no marker, and the statusline does
-not show the segment at all. Instead it **re-invokes your prior/default
-statusline command and passes its output through verbatim**, so your line
-looks exactly as it did before this plugin was installed. This holds **even
-inside a repository that contains a `.workspace/initiatives.md`** — presence
-of that file on disk is never sufficient to trigger the segment; only the
-session-scoped marker is.
+**When it disappears:** in a session where the `workspace` skill never ran ("vanilla" Claude), there is no marker. The statusline does not show the segment. It **runs your prior or default statusline command again and passes the output through unchanged**. Your line looks as it did before you installed this plugin. This holds **even inside a repository that has a `.workspace/initiatives.md`**. That file on disk never triggers the segment. Only the marker of the session triggers it.
 
 ---
 
 ## The takeover + delegate contract
 
-Because Claude Code exposes exactly one `statusLine` slot, this plugin cannot
-simply "add" a segment alongside whatever you already had wired. Instead the
-installer uses a **takeover + delegate** design:
+Claude Code has exactly one `statusLine` slot. The plugin cannot add a segment next to your old statusline. The installer uses a **takeover + delegate** design instead:
 
-1. **Capture.** If `~/.claude/settings.json` already has a `statusLine`
-   command the installer did not itself author, that command is captured
-   verbatim into a sidecar file before anything else changes. Nothing you
-   already had is discarded.
-2. **Takeover.** The workspace statusline script becomes the **sole**
-   `statusLine` command in `settings.json`.
-3. **Delegate when inactive.** On every render, the script checks for the
-   session marker. If the marker is present, it renders the line
-   described above. The `⚡<slug>` segment shows only when the marker has a
-   `slug=` line. If the marker is **absent**, it re-invokes the captured
-   prior command with the same stdin and writes that command's output
-   **verbatim** — byte-for-byte the line you had before.
+1. **Capture.** Your `~/.claude/settings.json` can already have a `statusLine` command that the installer did not write. The installer copies that command unchanged into a sidecar file before it changes anything else. It discards nothing.
+2. **Takeover.** The workspace statusline script becomes the **only** `statusLine` command in `settings.json`.
+3. **Delegate when inactive.** On every render, the script looks for the session marker. If the marker is present, the script renders the line described above. The `⚡<slug>` segment shows only when the marker has a `slug=` line. If the marker is **absent**, the script runs the captured prior command with the same stdin. It writes the output of that command **unchanged**, byte for byte.
 
-The net effect: outside a workspace session your statusline is
-indistinguishable from what you had pre-install; inside one, it gains the
-`⚡<slug>` segment automatically. No manual toggling, no "restore my
-statusline" step.
+Outside a workspace session, your statusline looks the same as before the install. Inside a session, it gains the `⚡<slug>` segment automatically. You do not toggle anything. You do not run a "restore my statusline" step.
 
-**`--segment` mode is not the restore mechanism.** The script also supports a
-`--segment` flag that prints only the `⚡<slug>` chunk (or nothing) with no
-cwd and no model. This exists purely as a developer/compose affordance for
-anyone who wants to fold the segment into a hand-rolled statusline script of
-their own — it plays no role in how the automatic install restores your prior
-line.
+**`--segment` mode does not restore your statusline.** The script also has a `--segment` flag. It prints only the `⚡<slug>` part (or nothing), with no working directory and no model. It exists for developers. Use it to add the segment to your own statusline script. It plays no part in how the automatic install restores your prior line.
 
 ---
 
 ## Install
 
-**Node is required.** The installer preflights `node` before touching
-anything; see "Requirements" below.
+**Node is required.** The installer checks for `node` before it changes anything. See "Requirements" below.
 
-**The plugin install location** is the Claude Code plugin cache (the
-marketplace directory). Its exact path is printed by the plugin manager when
-you install the plugin. In the examples below it is referred to as
-`<plugin-dir>`.
+**The plugin install location** is the Claude Code plugin cache (the marketplace directory). The plugin manager prints the exact path when you install the plugin. The examples below call it `<plugin-dir>`.
 
-To find `<plugin-dir>`, check the path the plugin manager printed on install,
-or run:
+To find `<plugin-dir>`, read the path that the plugin manager printed on install, or run:
 
 ```
 /plugin show claude-workspace
 ```
 
-**Run the installer once, deliberately:**
+**Run the installer once, on purpose:**
 
 ```
 node <plugin-dir>/scripts/install-statusline.js
 ```
 
-The installer:
+The installer does these steps:
 
-1. Preflights `node` on PATH. If node is absent it wires nothing and prints
-   guidance; see "Requirements".
-2. If a foreign `statusLine` command already exists in
-   `~/.claude/settings.json`, **captures it verbatim** into a sidecar file so
-   it can be restored automatically (see "The takeover + delegate contract").
-3. Copies the statusline script to a **stable path** at
-   `~/.claude/claude-workspace-statusline.js`. This copy is what your
-   `settings.json` will point at -- not the versioned plugin cache path, so
-   plugin updates do not break your statusline.
-4. Wires that stable-path script as the **sole** `statusLine` entry in
-   `~/.claude/settings.json`. The write is backed up and atomic; all other
-   keys in `settings.json` are preserved byte-for-byte.
-5. Is idempotent -- re-running when the workspace statusline is already
-   installed produces the same result, with no duplication and no re-capture
-   of an already-captured prior command.
+1. It checks that `node` is on PATH. If `node` is absent, it wires nothing and prints guidance. See "Requirements".
+2. If a foreign `statusLine` command exists in `~/.claude/settings.json`, it **copies it unchanged** into a sidecar file. Outside a workspace session, the script runs that command automatically (see "The takeover + delegate contract"). The uninstall step writes it back (see "Uninstall / revert").
+3. It copies the statusline script to a **stable path**, `~/.claude/claude-workspace-statusline.js`. Your `settings.json` points at this copy. It does not point at the versioned plugin cache path, so plugin updates do not break your statusline.
+4. It wires that stable-path script as the **only** `statusLine` entry in `~/.claude/settings.json`. The write is backed up and atomic. All other keys in `settings.json` stay byte for byte the same.
+5. It is idempotent. If you run it again when the workspace statusline is already installed, the result is the same. It adds no duplicate and it does not capture an already-captured prior command again.
 
 Restart Claude Code after install to activate the statusline.
 
@@ -131,76 +81,46 @@ node <plugin-dir>/scripts/install-statusline.js --uninstall
 
 This restores your `statusLine` to its **exact pre-install state**:
 
-- If a prior `statusLine` command was captured at install time, it is written
-  back **byte-for-byte**.
-- If no `statusLine` existed before install, the `statusLine` key is removed
-  entirely rather than left pointing at the workspace script.
-- All other keys in `settings.json` are left intact. The write is backed up
-  and atomic, same as install.
+- If the installer captured a prior `statusLine` command, it writes that command back **byte for byte**.
+- If no `statusLine` existed before install, the installer removes the `statusLine` key. It does not leave the key pointing at the workspace script.
+- It leaves all other keys in `settings.json` intact. The write is backed up and atomic, as in install.
 
-After uninstalling, restart Claude Code.
+After you uninstall, restart Claude Code.
 
 ---
 
 ## Session-id lifecycle and the marker
 
-The marker is a plain text file at `~/.claude/.workspace-active/<session_id>`. It holds `key=value`
-lines: `root=<shared root>`, `checkout=<checkout path>` and `slug=<slug>`. Each key occurs at most once.
-The statusline reads only the marker for its own stdin `session_id`. It shows the `⚡<slug>` segment
-only when that marker has a `slug=` line. This supersedes the earlier pure-existence marker rule, where
-an empty marker file was enough. The marker is also the only place that stores a session's initiative.
-The marker `root=` line is the one shared root for all sessions in a repo, including sessions in
-worktrees. This lifecycle determines the segment's behaviour across every session-lifecycle event:
+The marker is a plain text file at `~/.claude/.workspace-active/<session_id>`. It holds `key=value` lines: `root=<shared root>`, `checkout=<checkout path>` and `slug=<slug>`. Each key occurs at most once.
+The statusline reads only the marker for its own stdin `session_id`. It shows the `⚡<slug>` segment only when that marker has a `slug=` line.
+This replaces the earlier rule that the marker only needs to exist, where an empty marker file was enough. The marker is also the only place that stores the initiative of a session.
+The `root=` line of the marker is the one shared root for all sessions in a repo, including sessions in worktrees.
+This lifecycle decides how the segment behaves in each session event:
 
-- **`/clear`** starts a brand-new `session_id`. No marker has ever been written for that new id, so the
-  segment is **absent** the moment the new session begins — automatically, with no cleanup step required.
-  (A stale marker for the *old* session_id may still exist on disk; it is harmless because it can never be
-  read under the new session_id. It is eventually swept up by the `SessionStart(source=clear|startup)`
-  orphan cleanup once it is >24h old.)
-- **`/compact`** keeps the **same** `session_id`. The marker for that id is untouched by compaction, so the
-  segment **persists** across compaction exactly as before.
-- **Ending the session** fires a `SessionEnd` event. The plugin hook deletes that session's marker. A
-  crash or a killed terminal can skip this event and leave a stale marker. The 24-hour sweep below
-  removes it later.
-- **Exiting the workspace conversationally** fires **no Claude Code event of any kind** — there is no hook
-  surface for a spoken/typed exit verb. The system does **not** claim to detect this. Two approximations
-  exist, both explicitly non-mechanical or non-realtime: (1) the `workspace` SKILL.md exit procedure has an
-  explicit, deterministic marker-delete step that is **orchestrator-executed and compliance-dependent**, not
-  a hook guarantee; (2) `SessionStart(source=clear|startup)` performs a **best-effort, 24-hour-floor** cleanup
-  of orphaned markers (never removes anything <24h; never fires on resume/compact).
+- **`/clear`** starts a new `session_id`. No marker exists for the new id. The segment is **absent** when the new session begins. You do not clean up anything.
+  A stale marker for the *old* session_id can stay on disk. It is harmless, because the new session_id never reads it. The `SessionStart(source=clear|startup)` orphan cleanup sweeps it up when it is more than 24 hours old.
+- **`/compact`** keeps the **same** `session_id`. Compaction does not touch the marker for that id. The segment **stays** across compaction as before.
+- **Ending the session** fires a `SessionEnd` event. The `SessionEnd` hook may delete the marker of that session at once. If it does not, the 24-hour sweep below removes the old marker. A crash or a killed terminal can skip the `SessionEnd` event.
+- **Exiting the workspace in conversation** fires **no Claude Code event**. Claude Code has no hook for a spoken or typed exit word. The system does **not** claim to detect this exit. Two approximations exist. Neither one is mechanical and real-time.
+  1. The exit procedure in the `workspace` SKILL.md has a fixed step that deletes the marker. The orchestrator runs this step, and it depends on the orchestrator following the procedure. It is not a hook guarantee.
+  2. `SessionStart(source=clear|startup)` does a **best-effort cleanup with a 24-hour minimum** of orphaned markers. It never removes a marker that is less than 24 hours old. It never fires on resume or compact.
 
-**Honest summary:** marker *entry* is mechanical (a `PostToolUse` `Skill` event where the skill is
-`workspace`, or the first step of the `/workspace` command). A normal session end
-deletes the marker through the `SessionEnd` hook. Only a crash or a conversational
-exit falls back to the compliance-dependent SKILL.md exit step and the delayed
-best-effort 24-hour sweep.
+**Summary:** marker *entry* is mechanical. It happens on a `PostToolUse` `Skill` event where the skill is `workspace`, or in the first step of the `/workspace` command.
+At session end, the `SessionEnd` hook may delete the marker at once. If it does not, the 24-hour sweep removes it later.
+After a conversational exit, the marker goes only through the SKILL.md exit step, which depends on the orchestrator, or through the delayed best-effort 24-hour sweep.
 
 ---
 
 ## Requirements
 
-- **Node on PATH.** The statusline command is `node "..."` and relies on `node`
-  being resolvable in the shell environment Claude Code uses for statusline
-  commands. The installer preflights this before wiring anything: if `node` is
-  absent or unresolvable, it exits without modifying `settings.json` or copying
-  any file, and prints actionable guidance (how to install node, and the manual
-  `--segment` snippet as a fallback for anyone composing their own statusline).
+- **Node on PATH.** The statusline command is `node "..."`. It needs `node` to resolve in the shell that Claude Code uses for statusline commands. The installer checks this before it wires anything. If `node` is absent or does not resolve, the installer exits. It does not change `settings.json` and it copies no file. It prints guidance: how to install node, and the manual `--segment` snippet for anyone who builds their own statusline.
 
-Node is bundled with Claude Code in typical installs, so it is usually already
-on PATH. If the preflight fails, check that the `node` binary is accessible in
-your shell profile.
+Node is bundled with Claude Code in typical installs, so it is usually on PATH already. If the check fails, make sure the `node` binary is available in your shell profile.
 
 ---
 
 ## Notes
 
-- **Trusted workspace only.** Claude Code runs statusline commands only in
-  trusted workspaces. In an untrusted context the statusline is skipped and
-  Claude Code shows a notice ("statusline skipped -- restart to fix"). Mark the
-  workspace as trusted to activate it.
-- **Debounced (~300ms).** The statusline command is debounced by Claude Code at
-  approximately 300ms between invocations, so the script stays lightweight and
-  does not create noticeable lag.
-- **Plugin install is inert.** Installing or updating the `claude-workspace`
-  plugin never touches your statusline or `settings.json`. Only the
-  explicitly-run installer makes any change, and only when you run it.
+- **Trusted workspace only.** Claude Code runs statusline commands only in trusted workspaces. In an untrusted context, Claude Code skips the statusline and shows a notice ("statusline skipped -- restart to fix"). Mark the workspace as trusted to activate it.
+- **Debounced (~300ms).** Claude Code debounces the statusline command. It runs it at most about once every 300ms. The debounce keeps the script light, so it adds no lag you can notice.
+- **Plugin install is inert.** Installing or updating the `claude-workspace` plugin never touches your statusline or `settings.json`. Only the installer that you run yourself makes a change, and only when you run it.
