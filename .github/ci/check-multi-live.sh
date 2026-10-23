@@ -37,7 +37,6 @@ MDIR="${H}/.claude/.workspace-active"
 mkdir -p "${MDIR}"
 
 FAILS=0
-FAIL_MSGS=()
 CUR=""   # failure messages of the AC under test
 
 fail() { CUR+="    ${1}"$'\n'; }
@@ -253,7 +252,7 @@ eq "(a) current branch" "$(git -C "${R2}" branch --show-current)" "ticket-2-bran
 eq "(a) tip is the origin/main commit" "$(git -C "${R2}" rev-parse ticket-2-branch)" "${OM2}"
 git -C "${R2}" merge-base --is-ancestor "${INITA2}" ticket-2-branch 2>/dev/null && fail "(a) init-a commit is an ancestor"
 eq "(a) local main did not move" "$(git -C "${R2}" rev-parse main)" "${MAIN2}"
-git -C "${R2}" rev-parse --abbrev-ref ticket-2-branch@{u} >/dev/null 2>&1 && fail "(a) branch has an upstream"
+git -C "${R2}" rev-parse --abbrev-ref "ticket-2-branch@{u}" >/dev/null 2>&1 && fail "(a) branch has an upstream"
 [[ "$(git -C "${R2}" worktree list | wc -l | tr -d ' ')" == 1 ]] || fail "(a) a worktree was created"
 
 # ---- AC8e (d): main on main, marker present, new commit on origin ----
@@ -274,7 +273,7 @@ eq "(d) tip has the new origin commit" "$(git -C "${R3}" rev-parse ticket-3-bran
 eq "(d) main HEAD unchanged" "$(git -C "${R3}" rev-parse HEAD)" "${HEAD3}"
 eq "(d) main status unchanged" "$(git -C "${R3}" status --porcelain)" "${ST3}"
 eq "(d) local main did not move" "$(git -C "${R3}" rev-parse main)" "${MAIN3}"
-git -C "${R3}" rev-parse --abbrev-ref ticket-3-branch@{u} >/dev/null 2>&1 && fail "(d) branch has an upstream"
+git -C "${R3}" rev-parse --abbrev-ref "ticket-3-branch@{u}" >/dev/null 2>&1 && fail "(d) branch has an upstream"
 eq "(d) worktree branch" "$(git -C "${R3}" worktree list --porcelain | awk -v p="worktree ${SUB_WT}" '$0==p{f=1} f&&/^branch /{print $2; exit}')" "refs/heads/ticket-3-branch"
 eq "(d) pick check on repo with a worktree: git status clean" "$(git -C "${R3}" status --porcelain)" ""
 report AC8e
