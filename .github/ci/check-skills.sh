@@ -7,9 +7,12 @@
 #      MEMORY-XPROJECT.md is a plain-markdown on-demand include with NO frontmatter by
 #      design (it begins "# Cross-project memory tier — full rules").  This script checks
 #      its presence with test -f and NEVER parses or asserts frontmatter on it (D6).
+#   3. The 8 methodology skills (ideate, decide, plan, reflect, ask, write-issue, plain,
+#      code-quality) each exist AND have valid YAML frontmatter with non-empty 'name'
+#      AND 'description'.
 #
 # Usage: bash .github/ci/check-skills.sh  (run from repo root)
-# Exit 0 — both files pass their respective checks.
+# Exit 0 — all checked files pass their respective checks.
 # Exit 1 — one or more checks fail; clear message printed.
 
 set -euo pipefail

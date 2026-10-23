@@ -24,7 +24,7 @@ jobs:
       - name: Check agent frontmatter (required keys in every agent)
         run: bash .github/ci/check-frontmatter.sh
 
-      - name: Check skill files (SKILL.md + MEMORY-XPROJECT.md present and valid)
+      - name: Check skill files (workspace SKILL.md, MEMORY-XPROJECT.md and 8 skills)
         run: bash .github/ci/check-skills.sh
 
       - name: Check namespacing tokens (claude-workspace:<agent> in SKILL.md)
