@@ -1,37 +1,39 @@
 # Limitations / what this is NOT
 
-Claude Workspace is deliberately small and honest about its boundaries. Knowing
-what it does **not** do is part of using it well: it lets you keep the right
-expectations, stay in the loop where the system needs you, and not reach for a
-button that was never built.
+Claude Workspace is small on purpose. This page states its limits plainly.
+Knowing what it does **not** do helps you keep the right expectations. It also
+helps you stay in the loop where the system needs you. You will not look for a
+button that does not exist.
 
-This page lists only **real** limitations of the system as it actually ships
-today. Each one is grounded in how the skill and the agents behave. For the
-positive side -- the invariants that make it strict on purpose -- see
+This page lists only **real** limitations of the system as it ships today. Each
+one comes from how the skill and the agents behave. For the positive side, see
 [design-principles.md](./design-principles.md) and
-[why-it-refuses.md](./why-it-refuses.md).
+[why-it-refuses.md](./why-it-refuses.md). These pages explain the invariants that
+make the system strict on purpose.
 
 ---
 
 ## It is a prompt / markdown system, not a runtime
 
 The workspace is a skill plus eight agent definitions written in markdown. The
-"determinism" it promises is **convention-backed discipline**, not a sandbox that
-mechanically blocks every misstep. The one place where there is a real, mechanical
-guardrail is the agents' **tool locks**: the read-only adversaries
-(`task-checker`, `implementation-verifier`, `research-harvester`,
-`context-recovery`, `archivist`) ship with only `Read`/`Glob`/`Grep` tools, so they
-literally cannot `Write`/`Edit`. Everything else -- single-responsibility routing,
-single-writer ownership of artefacts, "don't restate the canonical payload" -- is
-enforced by the rules in the prompt, which the model follows but can still get
-wrong.
+"determinism" it promises is **convention-backed discipline**. It is not a
+sandbox that blocks every misstep.
+
+The one mechanical guardrail is the tool list of each agent. An agent can use
+only the tools on its `tools:` line. Some agents have no `Write` or `Edit` tool,
+so they cannot change files. The master list is the `tools:` line (line 4) in
+each file of `plugins/claude-workspace/agents/`.
+
+Everything else is a rule in the prompt. This covers single-responsibility
+routing, single-writer ownership of artefacts, and "do not restate the canonical
+payload". The model follows these rules, but it can still get them wrong.
 
 What this means for you:
 
-- Treat the system as a disciplined collaborator, not an infallible machine.
-- The `trust` marker on memory entries (`verified` vs `asserted`) exists precisely
-  because claims can be wrong; re-verify rather than trust.
-- There is no external service, daemon, scheduler, or database backing any of this.
+- Treat the system as a disciplined collaborator. It is not an infallible machine.
+- Claims can be wrong. For this reason, memory entries carry a `trust` marker
+  (`verified` or `asserted`). Re-check a claim before you rely on it.
+- No external service, daemon, scheduler or database backs any of this.
 
 ## Session markers and parallel sessions
 
@@ -39,15 +41,16 @@ Each session picks its own initiative. The pick lives in a per-session marker in
 `~/.claude/.workspace-active/`. These limits apply.
 
 - **Stale markers after a crash.** A crash can leave a marker behind. The marker
-  blocks that initiative for other sessions. When the block names a session that
-  has ended, tell the orchestrator that the other session has ended. It deletes the
-  stale marker and continues. Without your statement, the block stays. A normal
-  session end deletes its own marker. The 24-hour sweep removes old markers.
+  blocks that initiative for other sessions. Check whether the session that the
+  block names has ended. If it has, tell the orchestrator that the other session
+  has ended. The orchestrator deletes the stale marker and continues. Without your
+  statement, the block stays. A normal session end deletes its own marker. The
+  24-hour sweep removes old markers.
 - **Two sessions cannot work on one initiative.** The block stops the second pick.
 - **Parallel sessions use different branches or worktrees.** Two live sessions
-  never share one checkout. In a main-locked repo, when another live session has the same shared root
-  and the same checkout, the orchestrator makes a git worktree for the second
-  session. It stops and reports when git refuses the
+  never share one checkout. Take a main-locked repo where another live session has
+  the same shared root and the same checkout. There, the orchestrator makes a git
+  worktree for the second session. It stops and reports when git refuses the
   worktree. It never forces one.
 - **A main-allowed repo has one live workspace session.** A repo is main-allowed
   when `.workspace/main-commits` holds the word `allowed`. The plugin never makes a
@@ -58,69 +61,73 @@ See [initiatives.md](./initiatives.md).
 ## No first-class delete verb (deletion is manual)
 
 The only built-in initiative verbs are **create / switch / list**. There is **no**
-built-in delete (or rename) verb. Removing an initiative is a **manual** action:
-remove its entry from the registry and delete its `<slug>/` directory by hand. The
-docs never present a delete command, because one does not exist. See
-[initiatives.md](./initiatives.md) for the honest manual path.
+built-in delete or rename verb. You remove an initiative by hand. Remove its entry
+from the registry, then delete its `<slug>/` directory. The docs show no delete
+command, because none exists. See [initiatives.md](./initiatives.md) for the manual
+steps.
 
 ## Memory promotion is manual, never automatic
 
-Knowledge enters the cross-project shared tier (`~/.claude/shared-memory/`) **only
-by an explicit promotion decision** made by the orchestrator, on your instruction
-or on a surfaced candidate. There is **no automatic / on-recurrence promotion** of
-any kind. Read-only agents can surface "this looks reusable" candidates as returned
-content, but they never write the shared tier. See [memory.md](./memory.md).
+Knowledge enters the cross-project shared tier (`~/.claude/shared-memory/`)
+**only through an explicit promotion decision**. The orchestrator makes that
+decision on your instruction or on a candidate that it shows you. There is **no
+automatic promotion** of any kind. Read-only agents can return "this looks
+reusable" candidates as content. They never write the shared tier. See
+[memory.md](./memory.md).
 
 ## Memory retrieval is keyword / grep, not semantic
 
-All memory retrieval -- per-initiative and cross-project -- is by **explicit path,
-filename/dir convention, or `grep`/`glob`** over the files. There is **no semantic
-search, no vector store, no embeddings, no similarity ranking**. This is an
-accepted tradeoff for determinism, auditability, and zero infrastructure. The
-practical cost: across unrelated projects the **keyword miss-rate is higher** than
-within a single project -- if you do not use the words that were written down, the
-search can miss a relevant claim. See [memory.md](./memory.md).
+All memory retrieval works by **explicit path, filename or directory convention,
+or `grep` and `glob`** over the files. This covers per-initiative memory and
+cross-project memory. There is **no semantic search, no vector store, no
+embeddings and no similarity ranking**. The tradeoff gives you determinism,
+auditability and zero infrastructure. It has a cost. Across unrelated projects,
+the **keyword miss-rate is higher** than inside one project. If you do not use the
+words that were written down, the search can miss a relevant claim. See
+[memory.md](./memory.md).
 
 ## Read-only agents cannot self-fix
 
-The adversarial checkers and the other read-only agents **detect only -- they never
-fix**, and they deliberately have no `Write`/`Edit` tools to do so. When a checker
-FAILs something, the correction does not get patched in place: a failed plan routes
-back to `task-planner`, a failed implementation routes back to `implementer`. No
-agent fixes another agent's output. This is by design (see
-[design-principles.md](./design-principles.md)), but it does mean a FAIL is a
-**round trip**, not an in-place repair.
+The adversarial checkers and the other read-only agents **detect only. They never
+fix.** They have no `Write` or `Edit` tool, so they cannot patch a file. When a
+checker returns FAIL, nobody patches the output in place. A failed proposal check
+goes back to `proposal-writer`. A failed implementation check goes back to
+`implementer`. No agent fixes the output of another agent. This is by design (see
+[design-principles.md](./design-principles.md)). A FAIL is a **round trip**. It is
+not an in-place repair.
 
-## Executor agents need pre-authorized tools
+## Some agents need tools that you pre-authorize
 
-The `implementer` (and the verifier that runs tests) need `Write`/`Edit`/`Bash`
-access to do their job. Those permissions are granted by you in your Claude Code
-settings -- they are not something the workspace can grant itself. If the required
-tools are not pre-authorized, the work simply cannot proceed. See
+Some agents need tools that can change files or run commands. Agents that change
+files need `Write` and `Edit`. Agents that run commands, such as tests, need
+`Bash`. You grant these permissions in your Claude Code settings. The workspace
+cannot grant them to itself. If a needed tool is not pre-authorized, the work
+cannot proceed. The `tools:` line (line 4) in each file of
+`plugins/claude-workspace/agents/` shows what each agent can use. See
 [install.md](./install.md) and [troubleshooting.md](./troubleshooting.md).
 
 ## Background agents cannot answer permission prompts
 
-A background agent runs detached and **cannot respond to an interactive permission
-prompt**. If a tool it needs is not already authorized, the prompt has no one to
-answer it and the action stalls. Pre-authorize the tools it needs, or run the work
-in the foreground where you can approve prompts. See [install.md](./install.md).
+A background agent runs detached. It **cannot answer an interactive permission
+prompt**. If a tool it needs is not yet authorized, nobody answers the prompt and
+the action stalls. Pre-authorize the tools it needs. You can also run the work in
+the foreground, where you can approve prompts. See [install.md](./install.md).
 
 ## It is NOT a CI system or a hosted service
 
-The workspace is a set of local markdown files checked into your repos. It does
-**not** run continuous integration, it is **not** a hosted/managed service, and it
-does not run a build/test pipeline for you on a schedule. Verification happens when
-**you** dispatch a verifier; the gates are things you run, not a server that runs
-them. Versioning comes "for free" from git -- there is no separate versioning
-mechanism.
+CI means continuous integration, the automatic build and test of each change. The
+workspace is a set of local markdown files checked into your repos. It does
+**not** run CI. It is **not** a hosted or managed service. It does not run a
+build or test pipeline for you on a schedule. Verification happens when **you**
+dispatch a verifier. You run the gates yourself, and no server runs them. Git
+gives you versioning, so the workspace has no separate versioning mechanism.
 
 ## It brings no tracker connection of its own
 
 The plugin does **not** supply or configure a connection to a ticket tracker. It
-uses a tracker tool only when your environment already provides one and it is
-already authorized. With no such tool, the flow still works: you paste the ticket
-text, and you make the tracker updates by hand.
+uses a tracker tool only when your environment already provides one and the tool
+is already authorized. With no such tool, the flow still works. You paste the
+ticket text, and you make the tracker updates by hand.
 
 ## It never closes a ticket
 
@@ -129,18 +136,18 @@ follows review and merge, and that call belongs to a person.
 
 ## It is NOT a substitute for human review
 
-The adversarial checkers reduce mistakes; they do not eliminate them, and they are
-not a stand-in for your judgement. The system is built to **keep you in the loop**
-at every handoff -- it surfaces gates and conflicts and lets you decide, rather than
-auto-resolving. When a shared claim disagrees with reality, the conflict is
-**surfaced, never silently merged**; resolving it is your call.
+The adversarial checkers reduce mistakes. They do not remove them, and they do not
+replace your judgement. The system **keeps you in the loop** at every handoff. It
+shows you gates and conflicts, and you decide. It does not resolve them on its own.
+When a shared claim disagrees with reality, the system **shows the conflict and
+never merges it silently**. You resolve it.
 
 ## It is NOT a guarantee of correctness
 
 Determinism and traceability are not the same as correctness. The same inputs
-produce the same auditable outputs, and every claim is path-referenced and
-trust-marked -- but a plan can still be wrong, a `verified` re-check can still miss
-something, and a shared claim is **evidence, not ground truth**. Re-validate
-claims in the new context before acting on them. The point of the trust markers,
-the surfacing, and the human-in-the-loop handoffs is to make errors **visible and
-recoverable**, not to promise they never happen.
+give the same auditable outputs. Every claim has a path reference and a trust
+marker. Even so, a plan can be wrong, and a `verified` re-check can miss
+something. A shared claim is **evidence, not ground truth**. Re-check claims in
+the new context before you act on them. The trust markers, the conflict display
+and the human handoffs make errors **visible and recoverable**. They do not
+prevent every error.
