@@ -5,6 +5,33 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0] - 2026-10-23
+
+### Added
+- **One initiative per session** — each session picks its own initiative at start from a list of
+  open initiatives plus "new initiative". The pick lives in the session marker
+  `~/.claude/.workspace-active/<session_id>` as `root=`, `checkout=` and `slug=` lines.
+- **Live-session lock** — a second session cannot pick an initiative that another live session
+  uses. A repo with `.workspace/main-commits` that holds `allowed` allows one live session only.
+- **Worktrees** — in a repo without `.workspace/main-commits` set to `allowed` (main-locked), a second session on the same checkout gets a git worktree
+  under `.claude/worktrees/<slug>` on the initiative's own branch. Existing worktrees are reused.
+- **`.github/ci/check-multi-live.sh`** — checks the per-session picks and the worktrees.
+
+### Changed
+- New initiative branches start from a fetched `origin/<default>` with `--no-track`. The
+  first push sets the upstream.
+- Hooks find one shared `.workspace/` at the main checkout from any worktree
+  (`autolog.get_project_root`). `SessionEnd` deletes the session marker. Step 0 writes the marker
+  with `statusline-marker.py --session/--cwd`.
+- `conform-registry` makes no change when the registry has no `**ACTIVE**` row.
+- The status line and `autolog.py` take the initiative only from the session marker. They no
+  longer read the registry.
+- Docs describe the new flow.
+
+### Removed
+- The registry `**ACTIVE**` marker. The plugin does not write it. An old row with the marker still
+  loads, but it sets no initiative for any session.
+
 ## [1.20.0] - 2026-10-20
 
 ### Changed
