@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic SessionStart conformer for `.workspace/initiatives.md` (registry-auto-migrate T1).
 
-Reads $CLAUDE_PROJECT_DIR/.workspace/initiatives.md and — only when it can UNAMBIGUOUSLY
+Reads <shared root>/.workspace/initiatives.md (root from autolog.get_project_root, using the
+SessionStart event `cwd`) and — only when it can UNAMBIGUOUSLY
 recognise a known drift form and identify the single active initiative row — rewrites the
 file to the canonical format pinned in plugins/claude-workspace/skills/workspace/SKILL.md
 (lines ~44-51):
@@ -14,23 +15,25 @@ column) of data rows, and (ii) placing the literal `**ACTIVE**` marker in the (p
 blank) Active cell of the single identified active row. Every other byte — descriptions,
 statuses, row order, header, separator, and surrounding prose — is left untouched.
 
-Safety posture (C4/INV6 — never guess): on ANY ambiguity, unrecognised structure, multiple
-or zero recognisable active markers on a non-empty registry, or any error, the file is left
-byte-untouched. This is NOT hardening of the parsers: `statusline.js:extractActiveSlug` and
-`autolog.py:resolve_active_slug` (the correctness oracle) are never modified by this file.
+Zero `**ACTIVE**` cells (M7/AC11): the plugin adds no ACTIVE marker. With zero whole-cell
+`**ACTIVE**` markers the file is left byte-untouched and no notice is shown. A prose
+`**ACTIVE: <slug>**` marker or an `ACTIVE — ...` status cell no longer creates a new cell.
 
-Active-row recognition precedence (highest risk — see proposal/tasks T1):
+Safety posture (C4/INV6 — never guess): on ANY ambiguity, unrecognised structure, multiple
+active markers, or any error, the file is left byte-untouched. This file reads no
+active marker for any other purpose. The session pick sets the initiative, not this row.
+
+Active-row recognition (since M7). The conform runs only when at least one whole-cell
+`**ACTIVE**` marker exists. Otherwise the file is left alone, with no notice, before any
+other check:
   1. A standalone PROSE marker `**ACTIVE: <slug>**` appearing OUTSIDE the table's data rows
-     (e.g. a free-floating note) is AUTHORITATIVE — it names the slug directly. Scanning is
-     deliberately restricted to non-data-row lines only, so incidental "**ACTIVE**"-like text
-     inside a Description/Status cell can never be mistaken for this marker.
-  2. Failing that, a table row whose OWN Active cell already reads exactly `**ACTIVE**`
-     (the canonical marker itself, just possibly missing a backtick-wrapped slug) is used.
-  3. Failing that, a table row whose Status cell (and ONLY the Status cell) reads exactly
-     `ACTIVE — ...` (a known drift form) is used, PROVIDED exactly one such row exists.
-  Any conflict between sources (they name/point to different rows), any multiplicity within
-  a source, or zero recognisable markers on a non-empty registry -> NO-OP + notice. The
-  marker is never written onto a row that is not certain to be the active one.
+     is AUTHORITATIVE — it names the slug directly. Scanning is restricted to non-data-row
+     lines, so text inside a Description/Status cell is never mistaken for this marker.
+  2. Failing that, the single table row whose OWN Active cell reads exactly `**ACTIVE**`
+     (possibly missing a backtick-wrapped slug) is used.
+  A conflict between sources (including an `ACTIVE — ...` Status cell on another row), or
+  more than one marker -> NO-OP + notice. The marker is never written onto a row that is
+  not certain to be the active one.
 
 Notice channel (C11): a one-line best-effort notice is emitted via SessionStart hook JSON
 output as {"systemMessage": "..."} on stdout. `systemMessage` is surfaced to the user
@@ -43,18 +46,18 @@ Fail-silent skeleton mirrors autolog.py / statusline-marker.py: never raises, ne
 """
 
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
-# INV8/C6: root comes ONLY from $CLAUDE_PROJECT_DIR — no __file__ fallback, no cwd
-# derivation, no walk-up. Mirrors autolog.py:get_project_root exactly (unmodified original).
-def get_project_root():
-    env = os.environ.get("CLAUDE_PROJECT_DIR", "")
-    if env:
-        return Path(env)
-    return None
+# Do not leave hooks/__pycache__/ in the plugin tree when this hook imports autolog.
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import autolog  # noqa: E402
+
+# The root comes from autolog.get_project_root(cwd): the shared root of the repo, the same
+# for the main checkout and every linked worktree. This file keeps no root logic of its own.
 
 
 PIPE_LINE_RE = re.compile(r"^[ \t]*\|")
@@ -106,19 +109,27 @@ def _set_canonical_marker(raw: str) -> str:
 def _oracle_would_resolve(text: str, expected_slug: str) -> bool:
     """Pre-write INV3 gate — see the call site's comment for why this exact shared
     worst-case check (not a re-implementation of either resolver's full contract) is
-    sufficient for both `resolve_active_slug` and `extractActiveSlug` post-transform.
+    sufficient for the reader of the `**ACTIVE**` row post-transform.
 
     AC25: mirrors the anchored resolvers' whole-cell marker test exactly — split the
     line on '|', trim each cell, and require exact equality to '**ACTIVE**' (not a
     substring). A mention of the token inside another cell (e.g. a description) no
     longer counts as a match here either."""
+    line = _marker_line(text)
+    if line is None:
+        return False
+    m = re.search(r"`([^`]+)`", line)
+    return bool(m and m.group(1) == expected_slug)
+
+
+def _marker_line(text: str):
+    """First `|`-line with a whole trimmed cell equal to `**ACTIVE**`, else None."""
     for line in text.splitlines():
         if not re.match(r"\s*\|", line):
             continue
         if any(cell.strip() == "**ACTIVE**" for cell in line.split("|")):
-            m = re.search(r"`([^`]+)`", line)
-            return bool(m and m.group(1) == expected_slug)
-    return False
+            return line
+    return None
 
 
 def conform(original: str):
@@ -129,6 +140,11 @@ def conform(original: str):
     decides whether to write based on new_text != original, and always uses the returned
     notice (None => stay silent, per C11).
     """
+    # M7/AC11: with no whole-cell `**ACTIVE**` marker, no rewrite and no notice, whatever
+    # else is malformed. This check runs first.
+    if not _marker_line(original):
+        return original, None
+
     lines = original.splitlines(keepends=True)
 
     pipe_idxs = [i for i, l in enumerate(lines) if PIPE_LINE_RE.match(l)]
@@ -194,6 +210,10 @@ def conform(original: str):
     canonical_rows = [i for i, r in enumerate(rows) if r["active_kind"] == "canonical"]
     status_cell_rows = [i for i, r in enumerate(rows) if r["status_is_active"]]
 
+    # M7/AC11: zero whole-cell `**ACTIVE**` markers -> no rewrite, no notice.
+    if not canonical_rows:
+        return original, None
+
     # Rule 1: standalone prose marker, scanned ONLY outside the data-row lines, so
     # Description/Status cell text can never be mistaken for it (mis-identification guard).
     data_line_set = set(range(data_start_idx, data_start_idx + len(data_lines)))
@@ -223,19 +243,13 @@ def conform(original: str):
             return original, NOOP_DRIFT_NOTICE  # prose vs. marker/status-cell disagree
         active_idx = candidate
     else:
-        if canonical_rows:
-            if len(canonical_rows) > 1:
-                return original, NOOP_DRIFT_NOTICE  # multiple canonical markers
-            candidate = canonical_rows[0]
-            if conflicts_with(candidate):
-                return original, NOOP_DRIFT_NOTICE  # canonical vs. status-cell disagree
-            active_idx = candidate
-        elif status_cell_rows:
-            if len(status_cell_rows) > 1:
-                return original, NOOP_DRIFT_NOTICE  # multiple status-cell candidates
-            active_idx = status_cell_rows[0]
-        else:
-            return original, NOOP_DRIFT_NOTICE  # AC8: zero recognisable marker, non-empty
+        # canonical_rows is non-empty here (checked above).
+        if len(canonical_rows) > 1:
+            return original, NOOP_DRIFT_NOTICE  # multiple canonical markers
+        candidate = canonical_rows[0]
+        if conflicts_with(candidate):
+            return original, NOOP_DRIFT_NOTICE  # canonical vs. status-cell disagree
+        active_idx = candidate
 
     # Build the conformed rows: backtick-wrap every slug cell; place the canonical marker
     # ONLY on the identified active row. Every other cell is passed through unchanged.
@@ -256,18 +270,11 @@ def conform(original: str):
 
     target_slug = rows[active_idx]["slug_stripped"]
 
-    # INV3 safety gate: never COMMIT a conform unless it is verifiably safe under BOTH
-    # unmodified, anchored oracle resolvers (statusline.js:extractActiveSlug, autolog.py:
-    # resolve_active_slug). Both scan `|`-lines top-to-bottom and short-circuit on the
-    # FIRST line carrying a whole trimmed cell exactly equal to "**ACTIVE**", extracting
-    # its first backtick-wrapped cell (AC25: whole-cell, not substring — a Description
-    # cell that merely mentions "**ACTIVE**" as prose no longer collides in either
-    # resolver). Since every row's slug is now backtick-wrapped, JS's start-anchored
-    # match and Python's anywhere-in-line match agree on this same worst case, so a
-    # single top-down replay against the identical trigger condition suffices as the
-    # pre-write guard for both. If it would NOT resolve correctly, this is the
-    # mis-identification-guard escape hatch: refuse the write, no-op + notice instead
-    # (never write a "conforming" file that the real resolvers cannot correctly read).
+    # Safety gate: never COMMIT a conform unless the first `|`-line with a whole trimmed
+    # cell equal to "**ACTIVE**" carries the identified slug as its first backtick-wrapped
+    # cell (AC25: whole-cell, not substring). No other reader of that row remains (M7);
+    # this replay only checks that the written row names the slug we identified. If it
+    # does not, refuse the write: no-op + notice.
     if not _oracle_would_resolve(new_text, target_slug):
         return original, NOOP_DRIFT_NOTICE
 
@@ -275,16 +282,20 @@ def conform(original: str):
 
 
 def main() -> None:
-    # Best-effort stdin drain; this hook's behaviour never depends on the event payload
-    # (it must act identically on every SessionStart source per C2).
+    # Read the event for `cwd` only. The hook acts the same on every SessionStart source
+    # (C2). A bad or empty payload gives cwd None, and autolog falls back to
+    # $CLAUDE_PROJECT_DIR.
+    cwd = None
     try:
-        sys.stdin.read()
+        event = json.loads(sys.stdin.read())
+        if isinstance(event, dict) and isinstance(event.get("cwd"), str):
+            cwd = event["cwd"] or None
     except Exception:
         pass
 
-    root = get_project_root()
+    root = autolog.get_project_root(cwd)
     if root is None:
-        return  # AC11: unset/empty $CLAUDE_PROJECT_DIR -> silent no-op
+        return  # AC11: no git root and unset/empty $CLAUDE_PROJECT_DIR -> silent no-op
 
     ws_dir = root / ".workspace"
     if not ws_dir.is_dir():
