@@ -1,6 +1,6 @@
 # Ideation Spiral
 
-The ideation spiral is the front-of-pipeline phase that turns a vague idea or rough problem
+The ideation spiral is the front-of-pipeline phase. It turns a vague idea or rough problem
 statement into a crisp, testable concept and a per-hypothesis test plan. It runs **before**
 research or proposal-writing — for the moments when you know you want to build *something* but
 have not yet decided *what*. The output is a durable `ideation.md` artefact that feeds the rest
@@ -22,7 +22,7 @@ Say any of the following in your workspace conversation to invoke the spiral inl
 - "explore this before we spec it"
 
 These sit **before** the existing pipeline verbs. If you say "spec it" or "research this" with a
-concept that is already crisp, those verbs still route normally — the spiral never pre-empts an
+concept that is already crisp, those verbs still route normally. The spiral never pre-empts an
 explicit "research/spec it" instruction. If the idea is visibly vague, the orchestrator may
 *offer* the spiral first, but you decide.
 
@@ -35,20 +35,22 @@ within it.
 A spiral session moves through four ordered phases:
 
 **Phase 1 — Frame (Socratic).** The orchestrator surfaces the real problem under your stated
-idea: the actual need, what would make a concept valuable, which constraints are worth relaxing,
-and what has already been tried. It confirms the framing in one line before moving on.
+idea. It covers the actual need, what would make a concept valuable, which constraints are
+worth relaxing, and what has already been tried. It confirms the framing in one line
+before moving on.
 
-**Phase 2 — Diverge.** Candidate directions are generated as *hypotheses* ("if we do X, then Y,
-because Z"), spanning the obvious, the inverted, approaches borrowed from adjacent fields,
-constraint-flipped angles, and combinations. No direction is killed in this phase.
+**Phase 2 — Diverge.** The orchestrator generates candidate directions as *hypotheses* ("if we
+do X, then Y, because Z"). They span the obvious, the inverted, approaches borrowed from
+adjacent fields, constraint-flipped angles, and combinations. No direction is killed in this
+phase.
 
-**Phase 3 — Challenge (adversarial pass).** The set is attacked to enforce structural
-completeness: anchoring (multiple directions that are really one in disguise), missing classes of
-approach, fake novelty, and the unexamined obvious-best. This phase is internal to the skill —
-it is not a dispatched agent.
+**Phase 3 — Challenge (adversarial pass).** The orchestrator attacks the set to enforce
+structural completeness. It looks for anchoring (several directions that are one in disguise),
+missing classes of approach, fake novelty, and the unexamined obvious-best. This phase is
+internal to the skill. It is not a dispatched agent.
 
-**Phase 4 — Converge / re-loop.** With your reactions, the space narrows, surviving hypotheses
-sharpen, and a cheap falsifying test is attached to each. If the convergence gate (below) is not
+**Phase 4 — Converge / re-loop.** With your reactions, the space narrows. Surviving
+hypotheses sharpen, and each gets a cheap falsifying test. If the convergence gate (below) is not
 yet met, the loop returns to Phase 2/3 for a tighter pass. Each loop is expected to be smaller
 than the last.
 
@@ -58,14 +60,14 @@ Convergence is user-declared but **blocked** until the objective structural-comp
 passes. You declare "done" or "lock it in" — but that declaration only takes effect when ALL
 four conditions hold:
 
-- **(a) Hypotheses are MECE** — mutually exclusive (no two directions are the same restated) and
-  collectively exhaustive at the chosen frame (every missing class of approach has been named and
-  either filled or explicitly ruled out).
+- **(a) Hypotheses are MECE.** MECE means mutually exclusive and collectively exhaustive.
+  Mutually exclusive: no two directions are the same restated. Collectively exhaustive at the
+  chosen frame: you named every missing class of approach and either filled it or ruled it out.
 - **(b) Every hypothesis is falsifiable with a stated test** — each carries at least one cheap,
   concrete test that could disconfirm it. "Test: TBD" fails the gate.
-- **(c) The converged concept is crisp and testable** — stated in one or two sentences with no
-  unresolved either/or, expressed such that `proposal-writer` could derive objectively checkable
-  acceptance criteria from it.
+- **(c) The converged concept is crisp and testable** — it takes one or two sentences, with no
+  unresolved either/or. `proposal-writer` could derive objectively checkable acceptance criteria
+  from it.
 - **(d) Rejected branches are recorded with a reason** — each explored-then-dropped direction
   carries a one-line rejection rationale; divergence is not silently discarded.
 
@@ -79,9 +81,9 @@ top of it.
 ### What the spiral is for
 
 The spiral solves the gap that exists **before** research or proposal-writing: deciding *what* to
-build before *how* to build it. It is the right tool when the concept itself is not yet decided
-— when you have a vague idea, a rough problem statement, or a space you want to explore before
-committing the pipeline to it.
+build before *how* to build it. It is the right tool when you have not yet decided the concept itself. Use it when you have
+a vague idea, a rough problem statement, or a space to explore before you commit the
+pipeline to it.
 
 ### What it produces
 
@@ -127,18 +129,18 @@ sections are:
 
 ### In-workspace: feeding the pipeline
 
-`ideation.md` is the **front-of-pipeline input** the existing pipeline previously lacked. It
-precedes and supplements the raw idea — it does not replace it; it upgrades it from vague to
-crisp. **Reaching convergence never auto-dispatches a downstream agent.** The next step is
+`ideation.md` is the **front-of-pipeline input** that the pipeline previously lacked. It
+precedes and supplements the raw idea. It does not replace the idea. It upgrades the idea from
+vague to crisp. **Reaching convergence never auto-dispatches a downstream agent.** The next step is
 surfaced to you as a one-line handoff; you choose what comes next.
 
 Two paths, neither forced:
 
 - **`proposal-writer` directly** — when the concept is crisp enough to write acceptance criteria
   without additional research. Hand the orchestrator your `ideation.md` and say "spec it."
-- **`research-harvester` first, then `proposal-writer`** — when the open hypotheses benefit from
-  prior art or domain knowledge before committing to a proposal. The per-hypothesis test plan in
-  `ideation.md` is exactly the set of decided questions for research to investigate.
+- **`research-harvester` first, then `proposal-writer`** — when the open hypotheses need prior
+  art or domain knowledge before you commit to a proposal. The per-hypothesis test plan in
+  `ideation.md` is the set of decided questions for research to investigate.
 
 Research is **optional** on this seam — a routing choice you make, never a mandatory step.
 
@@ -148,10 +150,10 @@ Research is **optional** on this seam — a routing choice you make, never a man
 outside the workspace into any tool or workflow:
 
 - **Paste the finalised concept + test plan** into an external issue tracker, product brief, or
-  design doc to give downstream contributors a crisp starting point.
+  design doc. Downstream contributors then get a crisp starting point.
 - **Drop it into another LLM conversation** as a structured brief — the five-section format
   carries its own context and requires no explanation.
-- **Archive it as a decision record** alongside a codebase, RFC, or ADR process — the rejected
+- **Archive it as a decision record** alongside a codebase, RFC, or ADR process. The rejected
   branches + reasons section documents why alternatives were not chosen.
 
 The five-section structure makes `ideation.md` a documented, first-class input anywhere — not

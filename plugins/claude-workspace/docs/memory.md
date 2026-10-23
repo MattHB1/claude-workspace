@@ -25,10 +25,10 @@ messages, but they never write it.
 
 Each initiative gets its own memory under its `.workspace/<slug>/memory/`
 subfolder. This tier is **episodic and scoped to a single initiative**: it records
-what that initiative did and decided, and references no other project. It exists so
-a long, multi-day orchestrator session can offload its early history to disk and
-reload only what is relevant, keeping a fresh working context instead of letting
-the window fill with rot.
+what that initiative did and decided, and references no other project. A long,
+multi-day orchestrator session uses it to move its early history to disk. The
+session reloads only what it needs. This keeps the working context fresh, so the
+window does not fill with stale text.
 
 It is created on demand the first time an initiative uses memory.
 
@@ -70,11 +70,12 @@ copies the payload.
 
 ### When it loads and persists
 
-- **Bootstrap (read):** after the session picks its initiative from the registry list,
-  read `index.md` first (it is small by design), then the **journal tail -- at most
-  the last 20 entries** -- then the specific task/proposal for the work in hand.
-  Page in older entries or `archive/` files only on demand via explicit path or
-  `grep`. Never reload the full history; bounded re-ingestion is the whole point.
+- **Bootstrap (read):** the session first picks its initiative from the registry
+  list. Then it reads `index.md` (it is small by design). Next it reads the
+  **journal tail -- at most the last 20 entries**. Last it reads the task or
+  proposal for the work in hand. Load older entries or `archive/` files only on
+  demand, by explicit path or `grep`. Never reload the full history.
+  Bounded re-reading is the whole point.
 - **Teardown (write):** at session end and at safe checkpoints, append a journal
   entry and refresh the index. Treat every checkpoint as "assume interruption" so a
   reset mid-project loses nothing.
@@ -120,8 +121,8 @@ Per-initiative memory is episodic by construction and references no other projec
 Some knowledge, though, is **durable and recurring across separate projects**:
 stable facts about entities you work with, reusable how-to lessons, and durable
 preferences or conventions. The cross-project shared tier is a single,
-above-the-project home for exactly that knowledge, so you can reuse it on a new
-project instead of re-deriving and duplicating it.
+above-the-project home for exactly that knowledge. You reuse it on a new project,
+so you do not derive it again or copy it.
 
 It is a bespoke flat-file home one level up from any project, under
 `~/.claude/shared-memory/`. It is **not** native Claude Code auto-memory and
@@ -166,32 +167,32 @@ silently merged or auto-resolved**.
 ### How to promote a lesson (manual, explicit, orchestrator-owned)
 
 Knowledge enters the shared tier **only by an explicit promotion decision made by
-the orchestrator** -- on the user's instruction or on a read-only agent's surfaced
-candidate. There is **no automatic, on-recurrence, or background promotion** of any
+the orchestrator**. The orchestrator decides on the user's instruction or on a
+candidate that a read-only agent surfaced. There is **no automatic, on-recurrence, or background promotion** of any
 kind.
 
 - **Read-only agents may only suggest.** `research-harvester`, `task-checker`,
   `implementation-verifier`, `context-recovery`, and `archivist` may read the
-  shared tier and surface a "this looks reusable" candidate by **returning it as
+  shared tier. They surface a "this looks reusable" candidate by **returning it as
   content**. They never write the tier. The orchestrator decides and persists.
-- **Every claim is a markdown + YAML-frontmatter file** in a namespace dir, with
-  these mandatory fields: `type` (`semantic` / `procedural` / `preference`),
-  `source` (the project(s) it was learned in), `scope` (the validity scope -- a
-  namespace/entity, or `global`), a **supersedes / staleness** marker, and `trust`
-  (`verified` vs `asserted`).
+- **Every claim is a markdown + YAML-frontmatter file** in a namespace dir. It has
+  these mandatory fields. `type` is `semantic`, `procedural` or `preference`.
+  `source` names the project or projects where it was learned. `scope` is the
+  validity scope: a namespace or entity, or `global`. A **supersedes / staleness**
+  marker and `trust` (`verified` or `asserted`) complete the list.
 - **De-contextualization guard.** A project-specific fact must record its source
-  project and a bounded `scope`, never an unqualified `global` -- otherwise lifting
-  it out of its project silently drops the implicit "...in project X" qualifier.
-  For example, a build-tool fact learned in one project should be scoped to that
+  project and a bounded `scope`, never an unqualified `global`. Otherwise the fact
+  silently loses the implicit "...in project X" qualifier when it leaves its
+  project. For example, a build-tool fact learned in one project should be scoped to that
   project family (such as `scope: acme/service-x`), not to `global`.
 - **Dedup before writing.** Check for an existing claim with the same or
   overlapping scope, keyed on namespace/scope plus `type`. If one exists,
   **update or supersede** it (set the supersedes marker, archive the old) rather
   than appending a parallel duplicate.
 
-Consolidation and pruning are also orchestrator-owned and non-destructive:
-superseded or stale claims are rolled up into a summary and **moved to
-`archive/`**, never hard-deleted; full history stays recoverable via git.
+The orchestrator also owns consolidation and pruning, and they destroy nothing.
+The orchestrator rolls superseded or stale claims up into a summary. It **moves
+them to `archive/`** and never hard-deletes them. Git keeps the full history.
 
 ### How to inspect it
 
@@ -203,10 +204,10 @@ The shared tier is **plain files under `~/.claude/shared-memory/`** -- read and
   tells you what exists and where without loading everything.
 - **Skim the journal:** `~/.claude/shared-memory/journal.md` is the append-only log
   of promotion events and shared decisions.
-- **Read the namespace claim files:** open the `global/` directory plus any
-  project-family namespace dir (for example `acme/`) and read the individual claim
-  files; each carries its `type`, `source`, `scope`, staleness marker, and `trust`
-  in frontmatter.
+- **Read the namespace claim files:** open the `global/` directory and any
+  project-family namespace dir (for example `acme/`). Read the individual claim
+  files. Each file carries its `type`, `source`, `scope`, staleness marker, and
+  `trust` in frontmatter.
 - **Grep across them:** keyword search is the supported retrieval, for example
   `grep -ri "<keyword>" ~/.claude/shared-memory/`. Because it is keyword-only,
   the miss rate across unrelated projects is higher than within one project -- an
@@ -219,12 +220,11 @@ tracked.)
 
 ### How to disable / opt out
 
-There is **no separate disable command or toggle** -- shared memory is **opt-in
-through the project's namespace declaration**, so opting out is simply not opting
-in.
+There is **no separate disable command or toggle**. Shared memory is **opt-in
+through the project's namespace declaration**, so to opt out you do not opt in.
 
-A project reads the shared tier only if it **declares which namespaces it reads** in
-a small project-level file at its `.workspace/` root: `.workspace/namespaces`
+A project reads the shared tier only if it **declares which namespaces it reads**.
+It does this in a small project-level file at its `.workspace/` root: `.workspace/namespaces`
 (filename non-load-bearing). That file holds a parseable list of namespace names
 (always `global/`, plus zero or more project-family namespaces). It is the
 project's cross-project membership and is **shared by all the project's
@@ -249,12 +249,12 @@ So to control participation:
 
 Claude Code's native auto-memory (its `MEMORY.md`/auto-memory) is a **separate
 per-repository tier**: cwd-keyed, machine-local, non-git, and Claude-written, with
-its own home. It coexists with the two workspace tiers but is **not mirrored** into
-or out of either one in either direction, and it is **not** the cross-project tier.
+its own home. It coexists with the two workspace tiers. It is **not mirrored** into
+or out of either one. It is **not** the cross-project tier.
 
-The net result is exactly one documented home per kind of state: per-initiative
-working state in the journal+index, durable cross-project knowledge in
-`~/.claude/shared-memory/`, and per-repository Claude-written learnings in native
+Each kind of state has exactly one documented home. Per-initiative working state
+lives in the journal and index. Durable cross-project knowledge lives in
+`~/.claude/shared-memory/`. Per-repository Claude-written learnings live in native
 auto-memory.
 
 ---
