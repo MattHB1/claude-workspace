@@ -100,6 +100,26 @@ Parallel sessions then use different branches.
 When two live sessions share one checkout, the orchestrator makes a git worktree
 at `<root>/.claude/worktrees/<slug>` for the new session.
 
+**Worktree clean-up.** The plugin never removes a worktree by itself. The orchestrator
+runs a merge check once at Bootstrap, after your pick, and again at Switch. The check
+covers every linked worktree of the repo. For each branch it asks `gh pr view` for the PR
+state. If the state is `MERGED`, the orchestrator asks `remove worktree <path>? y/n`.
+It removes the worktree only on "y". Any other answer leaves it in place. The plugin
+never uses `--force`. If git refuses, the orchestrator reports git's message. The
+removal writes nothing to the tracker.
+
+The check skips a worktree, with no prompt, in these cases:
+
+- The PR is not merged, or `gh` cannot tell (no `gh`, no login, no remote, no PR). This
+  skip is silent.
+- The worktree is the checkout of this session.
+- Another live session with the same `root=` uses the worktree. The orchestrator names
+  that session's marker file. The stale-marker rule above applies.
+- The worktree has uncommitted or untracked files. The orchestrator says in one line
+  that the worktree stays.
+
+The check does not delete the local branch.
+
 To make a repo **main-allowed**, write the single word `allowed` to
 `<repo>/.workspace/main-commits`:
 
