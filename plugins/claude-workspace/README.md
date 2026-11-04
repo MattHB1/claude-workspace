@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.21.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.22.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it in plain language. It researches your idea and turns it into a spec. It plans the work and builds it. Independent, adversarial checks catch a plan or build that drifts from what you agreed, before you ship. Every decision lands in a plain file that you can read, search and revert. The work stays traceable and does not drift. Even a multi-day project picks up where you left off.
 
@@ -53,7 +53,7 @@ An initiative starts from a ticket. You give the orchestrator the ticket identif
 
 The branch name comes from one of two places, and the orchestrator does not guess between them. It uses the name that your tracker supplies. If the tracker supplies none, it uses the initiative slug. The orchestrator never invents a branch name from the ticket title.
 
-Git actions belong to the orchestrator. An agent never runs them. After a task passes verification, the orchestrator commits without asking. Before it pushes, it asks you a one-line `y/n` question. It asks again before it opens a pull request. Those two actions leave your machine, and your team can see them.
+Git actions belong to the orchestrator. An agent never runs them. After a task passes verification, the orchestrator commits without asking. Before it pushes, it asks you a one-line `y/n` question. It asks again before it opens a pull request. Those two actions leave your machine, and your team can see them. At Bootstrap and Switch, the orchestrator also runs a merge check. It looks at each linked worktree of the repo and asks `gh` if the branch pull request is merged. If it is merged, the orchestrator asks `remove worktree <path>? y/n`. It removes the worktree only if you answer `y`. It never uses `--force`. It skips the worktree, with no prompt, when `gh` cannot tell, when the pull request is not merged, when the worktree is this session's checkout, or when another live session uses it. It also skips it, and tells you, when the worktree has uncommitted or untracked files.
 
 Your tracker gets an update at two moments only. The first moment is when work starts. The second is when the pull request opens. Each one is a `y/n` prompt. Nothing is written to the tracker unless you say yes.
 
