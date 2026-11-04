@@ -56,7 +56,7 @@ of them dispatches a subagent or adds a new agent. The verbs are exactly
 | You say... | What happens |
 |---|---|
 | "new initiative <name>" / "start a new initiative" | creates `.workspace/<slug>/`, adds a registry entry, and picks it for this session (no `**ACTIVE**` marker is written) |
-| "switch to <name>" / "work on <name>" | changes the `slug=` line in this session's marker to that initiative; refused if another live session works on it; no files move |
+| "switch to <name>" / "work on <name>" | changes the `slug=` line in this session's marker to that initiative; refused if another live session works on it; no workspace artefacts move; Switch then runs the merge check |
 | "list initiatives" / "what's in this workspace" | reports the slug, one-line description and status of every initiative, from the registry |
 
 When the workspace starts, the orchestrator lists the open initiatives and waits
@@ -98,7 +98,7 @@ The merge check skips a worktree, with no prompt, in these cases:
 - Another live session uses the worktree. The orchestrator names that session's marker file.
 - The worktree has uncommitted or untracked files. The orchestrator tells you in one line that it stays.
 
-If git refuses the removal, the orchestrator stops and reports git's message. It never uses `--force`.
+If git refuses the removal, the orchestrator stops that removal and reports git's message. It never uses `--force`.
 The removal writes nothing to the tracker.
 
 A push and a pull request leave your machine, and your team can see them.
