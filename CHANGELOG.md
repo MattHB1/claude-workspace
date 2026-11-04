@@ -5,6 +5,18 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0] - 2026-11-04
+
+### Added
+- **Merge check** — at Bootstrap and at Switch, the workspace skill lists the linked worktrees of
+  the repo. For each one, it asks `gh` if the branch's pull request has merged. When the PR has merged, it
+  asks `remove worktree <path>? y/n`. On "y" it runs `git worktree remove`. On any other answer it
+  does nothing.
+- The check skips a worktree when the path is this session's checkout, when another session
+  marker uses the path, when the worktree has uncommitted or untracked files, or when the worktree
+  is detached. It also skips silently when `gh` fails (no `gh`, no login, no remote, no PR).
+- The check never uses `--force`. It does not delete the branch. It writes nothing to the tracker.
+
 ## [1.21.0] - 2026-10-23
 
 ### Added
