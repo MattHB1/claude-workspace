@@ -98,6 +98,9 @@ The merge check skips a worktree, with no prompt, in these cases:
 - Another live session uses the worktree. The orchestrator names that session's marker file.
 - The worktree has uncommitted or untracked files. The orchestrator tells you in one line that it stays.
 
+Git-ignored files do not stop the prompt. The removal deletes them with no warning from git.
+So the orchestrator lists them first, before the prompt. It shows up to 10 entries, then a count of the rest.
+
 If git refuses the removal, the orchestrator stops that removal and reports git's message. It never uses `--force`.
 The removal writes nothing to the tracker.
 
