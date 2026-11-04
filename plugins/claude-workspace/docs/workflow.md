@@ -80,7 +80,8 @@ guess.
 
 Branch, commit, push, and open-PR are **orchestrator actions**. No agent performs
 a git action, and git is never an agent's write-target. These actions use the existing
-flow points. They add no new stage and no extra dispatch.
+flow points. They add no new stage and no extra dispatch. The one exception is the
+merge check. It is a new step at Bootstrap and at Switch, and it adds no dispatch.
 
 | Moment | What the orchestrator does |
 |---|---|
@@ -88,6 +89,17 @@ flow points. They add no new stage and no extra dispatch.
 | after a task passes verification | commits, with no prompt |
 | after that commit | asks `push <branch> to origin? y/n`, and pushes only on "y" |
 | after the push | asks `open a PR for <branch>? y/n`, and opens it only on "y" |
+| at Bootstrap and at Switch | runs the merge check on every linked worktree. If `gh pr view` says the PR for a branch is merged, it asks `remove worktree <path>? y/n`, and removes the worktree only on "y" |
+
+The merge check skips a worktree, with no prompt, in these cases:
+
+- The PR is not merged, or `gh` cannot tell (no `gh`, no login, no remote, no PR, or an error). The skip is silent.
+- The worktree is the checkout of this session.
+- Another live session uses the worktree. The orchestrator names that session's marker file.
+- The worktree has uncommitted or untracked files. The orchestrator tells you in one line that it stays.
+
+If git refuses the removal, the orchestrator stops and reports git's message. It never uses `--force`.
+The removal writes nothing to the tracker.
 
 A push and a pull request leave your machine, and your team can see them.
 The orchestrator always asks first.
