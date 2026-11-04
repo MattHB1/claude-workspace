@@ -118,6 +118,12 @@ The check skips a worktree, with no prompt, in these cases:
 - The worktree has uncommitted or untracked files. The orchestrator says in one line
   that the worktree stays.
 
+Git-ignored files do not stop the prompt. The removal deletes them with no warning.
+So before the prompt, the orchestrator lists them. It prints one line that says the
+worktree has git-ignored files that the removal deletes. Then it prints the first 10
+entries, and `and <N> more` when there are more than 10. The prompt comes last. When
+there are no such files, only the prompt shows.
+
 The check does not delete the local branch.
 
 To make a repo **main-allowed**, write the single word `allowed` to
