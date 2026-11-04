@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The check skips a worktree when the path is this session's checkout, when another session
   marker uses the path, when the worktree has uncommitted or untracked files, or when the worktree
   is detached. It also skips silently when `gh` fails (no `gh`, no login, no remote, no PR).
+- The prompt first lists the git-ignored files that the removal deletes. Git-ignored files do not
+  stop the prompt. When there are any, one line says the worktree has them. Then the prompt shows
+  the first 10 entries, one per line, and `and <N> more` when there are more than 10. The prompt
+  line comes last. When there are none, only the prompt line shows.
 - The check never uses `--force`. It does not delete the branch. It writes nothing to the tracker.
 
 ## [1.21.0] - 2026-10-23
