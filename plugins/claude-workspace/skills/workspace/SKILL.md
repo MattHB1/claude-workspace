@@ -234,7 +234,13 @@ git -C "<root>" worktree list --porcelain | awk '/^worktree /{n++; p=substr($0,1
 - Another live session uses `<path>`: run the pick-check recipe in "Session pick" and read its `LIVE-CHECKOUT` lines. Do not copy the marker scan. If a line has `checkout=<path>`, give no prompt and name that marker file. The stale-marker rule in "Session pick" applies unchanged.
 - `git -C "<path>" status --porcelain` prints any line: give no prompt. Tell the user in one line that `<path>` has uncommitted or untracked files and stays.
 
-**4. Ask, then remove.** Otherwise ask `remove worktree <path>? y/n`. On "y", run `git -C "<root>" worktree remove "<path>"`. On any other answer, do nothing. If git refuses, stop that removal and report git's message to the user. Never use `--force`. The removal writes nothing to the tracker (see "Tracker write-back").
+**4. Ask, then remove.** When no step-3 case applies, do these steps. Git-ignored files do not stop the prompt, because `git worktree remove` deletes them with no warning. Before the prompt, list them. This recipe prints the first 10 git-ignored entries (an ignored directory is one entry), one per line, then `and <N> more` when there are more than 10. It prints nothing when there are none.
+
+```
+git -C "<path>" status --porcelain --ignored --untracked-files=normal | awk '/^!! /{n++; if(n<=10) print substr($0,4)} END{if(n>10) print "and " n-10 " more"}'
+```
+
+When the recipe prints anything, first print one line that says `<path>` has git-ignored files that the removal deletes, then print the recipe output. When it prints nothing, print only the prompt. The prompt is `remove worktree <path>? y/n`, and it comes last. On "y", run `git -C "<root>" worktree remove "<path>"`. On any other answer, do nothing. If git refuses, stop that removal and report git's message to the user. Never use `--force`. The removal writes nothing to the tracker (see "Tracker write-back").
 
 ### Tracker write-back — prompt-gated, exactly two moments
 
