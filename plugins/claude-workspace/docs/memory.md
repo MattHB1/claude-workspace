@@ -48,11 +48,8 @@ It is created on demand the first time an initiative uses memory.
   reality) or `asserted` (claimed only), so readers know what to re-check rather
   than blindly trust.
 
-  Three more fields can appear in an entry's frontmatter:
+  One more field can appear in an entry's frontmatter:
 
-  - `tier` -- the task-risk tier decision (`T1`/`T2`/`T3`). Optional-but-recorded:
-    existing entries without it stay valid. Recorded at teardown on the relevant
-    entry.
   - `outcome` -- the verification/result status (`pass`/`fail`/`retry`).
     **Mandatory on every `implementation-verifier` and `task-checker` entry**;
     optional-but-recorded on all other entries. Recorded at teardown.

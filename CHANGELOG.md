@@ -5,6 +5,28 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0] - 2026-11-13
+
+### Changed
+- **Adversary effort** — `task-checker` and `implementation-verifier` now set `effort: medium`.
+  Their models stay `claude-opus-5-5`. The Split-AC union check stays on the verifier. It is a
+  bounded read of the sibling tasks' outputs against the whole acceptance criterion, so it does
+  not keep the whole agent on `high`.
+- **Decide, do not ask** — for work git can undo, the orchestrator decides and reports. The
+  "ask if unsure" lines are gone, and a handoff is a one-line status that states the next move
+  (for example "proposal updated → planning tasks"). Push, open-PR, worktree removal, and tracker
+  write-back still ask `y/n`. The same handoff wording in `docs/workflow.md` and
+  `docs/why-it-refuses.md` matches.
+- **`task-checker`** — it FAILs only a finding it has verified and can cite. A gap it can point
+  at in the proposal still FAILs. An unclear or unverifiable concern is WEAK / INFORMATIONAL,
+  not a FAIL and not BLOCKING.
+
+### Removed
+- **Task-risk `tier`** — the journal schema no longer records `tier: T1|T2|T3`, and Metric 1
+  (tier assigned per task) is gone. The flow already has no complexity-tiering. Metrics 2–5 keep
+  their numbers. `docs/memory.md` drops the field too. An old journal entry that still holds
+  `tier` stays valid. Do not write `tier` on a new entry.
+
 ## [1.22.0] - 2026-11-04
 
 ### Added

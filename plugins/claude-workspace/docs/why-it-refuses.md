@@ -17,7 +17,7 @@ The orchestrator does not rubber-stamp a proposal or a plan and start to build. 
 
 These checkers **only detect** deviations. They never patch what they find. When a checker FAILs something, the system does **not** quietly fix it in place. The correction goes **back to the generator** that made it. A failed proposal goes back to `proposal-writer`. A failed implementation goes back to `implementer`. The verifier never fixes its own findings, and the orchestrator does not hand-patch them either.
 
-The workflow also prefers **gates before progress**. It runs `task-checker` on the proposal before planning, and it runs `implementation-verifier` after each task. The system shows you the gate and lets you decide to proceed or skip. It does not rush ahead.
+The workflow also prefers **gates before progress**. It runs `task-checker` on the proposal before planning, and it runs `implementation-verifier` after each task. It reports the gate and goes on. It does not skip the gate, and it does not ask before an undoable next step.
 
 **What this looks like:**
 

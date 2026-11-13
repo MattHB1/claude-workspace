@@ -202,9 +202,9 @@ verify          ->  claude-workspace:implementation-verifier  (gate after each t
 ```
 
 Build and verify usually repeat per task. Build one task, verify it, then move to
-the next. The orchestrator prefers to run `task-checker` on the proposal before planning and
-`implementation-verifier` after each task. It shows you the gate and lets you
-decide to go on or skip.
+the next. The orchestrator runs `task-checker` on the proposal before planning and
+`implementation-verifier` after each task. It reports the gate and goes on.
+Both steps are undoable, so it does not ask.
 
 When an adversarial checker finds a FAIL, the fix goes **back to the
 generator**. A failed proposal check returns to `proposal-writer`. A failed implementation
@@ -247,9 +247,10 @@ follows your flow and does not force every stage.
   without touching anything else.
 - The orchestrator does not restart the pipeline from the top each turn. It reads
   the picked initiative's state, then acts on what you ask next.
-- It keeps you informed at each handoff with a one-line status. An example is
-  "proposal updated -> want me to plan it, or review it first?". Your
-  reply picks the next move.
+- It keeps you informed at each handoff with a one-line status that states the
+  next move. An example is "proposal updated -> planning tasks". It asks only
+  when the next step is not undoable, such as a push, a pull request, a
+  worktree removal, or a tracker write.
 
 Describe the next thing you want. The orchestrator dispatches the
 single right agent for it. The stages are a map of the usual path.

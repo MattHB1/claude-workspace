@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.22.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.23.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it in plain language. It researches your idea and turns it into a spec. It plans the work and builds it. Independent, adversarial checks catch a plan or build that drifts from what you agreed, before you ship. Every decision lands in a plain file that you can read, search and revert. The work stays traceable and does not drift. Even a multi-day project picks up where you left off.
 
