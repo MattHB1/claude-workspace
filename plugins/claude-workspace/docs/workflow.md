@@ -73,6 +73,7 @@ The create verb takes a **ticket identifier**. The orchestrator uses that identi
 initiative slug. A numeric slug is valid. The orchestrator reads the ticket with
 a tracker tool when one is available. Otherwise it asks you to paste the ticket
 text. It saves the ticket text as a file under the initiative's `research/`.
+This describes interactive mode. In headless mode, the runner supplies the ticket. See [docs/headless.md](./headless.md).
 
 The orchestrator finds the branch at create time, from one of two sources and no other. The first source is the
 branch name the tracker supplies. The second is the initiative slug, when the tracker
@@ -112,6 +113,8 @@ Tracker write-back happens at exactly **two** moments: when work starts, and whe
 the pull request opens (the handoff). Each moment is a one-line `y/n` prompt. Each writes to the tracker
 only on "y". There is no third moment. No tracker write happens without a
 "y".
+
+These prompts apply to interactive mode only. In headless mode, no step waits for you. See [docs/headless.md](./headless.md).
 
 The plugin has no fixed state names. It reads the real states from your tracker
 the first time a write-back prompt appears in a project. You choose which state

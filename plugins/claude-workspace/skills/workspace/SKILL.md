@@ -14,6 +14,9 @@ The harness shows this skill's base directory (`skills/workspace`) when it loads
 | `<base>/session-and-git.md` | You create, switch, list, or exit an initiative, or you pick, branch, worktree, merge-check, push, open a PR, or write the tracker. |
 | `<base>/memory-maintenance.md` | Bootstrap after the pick, a safe checkpoint, session end, or a guard or consolidation. |
 | `<base>/MEMORY-XPROJECT.md` | The project has `.workspace/namespaces` (read it once at that bootstrap), or you promote a claim to the shared tier. |
+| `<base>/headless.md` | Step 0, when `WORKSPACE_HEADLESS=1`. |
+
+In headless, `headless.md` overrides every prompt and stop named below.
 
 ## Layout
 
@@ -33,6 +36,7 @@ The **initiative**, not the project, is the first-class unit. Each initiative ow
     decisions.md         # you append; one entry per judge ruling
     research/            # you save research-harvester's brief
     verification/        # you save adversary reports
+    run-summary.json     # you write it; headless only
     memory/
       index.md           # you overwrite
       journal.md         # you append
@@ -75,6 +79,7 @@ Read-only agents (research-harvester, task-checker, implementation-verifier, con
 | `decisions.md` | you; append-only |
 | `research/`, `verification/`, `file-structure.md` | you, from the agent's returned text |
 | `main-commits` | the user |
+| `run-summary.json` | you |
 
 No read-only agent writes the registry or any memory file. This set is the nine agents. Do not add one.
 

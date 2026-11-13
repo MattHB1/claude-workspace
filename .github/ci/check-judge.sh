@@ -86,7 +86,7 @@ while IFS= read -r f; do
 done < <(find .github/ci .github/workflows -type f | sort)
 
 # De-duplicate while keeping order (the loop above may repeat nothing today, but stay safe).
-# (while-read rather than mapfile, so this runs on macOS's stock bash 3.2 too.)
+# (while-read loop, not a bash-4 builtin, so this runs on macOS stock bash 3.2 too.)
 deduped=()
 while IFS= read -r f; do
   deduped+=("${f}")

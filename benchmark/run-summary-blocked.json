@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "blocked",
+  "ticket": "TEST-101",
+  "slug": "TEST-101",
+  "branch": "test-101-fix-score",
+  "worktree": "/work/repo/.claude/worktrees/TEST-101",
+  "pr_url": null,
+  "stage_reached": "propose",
+  "started_at": "2026-11-13T15:00:00Z",
+  "finished_at": "2026-11-13T15:41:12Z",
+  "duration_seconds": 2472,
+  "tasks": {"planned": 4, "passed": 0},
+  "decisions": {"total": 7, "decided": 6, "ask_user": 1, "low_confidence": 2},
+  "blocked_reason": {"code": "needs_human", "questions": [{"text": "Which score range is correct?", "why_human": "The ticket does not state the product intent.", "category": "product-intent", "suggested_default": "Use 0 to 100."}], "tracker_note_written": true},
+  "failure": null,
+  "head_sha": "abc1234",
+  "pushed": true,
+  "notes": [],
+  "follow_ups": [],
+  "plugin_version": "1.26.0"
+}

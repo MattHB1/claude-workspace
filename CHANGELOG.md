@@ -5,6 +5,14 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.26.0] - 2026-11-13
+
+### Added
+- **Headless mode.** An unattended runner can take one tracker ticket to a pull request. It turns headless on with `WORKSPACE_HEADLESS=1` and gives the ticket in `WORKSPACE_TICKET`. No step waits for a person. Each run ends as `pr_opened`, `blocked` or `failed`, and writes `run-summary.json`. The runner guide is `docs/headless.md`. The CI checks are `check-headless.sh`, `check-run-summary.py` and `check-headless-run.sh`.
+
+### Changed
+- The docs say that the prompts and reminders in the interactive workflow apply to interactive mode only, and link `docs/headless.md`.
+
 ## [1.25.0] - 2026-11-13
 
 ### Added

@@ -8,30 +8,49 @@ on:
 
 jobs:
   structural-checks:
-    name: Structural integrity checks
-    runs-on: ubuntu-latest
+    name: Structural integrity checks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            sh: bash
+          - os: macos-latest
+            sh: /bin/bash
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Show bash version (macOS /bin/bash is 3.2)
+        if: runner.os == 'macOS'
+        run: /bin/bash --version
+
+      - name: Install jq if missing
+        if: runner.os == 'macOS'
+        run: command -v jq || brew install jq
+
       - name: Check manifests (plugin.json + marketplace.json)
-        run: bash .github/ci/check-manifests.sh
+        run: ${{ matrix.sh }} .github/ci/check-manifests.sh
 
       - name: Check agents (exactly the 9 expected agents present)
-        run: bash .github/ci/check-agents.sh
+        run: ${{ matrix.sh }} .github/ci/check-agents.sh
 
       - name: Check agent frontmatter (required keys in every agent)
-        run: bash .github/ci/check-frontmatter.sh
+        run: ${{ matrix.sh }} .github/ci/check-frontmatter.sh
 
       - name: Check skill files (workspace SKILL.md, on-demand includes, methodology skills)
-        run: bash .github/ci/check-skills.sh
+        run: ${{ matrix.sh }} .github/ci/check-skills.sh
 
       - name: Check namespacing tokens (claude-workspace:<agent> in SKILL.md)
-        run: bash .github/ci/check-namespacing.sh
+        run: ${{ matrix.sh }} .github/ci/check-namespacing.sh
 
       - name: Check judge agent (file limits, agent-count text, SKILL.md references)
-        run: bash .github/ci/check-judge.sh
+        run: ${{ matrix.sh }} .github/ci/check-judge.sh
 
       - name: Check releasing gates (PII / UESA / no-build-machinery / exact-tree)
-        run: bash .github/ci/check-releasing-gates.sh
+        run: ${{ matrix.sh }} .github/ci/check-releasing-gates.sh
+
+      - name: Check headless mode (rules file, env, preflight, summary schema)
+        run: ${{ matrix.sh }} .github/ci/check-headless.sh

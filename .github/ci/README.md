@@ -23,11 +23,14 @@ Tier 2 triggers only on release tags. The load-check job is additionally guarded
 - `README.md` — this file.
 - `check-agents.sh` — Tier 1: the agent files equal the expected set.
 - `check-frontmatter.sh` — Tier 1: each agent file has valid frontmatter.
+- `check-headless-run.sh` — Tier 2: the headless run check.
+- `check-headless.sh` — Tier 1: the headless-mode files and references.
 - `check-judge.sh` — Tier 1: the judge agent file (tools, effort, size, required words), the agent-count text, and the `SKILL.md` judge references.
 - `check-load.sh` — Tier 2: the headless load assertions.
 - `check-manifests.sh` — Tier 1: `plugin.json` and `marketplace.json` are valid, and the version badges match.
 - `check-multi-live.sh` — checks the per-session picks and worktrees. You run it by hand. No workflow runs it.
 - `check-namespacing.sh` — Tier 1: `SKILL.md` has a `claude-workspace:<agent>` token for each agent.
 - `check-releasing-gates.sh` — Tier 1: the release gates, including the PII scan.
+- `check-run-summary.py` — Tier 1: the `run-summary.json` files match the schema.
 - `check-skills.sh` — Tier 1: the workspace `SKILL.md`, the on-demand includes, and the methodology skills (including `ideation-spiral`) exist, with frontmatter where the file is a skill.
 - `expected.sh` — the shared lists that the checks use.

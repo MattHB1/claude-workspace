@@ -43,6 +43,7 @@ EXPECTED_TREE=(
   plugins/claude-workspace/skills/workspace/MEMORY-XPROJECT.md
   plugins/claude-workspace/skills/workspace/session-and-git.md
   plugins/claude-workspace/skills/workspace/memory-maintenance.md
+  plugins/claude-workspace/skills/workspace/headless.md
   plugins/claude-workspace/skills/ideate/SKILL.md
   plugins/claude-workspace/skills/decide/SKILL.md
   plugins/claude-workspace/skills/plan/SKILL.md
@@ -68,6 +69,8 @@ EXPECTED_TREE=(
   plugins/claude-workspace/docs/why-it-refuses.md
   plugins/claude-workspace/docs/workflow.md
   plugins/claude-workspace/docs/ideation-spiral.md
+  plugins/claude-workspace/docs/headless.md
+  plugins/claude-workspace/docs/run-summary.schema.json
   plugins/claude-workspace/scripts/install-statusline.js
   plugins/claude-workspace/scripts/statusline.js
   plugins/claude-workspace/scripts/session-pick-check.sh
@@ -75,6 +78,8 @@ EXPECTED_TREE=(
   plugins/claude-workspace/scripts/branch-start.sh
   plugins/claude-workspace/scripts/worktree-exclude.sh
   plugins/claude-workspace/scripts/worktree-for-branch.sh
+  plugins/claude-workspace/scripts/headless-env.sh
+  plugins/claude-workspace/scripts/headless-preflight.sh
   plugins/claude-workspace/hooks/hooks.json
   plugins/claude-workspace/hooks/autolog.py
   plugins/claude-workspace/hooks/conform-registry.py

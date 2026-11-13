@@ -30,7 +30,7 @@ grep -B4 -E '^outcome: fail' .workspace/<slug>/memory/journal.md | grep -c '^rol
 
 There is no count of mid-task user corrections. No signal for that exists.
 
-`git-push` and `pr-create` are written by the orchestrator after a task passes verification, and only when the `y/n` answer is "y".
+`git-push` and `pr-create` are written by the orchestrator after a task passes verification, and only when the `y/n` answer is "y". This describes interactive mode. In headless mode, no `y/n` prompt exists. See [docs/headless.md](./headless.md).
 
 **Metric 5 — Git push count:**
 

@@ -53,6 +53,7 @@ The `.workspace/` folder holds these items:
   <slug>/                 # one subfolder PER INITIATIVE -- non-colliding
     proposal.md           # this initiative's root of truth
     tasks.md              # this initiative's task list
+    run-summary.json      # headless runs only - the outcome of the run
     research/             # this initiative's research briefs
     verification/         # this initiative's check & verify reports
     memory/               # this initiative's working-memory + journal
@@ -98,13 +99,13 @@ deletes that marker and continues. Without your statement, the block stays.
 **Main-locked and main-allowed repos.** By default, a repo is **main-locked**.
 Parallel sessions then use different branches.
 When two live sessions share one checkout, the orchestrator makes a git worktree
-at `<root>/.claude/worktrees/<slug>` for the new session.
+at `<root>/.claude/worktrees/<slug>` for the new session. The two-live-sessions rule is for interactive mode only. A headless run always makes a worktree. See [docs/headless.md](./headless.md).
 
 **Worktree clean-up.** The plugin never removes a worktree by itself. The orchestrator
 runs a merge check once at Bootstrap, after your pick, and again at Switch. The check
 covers every linked worktree of the repo. For each branch it asks `gh pr view` for the PR
 state. If the state is `MERGED`, the orchestrator asks `remove worktree <path>? y/n`.
-It removes the worktree only on "y". Any other answer leaves it in place. The plugin
+It removes the worktree only on "y". Any other answer leaves it in place. The prompt exists in interactive mode only. In headless mode, the orchestrator asks nothing. See [docs/headless.md](./headless.md). The plugin
 never uses `--force`. If git refuses, the orchestrator reports git's message. The
 removal writes nothing to the tracker.
 
@@ -142,7 +143,7 @@ no slug. The orchestrator reads this state only from that file.
 session has been running. Past a threshold (default 2 hours), the orchestrator
 gives an advisory reminder. Type `/clear` or `/compact`, then re-invoke the
 workspace and pick again. Below the threshold, the reminder stays silent. It also stays silent if
-the session age can't be read. The verb then completes as normal.
+the session age can't be read. The verb then completes as normal. The reminder is for interactive mode only. See [docs/headless.md](./headless.md).
 
 **Guard checks on create/switch.** Create and switch both also run two guards. The
 index-bloat guard checks the size of the newly-picked initiative's `memory/index.md`.

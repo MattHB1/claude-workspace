@@ -1,0 +1,270 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "claude-workspace headless run summary",
+  "description": "Master copy of the run-summary.json fields and the status, stage and code enums.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "ticket",
+    "slug",
+    "branch",
+    "worktree",
+    "pr_url",
+    "stage_reached",
+    "started_at",
+    "finished_at",
+    "duration_seconds",
+    "tasks",
+    "decisions",
+    "blocked_reason",
+    "failure",
+    "head_sha",
+    "pushed",
+    "notes",
+    "follow_ups",
+    "plugin_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "pr_opened",
+        "blocked",
+        "failed"
+      ]
+    },
+    "ticket": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "worktree": {
+      "type": "string"
+    },
+    "pr_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stage_reached": {
+      "type": "string",
+      "enum": [
+        "preflight",
+        "pick",
+        "research",
+        "propose",
+        "check_proposal",
+        "plan",
+        "build",
+        "verify",
+        "push",
+        "pr"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "duration_seconds": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tasks": {
+      "type": "object",
+      "properties": {
+        "planned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "planned",
+        "passed"
+      ]
+    },
+    "decisions": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decided": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ask_user": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "low_confidence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "total",
+        "decided",
+        "ask_user",
+        "low_confidence"
+      ]
+    },
+    "blocked_reason": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "needs_human",
+                "proposal_check_limit",
+                "implementer_stop"
+              ]
+            },
+            "questions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "why_human": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "suggested_default": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              }
+            },
+            "tracker_note_written": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "code"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "no_ticket",
+                "invalid_bound",
+                "ticket_mismatch",
+                "no_ticket_text",
+                "no_root",
+                "concurrent_run",
+                "main_allowed_repo",
+                "no_default_branch",
+                "fetch_failed",
+                "no_origin",
+                "worktree_refused",
+                "dirty_main",
+                "gh_unavailable",
+                "registry_locked",
+                "push_failed",
+                "pr_failed",
+                "judge_error",
+                "build_check_failed",
+                "quality_check_unavailable",
+                "time_limit",
+                "task_limit"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "head_sha": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pushed": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "follow_ups": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plugin_version": {
+      "type": "string"
+    }
+  }
+}

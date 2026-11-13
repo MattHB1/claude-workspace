@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.25.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.26.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it in plain language. It researches your idea and turns it into a spec. It plans the work and builds it. Independent, adversarial checks catch a plan or build that drifts from what you agreed, before you ship. Every decision lands in a plain file that you can read, search and revert. The work stays traceable and does not drift. Even a multi-day project picks up where you left off.
 
@@ -49,13 +49,13 @@ You run only the stages you need. It is a map, not a track.
 
 ## Tickets, branches, and your tracker
 
-An initiative starts from a ticket. You give the orchestrator the ticket identifier. That identifier becomes the initiative slug. A number is a valid slug. The orchestrator reads the ticket with your tracker tool if one is connected. If none is connected, it asks you to paste the ticket text. In both cases the text is saved into the `research/` folder of the initiative.
+An initiative starts from a ticket. You give the orchestrator the ticket identifier. That identifier becomes the initiative slug. A number is a valid slug. The orchestrator reads the ticket with your tracker tool if one is connected. If none is connected, it asks you to paste the ticket text. In both cases the text is saved into the `research/` folder of the initiative. The paste step is for interactive mode only. In headless mode, the runner supplies the ticket. See [docs/headless.md](docs/headless.md).
 
 The branch name comes from one of two places, and the orchestrator does not guess between them. It uses the name that your tracker supplies. If the tracker supplies none, it uses the initiative slug. The orchestrator never invents a branch name from the ticket title.
 
 Git actions belong to the orchestrator. An agent never runs them. After a task passes verification, the orchestrator commits without asking. Before it pushes, it asks you a one-line `y/n` question. It asks again before it opens a pull request. Those two actions leave your machine, and your team can see them. At Bootstrap and Switch, the orchestrator also runs a merge check. It looks at each linked worktree of the repo and asks `gh` if the branch pull request is merged. If it is merged, the orchestrator asks `remove worktree <path>? y/n`. It removes the worktree only if you answer `y`. It never uses `--force`. It skips the worktree, with no prompt, when `gh` cannot tell, when the pull request is not merged, when the worktree is this session's checkout, or when another live session uses it. It also skips it, and tells you, when the worktree has uncommitted or untracked files. Git-ignored files do not stop the prompt. The removal deletes them. Before the prompt, the orchestrator lists them: up to 10 entries, then a count of the rest.
 
-Your tracker gets an update at two moments only. The first moment is when work starts. The second is when the pull request opens. Each one is a `y/n` prompt. Nothing is written to the tracker unless you say yes.
+Your tracker gets an update at two moments only. The first moment is when work starts. The second is when the pull request opens. Each one is a `y/n` prompt. Nothing is written to the tracker unless you say yes. The push, pull request, worktree and tracker prompts on this page apply to interactive mode only. In headless mode, no step waits for you. See [docs/headless.md](docs/headless.md).
 
 The plugin holds no state names of its own. It reads the real states from your tracker the first time you are asked. It records your choice for the project and does not ask again. If no tracker tool is connected, the plugin skips every tracker step in silence. You see no prompt, no notice and no error.
 
@@ -174,5 +174,6 @@ The full guide is split into focused pages under `docs/`:
 | [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows the initiative of this session in your Claude Code prompt. |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Fixes for permission errors, missing tools, marketplace auth, and the two "why did it refuse" cases. |
 | [docs/limitations.md](docs/limitations.md) | Known gaps and what the system is NOT (no semantic retrieval, no auto-promotion, no built-in delete, and more). |
+| [docs/headless.md](docs/headless.md) | How to run the workspace with no person present: the environment variables, the run summary file, and the `failed` and `blocked` outcomes. |
 | [docs/ideation-spiral.md](docs/ideation-spiral.md) | How to use the ideation spiral: its triggers, the Frame→Diverge→Challenge→Converge loop and the convergence gate. It also covers its limits, and how to pass `ideation.md` on to the pipeline or export it. |
 | [CHANGELOG.md](../../CHANGELOG.md) | Release history and notable changes per version. |
