@@ -7,9 +7,11 @@
 #      MEMORY-XPROJECT.md is a plain-markdown on-demand include with NO frontmatter by
 #      design (it begins "# Cross-project memory tier — full rules").  This script checks
 #      its presence with test -f and NEVER parses or asserts frontmatter on it (D6).
-#   3. The 8 methodology skills (ideate, decide, plan, reflect, ask, write-issue, plain,
-#      code-quality) each exist AND have valid YAML frontmatter with non-empty 'name'
-#      AND 'description'.
+#   3. The on-demand includes session-and-git.md and memory-maintenance.md exist
+#      (presence only; plain markdown, no frontmatter, same as MEMORY-XPROJECT.md).
+#   4. The methodology skills (ideate, decide, plan, reflect, ideation-spiral, ask,
+#      write-issue, plain, code-quality) each exist AND have valid YAML frontmatter
+#      with non-empty 'name' AND 'description'.
 #
 # Usage: bash .github/ci/check-skills.sh  (run from repo root)
 # Exit 0 — all checked files pass their respective checks.
@@ -19,6 +21,8 @@ set -euo pipefail
 
 SKILL_FILE="plugins/claude-workspace/skills/workspace/SKILL.md"
 MEMORY_FILE="plugins/claude-workspace/skills/workspace/MEMORY-XPROJECT.md"
+SESSION_FILE="plugins/claude-workspace/skills/workspace/session-and-git.md"
+MAINTENANCE_FILE="plugins/claude-workspace/skills/workspace/memory-maintenance.md"
 REQUIRED_KEYS=("name" "description")
 
 # Determine parse strategy: prefer python3 + pyyaml, fall back to grep.
@@ -167,10 +171,18 @@ if ! test -f "$MEMORY_FILE"; then
   fail=1
 fi
 
-# --- Check 3: Skills frontmatter (ideate, decide, plan, reflect, ask, write-issue, plain, code-quality) ---
+# --- Check 3: on-demand includes (presence only — no frontmatter asserted) ---
+for include in "$SESSION_FILE" "$MAINTENANCE_FILE"; do
+  if ! test -f "$include"; then
+    echo "FAIL: ${include} is absent."
+    fail=1
+  fi
+done
+
+# --- Check 4: Skills frontmatter ---
 # Each must exist and carry valid YAML frontmatter with non-empty 'name' and 'description'.
 # No 'claude-workspace:' namespace prefix is required in the 'name' field.
-METHODOLOGY_SKILLS=(ideate decide plan reflect ask write-issue plain code-quality)
+METHODOLOGY_SKILLS=(ideate decide plan reflect ideation-spiral ask write-issue plain code-quality)
 for skill in "${METHODOLOGY_SKILLS[@]}"; do
   mskill_file="plugins/claude-workspace/skills/${skill}/SKILL.md"
   if [ ! -f "$mskill_file" ]; then
@@ -203,5 +215,5 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
-echo "OK: ${SKILL_FILE} present with valid frontmatter (name, description); ${MEMORY_FILE} present; plugins/claude-workspace/skills/{ideate,decide,plan,reflect,ask,write-issue,plain,code-quality}/SKILL.md present with valid frontmatter."
+echo "OK: ${SKILL_FILE} present with valid frontmatter (name, description); ${MEMORY_FILE}, ${SESSION_FILE}, ${MAINTENANCE_FILE} present; methodology skills including ideation-spiral present with valid frontmatter."
 exit 0

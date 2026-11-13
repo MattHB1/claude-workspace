@@ -28,5 +28,5 @@ Tier 2 triggers only on release tags. The load-check job is additionally guarded
 - `check-multi-live.sh` — checks the per-session picks and worktrees. You run it by hand. No workflow runs it.
 - `check-namespacing.sh` — Tier 1: `SKILL.md` has a `claude-workspace:<agent>` token for each agent.
 - `check-releasing-gates.sh` — Tier 1: the release gates, including the PII scan.
-- `check-skills.sh` — Tier 1: the skill files (the workspace `SKILL.md`, `MEMORY-XPROJECT.md` and the other skills) exist and have valid frontmatter.
+- `check-skills.sh` — Tier 1: the workspace `SKILL.md`, the on-demand includes, and the methodology skills (including `ideation-spiral`) exist, with frontmatter where the file is a skill.
 - `expected.sh` — the shared lists that the checks use.

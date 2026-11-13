@@ -1,6 +1,6 @@
 ---
 name: ideation-spiral
-description: Turn a vague idea or rough problem statement into a crisp, testable concept and a per-hypothesis test plan, captured as a durable ideation.md artefact. Use before research or proposal-writing, when the concept itself is not yet decided — "ideate on this", "spiral this", "let's refine the idea", "help me figure out what to build", "I have a rough idea, not sure what it should be yet", "explore this before we spec it". Runs an iterative Frame → Diverge → Challenge → Converge loop with an objective structural-completeness gate that blocks premature convergence. Self-contained: no dependency on other loose local skills.
+description: "Turn a vague idea or rough problem statement into a crisp, testable concept and a per-hypothesis test plan, captured as a durable ideation.md artefact. Use before research or proposal-writing, when the concept itself is not yet decided — \"ideate on this\", \"spiral this\", \"let's refine the idea\", \"help me figure out what to build\", \"I have a rough idea, not sure what it should be yet\", \"explore this before we spec it\". Runs an iterative Frame → Diverge → Challenge → Converge loop with an objective structural-completeness gate that blocks premature convergence. Self-contained: no dependency on other loose local skills."
 ---
 
 # Ideation Spiral

@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.23.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.24.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it in plain language. It researches your idea and turns it into a spec. It plans the work and builds it. Independent, adversarial checks catch a plan or build that drifts from what you agreed, before you ship. Every decision lands in a plain file that you can read, search and revert. The work stays traceable and does not drift. Even a multi-day project picks up where you left off.
 
@@ -165,6 +165,9 @@ The full guide is split into focused pages under `docs/`:
 | [docs/workflow.md](docs/workflow.md) | The intent and command table (what you say, and which agent acts), and the optional stage flow. |
 | [docs/initiatives.md](docs/initiatives.md) | Initiative naming, slugs, switching, the registry, the session pick, and manual deletion. |
 | [docs/memory.md](docs/memory.md) | The per-initiative and cross-project memory tiers. When to use them, how to promote and inspect, and how to opt out of a namespace. |
+| [docs/efficiency-metrics.md](docs/efficiency-metrics.md) | Grep recipes for dispatches, outcomes, pushes, and pull requests. Not a flow step. |
+| [docs/cost-and-timing.md](docs/cost-and-timing.md) | What the cost and session-start hooks can attribute, and the prompt-cache default. |
+| [docs/registry.md](docs/registry.md) | History of the old ACTIVE cell, and what the SessionStart conform hook rewrites. |
 | [docs/safety-and-compliance.md](docs/safety-and-compliance.md) | The safety rules as a feature: gates for personal data, distribution gates, repo-wide searches, and checks against specific acceptance criteria. |
 | [docs/install.md](docs/install.md) | Full operational guide: private marketplace add, auth, manual and background updates, permissions, distribution. Each agent has its own model, set in its agent file. See the section [Per-agent models / cost](docs/install.md#per-agent-models--cost). It also has override and fallback steps. |
 | [docs/statusline.md](docs/statusline.md) | Opt-in statusline that shows the initiative of this session in your Claude Code prompt. |

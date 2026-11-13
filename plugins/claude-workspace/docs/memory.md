@@ -73,12 +73,23 @@ copies the payload.
   proposal for the work in hand. Load older entries or `archive/` files only on
   demand, by explicit path or `grep`. Never reload the full history.
   Bounded re-reading is the whole point.
-- **Teardown (write):** at session end and at safe checkpoints, append a journal
-  entry and refresh the index. Treat every checkpoint as "assume interruption" so a
-  reset mid-project loses nothing.
+- **Teardown (write):** after a task passes verification, and at session end.
+  Those are the only checkpoints. Append a journal entry and refresh the index
+  so a reset mid-project loses nothing.
 
 It all lives inside the git-controlled `.workspace/` tree, so every write is
 versioned and revertible from git -- no parallel versioning mechanism.
+
+`events.jsonl` and `$CLAUDE_PROJECT_DIR/agentic/cost-log.md` are the exception
+(INV13). They are git-ignored and never committed. `journal.md` and `index.md`
+stay tracked. The ignore is automatic only where `~/.claude/.gitignore` applies
+(`.workspace/*/memory/events.jsonl` and `agentic/cost-log.md`). A plugin cannot
+edit a consumer's `.gitignore`, so other repos add those two lines themselves.
+Because the ignored files are not in git, archiving them at the 500 KB bound is
+local only. Losing the local file is not recoverable from git. That is accepted:
+the event trace and the cost log are disposable, and the decisions stay in the
+journal and the index. The cost hook is described in
+[cost-and-timing.md](cost-and-timing.md).
 
 ### Size and health checks
 

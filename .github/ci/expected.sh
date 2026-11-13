@@ -23,7 +23,7 @@ EXPECTED_AGENTS=(
 )
 
 # -------------------------------------------------------------------
-# 2. Exact distributable file set (43) — AC11 / I5
+# 2. Exact distributable file set — AC11 / I5
 #    Repo-root-relative paths. Every file here must be present;
 #    no file outside this list may appear in the distributable tree.
 # -------------------------------------------------------------------
@@ -39,6 +39,8 @@ EXPECTED_TREE=(
   plugins/claude-workspace/agents/task-planner.md
   plugins/claude-workspace/skills/workspace/SKILL.md
   plugins/claude-workspace/skills/workspace/MEMORY-XPROJECT.md
+  plugins/claude-workspace/skills/workspace/session-and-git.md
+  plugins/claude-workspace/skills/workspace/memory-maintenance.md
   plugins/claude-workspace/skills/ideate/SKILL.md
   plugins/claude-workspace/skills/decide/SKILL.md
   plugins/claude-workspace/skills/plan/SKILL.md
@@ -55,6 +57,9 @@ EXPECTED_TREE=(
   plugins/claude-workspace/docs/install.md
   plugins/claude-workspace/docs/limitations.md
   plugins/claude-workspace/docs/memory.md
+  plugins/claude-workspace/docs/efficiency-metrics.md
+  plugins/claude-workspace/docs/cost-and-timing.md
+  plugins/claude-workspace/docs/registry.md
   plugins/claude-workspace/docs/safety-and-compliance.md
   plugins/claude-workspace/docs/statusline.md
   plugins/claude-workspace/docs/troubleshooting.md
@@ -63,6 +68,11 @@ EXPECTED_TREE=(
   plugins/claude-workspace/docs/ideation-spiral.md
   plugins/claude-workspace/scripts/install-statusline.js
   plugins/claude-workspace/scripts/statusline.js
+  plugins/claude-workspace/scripts/session-pick-check.sh
+  plugins/claude-workspace/scripts/session-marker-write.sh
+  plugins/claude-workspace/scripts/branch-start.sh
+  plugins/claude-workspace/scripts/worktree-exclude.sh
+  plugins/claude-workspace/scripts/worktree-for-branch.sh
   plugins/claude-workspace/hooks/hooks.json
   plugins/claude-workspace/hooks/autolog.py
   plugins/claude-workspace/hooks/conform-registry.py

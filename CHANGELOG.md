@@ -5,6 +5,20 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.24.0] - 2026-11-13
+
+### Changed
+- **Search bounds.** `research-harvester` INV-R1 greps the symbols this change touches and their direct callers, records anything unmapped as a risk, and stops. The implementer and the Necessity checks in `task-checker` and `implementation-verifier` do one search for the thing being added, then decide. A bound is a note, then the work continues. It is not a question.
+- **Safe checkpoint** means after a task passes verification. Session end still runs teardown. Escalation is two cases: a fact that is not in the repo and not in the ticket, or one extra check when the change touches authentication, data loss, or a public API.
+- **Each rule once.** The session-age `/clear` nudge is one block. Check limits are Hard Rule 5. The four guards are one table. One sole-writer table. `context-snapshot.md` is retired in one sentence.
+- **Orchestrator skill split.** `SKILL.md` is the always-loaded core. `session-and-git.md` and `memory-maintenance.md` load only when a section says so. The cross-project file is `<base>/MEMORY-XPROJECT.md`, from the harness base directory.
+
+### Removed
+- Moved out of the always-loaded skill, into docs: metric recipes, the cost and prompt-cache notes, the INV13 git-ignore note, the old `**ACTIVE**` history, and the conform-hook explanation.
+
+### Fixed
+- `ideation-spiral` skill description is quoted YAML, so the structural skill check can read it. The words are unchanged.
+
 ## [1.23.0] - 2026-11-13
 
 ### Changed
