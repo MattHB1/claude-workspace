@@ -1,5 +1,5 @@
 {
   "name": "claude-workspace",
-  "version": "1.24.0",
-  "description": "Deterministic agentic workspace: an orchestrator skill plus 8 single-responsibility subagents."
+  "version": "1.25.0",
+  "description": "Deterministic agentic workspace: an orchestrator skill plus 9 single-responsibility subagents."
 }

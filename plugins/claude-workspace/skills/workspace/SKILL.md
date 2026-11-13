@@ -30,6 +30,7 @@ The **initiative**, not the project, is the first-class unit. Each initiative ow
   <slug>/
     proposal.md          # proposal-writer
     tasks.md             # task-planner
+    decisions.md         # you append; one entry per judge ruling
     research/            # you save research-harvester's brief
     verification/        # you save adversary reports
     memory/
@@ -57,9 +58,10 @@ Dispatch with `subagent_type` `claude-workspace:<name>`. Each dispatch is a fres
 | "build / implement / do task N" | `claude-workspace:implementer` | One task, fresh session. It writes code. |
 | "verify / does it match the task" | `claude-workspace:implementation-verifier` | Save the report under `verification/`. |
 | "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | Append a journal entry and refresh `index.md`. |
+| a question that would go to the user (`## Decide, do not ask`) | `claude-workspace:judge` | Append its rulings to `decisions.md`. |
 | "tidy / organise / move these files" | `claude-workspace:archivist` | Record the map in `file-structure.md`. |
 
-Read-only agents (research-harvester, task-checker, implementation-verifier, context-recovery, archivist) do not write artefacts. When they return, you persist the output. Generators write only the path you supplied.
+Read-only agents (research-harvester, task-checker, implementation-verifier, context-recovery, archivist, judge) do not write artefacts. When they return, you persist the output. Generators write only the path you supplied.
 
 ### Sole writer
 
@@ -70,27 +72,43 @@ Read-only agents (research-harvester, task-checker, implementation-verifier, con
 | `proposal.md` | proposal-writer |
 | `tasks.md` | task-planner |
 | code | implementer |
+| `decisions.md` | you; append-only |
 | `research/`, `verification/`, `file-structure.md` | you, from the agent's returned text |
 | `main-commits` | the user |
 
-No read-only agent writes the registry or any memory file. This set is the eight agents. Do not add one.
+No read-only agent writes the registry or any memory file. This set is the nine agents. Do not add one.
+
+`decisions.md` entry. `<n>` counts up from 1. The User line holds the user's answer and date, `default taken`, or `—`.
+
+```markdown
+## D<n> · <UTC time> · asked_by: <agent or agent:task>
+- **Q:** <question>
+- **Verdict:** DECIDED (<confidence>) — <answer>
+- **Reason:** <one line>
+- **Refs:** <file:line>
+- **User:** —
+```
 
 ## Hard rules
 
 1. **Single responsibility.** Never collapse roles. Don't do the specialist work yourself — dispatch it.
-2. **Adversarial verification never fixes.** A failed proposal returns to `proposal-writer`. A failed implementation returns to `implementer`. You do not patch it. Exception: `implementation-verifier` reporting "spec requires break: for the user" is product direction. Give it to the user (see "Ticket fix check"). Do not send it to `implementer`.
+2. **Adversarial verification never fixes.** A failed proposal returns to `proposal-writer`. A failed implementation returns to `implementer`. You do not patch it. Exception: `implementation-verifier` reporting "spec requires break: for the user" is product direction. Send it to the judge (`## Decide, do not ask`). Do not send it to `implementer`.
 3. **Proposal is root of truth.** Tasks trace to proposal acceptance criteria. Implementations trace to tasks. A proposal change is a `proposal-writer` job, then a re-check of that change only. If a scope change makes another artefact wrong, route it back to its generator and re-check only that change. A user answer is the exception: `proposal-writer` changes only the lines the answer affects. When both apply, apply the user answer first, then re-derive anything else the scope change made wrong.
 4. **Fresh execution.** Each `implementer` or verifier dispatch is a new session. Give it the task spec and the proposal.
 5. **Check limits.** State these numbers only here. Elsewhere, say "Hard Rule 5". One proposal cycle is the first check plus at most two fix-and-recheck rounds (three checks). After the third FAIL, stop, give the user the open findings, and talk about the approach. Do not dispatch a fourth check. A changed-lines check after a late user answer starts a new cycle. A re-dispatch because the report says `quality check not run` does not count. A build check runs once per task. On FAIL the generator fixes once and you re-check only that fix. Do not loop. PASS is terminal.
 6. **Verified foundation (INV-O1).** Do not plan on, build on, or report as done any work that has not passed verification. Pausing with unverified work on disk is allowed. Extending it is not.
 7. **Status honesty (INV-O2).** Any pointer to work carries `trust: verified|asserted`. Do not strip it.
-8. **A bound is a stop, not a question.** When a search, footprint, or check hits its bound, note the bound and what you did not cover, then continue. Do not ask the user. This does not remove a prompt this skill already names (the initiative pick, `NO-ROOT`, no default branch, push, open-PR, worktree removal, tracker write-back, and product direction).
+8. **A bound is a stop, not a question.** When a search, footprint, or check hits its bound, note the bound and what you did not cover, then continue. Do not ask the user. This does not remove a prompt this skill already names (the initiative pick, `NO-ROOT`, no default branch, push, open-PR, worktree removal, tracker write-back, and a question the judge returned as ASK_USER).
 
 ## Decide, do not ask
 
-Git history is the test. If git can undo the work, do it and report it. If git cannot, ask first. Push, open-PR, worktree removal, and tracker write-back each keep one `y/n` line. Product direction belongs to the person, including a fix-check finding. A problem in the work in hand is in scope: fix it. Any other problem: append it to `journal.md`, and at the next stop ask the operator to raise a new ticket or roll it into this one (`write-issue` for a new ticket; `ask` for the choice). Do not act before the answer. Where `.workspace/` is git-ignored, registry consolidation and index re-derivation still run and report.
+Git history is the test. If git can undo the work, do it and report it. If git cannot, ask first. Push, open-PR, worktree removal, and tracker write-back each keep one `y/n` line. Product direction belongs to the person, including a fix-check finding. A problem in the work in hand is in scope: fix it. Any other problem: append it to `journal.md` and send it to the judge. "Roll it into this ticket" is a scope change: ASK_USER (`scope`). "Log it and defer it" can be DECIDED. For a new ticket, use `write-issue`. Do not act on an ASK_USER item before the answer.
 
-**Questions.** Batch them. After research and before `proposal-writer`: the brief's "for the user" questions, fix-check findings, and 1c questions. Ask with `claude-workspace:ask` and wait. Send the answers to `proposal-writer`. Questions that appear only while the proposal is written stay in "Needs you". Ask those once, after the proposal check and before planning. Report "Decided by default" and do not ask about them. After a late answer, `proposal-writer` changes only the affected lines and `task-checker` checks only that list (Hard Rule 5). Speak in short sentences. The user's own style instructions win.
+**Judge first.** No question reaches the user before `claude-workspace:judge` rules on it. The judge returns DECIDED or ASK_USER for each question. Act on DECIDED and report it. Ask the user about ASK_USER only, with `claude-workspace:ask` and the judge's suggested default. A product-direction question still reaches the user, but only after an ASK_USER ruling (`product-intent` or `scope`). The five categories are `irreversible`, `security`, `money-external`, `product-intent`, and `scope`. Their meaning is in `agents/judge.md`. Append each ruling to `decisions.md`.
+
+**Bypass the judge** for: the four `y/n` gates above, environment stops, the session pick, the "paste the ticket" fallback, and the third proposal-check FAIL. Where `.workspace/` is git-ignored, registry consolidation and index re-derivation still run and report.
+
+**Questions.** Batch them and apply `## Decide, do not ask`. After research and before `proposal-writer`: the brief's "for the user" questions, fix-check findings, and 1c questions. Send them to the judge in one dispatch. Ask only the ASK_USER items and wait. Send the answers to `proposal-writer`. Questions that appear only while the proposal is written stay in "Needs you". Judge those once, after the proposal check and before planning. Send DECIDED items to `proposal-writer` as dated answers. Report "Decided by default" and do not ask about them. After a late answer, `proposal-writer` changes only the affected lines and `task-checker` checks only that list (Hard Rule 5). Speak in short sentences. The user's own style instructions win.
 
 ## Session-age /clear nudge
 
@@ -107,10 +125,10 @@ Do not read `events.jsonl` for age. Do not add a threshold, file, or hook.
 
 One flow: **(for a ticket: research) → propose → check proposal → plan → build → check each build.** No complexity tier and no fast-track lane. You still only route (Hard Rule 1). Check counts: Hard Rule 5.
 
-1. **Propose.** A ticket starts with `research-harvester` and INV-R2. Ask the user the brief's "for the user" questions, then send the answers. `proposal-writer` writes a lean proposal: problem, acceptance criteria, constraints. About a page.
+1. **Propose.** A ticket starts with `research-harvester` and INV-R2. Collect the brief's "for the user" questions into one batch. Handle the batch as `## Decide, do not ask` says, then send the answers. `proposal-writer` writes a lean proposal: problem, acceptance criteria, constraints. About a page.
 2. **Check the proposal.** `task-checker`, one validity pass. On FAIL, back to `proposal-writer` and re-check only the fix. Limits: Hard Rule 5.
 3. **Plan.** `task-planner` writes lean tasks. One checkable acceptance criterion each. No separate plan-gate.
-4. **Build.** `implementer`, one task per dispatch. Parallel only when `tasks.md` names no dependency and the write-targets are disjoint (INV-O3). Overlapping write-targets are serial. AC count is not a reason to split a wave. The first build uses the branch from Create. The implementer does no git.
+4. **Build.** `implementer`, one task per dispatch. Parallel only when `tasks.md` names no dependency and the write-targets are disjoint (INV-O3). Overlapping write-targets are serial. AC count is not a reason to split a wave. The first build uses the branch from Create. The implementer does no git. When the implementer reports a STOP, send it to the judge (`## Decide, do not ask`). On DECIDED, re-dispatch the implementer once with the ruling inline. A second STOP on the same task goes to the user. If a judge output does not parse, re-dispatch the judge once. A second failure goes to the user, logged as `verdict: JUDGE_ERROR`.
 5. **Check the build.** `implementation-verifier`, one check (Hard Rule 5). When `tasks.md` says `Shares AC:`, the last contributing task's check also gets the full proposal AC and the sibling task IDs, and must confirm the union. That is the same check, not a second pass. Then run the safe checkpoint in `memory-maintenance.md` (a task has passed verification). You commit with no prompt, then `y/n` before push, then `y/n` before the PR. Commands and the merge check: `session-and-git.md`.
 
 **Handoff.** One line that states the next move ("proposal updated → planning tasks"). Then do it. Ask only for a step git cannot undo.
@@ -123,7 +141,7 @@ Plugin-export parity, exact-tree CI, and artefact regeneration still run when a 
 
 ## Ticket fix check and code quality
 
-A fix-check finding is product direction. Put it in the before-the-draft batch. Do not plan while a "Fix check" line or an AC says "awaiting user". After a late answer, `proposal-writer` changes only the affected lines, then `task-checker` checks that list (Hard Rule 5).
+A fix-check finding goes in the before-the-draft batch. The judge rules on it (`## Decide, do not ask`). Only product intent that is written nowhere escalates. Do not plan while a "Fix check" line or an AC says "awaiting user". After a late answer, `proposal-writer` changes only the affected lines, then `task-checker` checks that list (Hard Rule 5).
 
 Pass `research-harvester` (tickets), `task-checker`, and `implementation-verifier` two absolute paths: the `code-quality` skill and the project root. In a worktree the project root is the worktree path (`session-and-git.md`). The skill path is `<base>` with the last part `workspace` replaced by `code-quality`, plus `/SKILL.md`.
 

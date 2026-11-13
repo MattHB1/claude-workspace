@@ -5,7 +5,7 @@
 # Reads the raw stream-json output from stdin (or the file named $1).
 # Asserts (per AC15 / C7 / PINNED-INIT.md):
 #   (a) .plugins[] contains an entry with .name == "claude-workspace"
-#   (b) .agents[] contains ALL 8 namespaced agents (sourced from expected.sh / EXPECTED_AGENTS)
+#   (b) .agents[] contains ALL 9 namespaced agents (sourced from expected.sh / EXPECTED_AGENTS)
 #   (c) plugin_errors is absent or empty (absent-or-empty logic; see PINNED-INIT.md)
 #
 # Exits non-zero with a clear message on any violation.
@@ -52,7 +52,7 @@ else
 fi
 
 # ---------------------------------------------------------------
-# (b) .agents[] contains all 8 namespaced agents (from expected.sh)
+# (b) .agents[] contains all 9 namespaced agents (from expected.sh)
 # ---------------------------------------------------------------
 AGENTS_JSON=$(echo "$INIT_LINE" | jq '.agents // []')
 

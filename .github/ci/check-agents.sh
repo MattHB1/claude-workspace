@@ -23,38 +23,20 @@ if [[ ! -d "${AGENTS_DIR}" ]]; then
   exit 1
 fi
 
-# Build an associative array of expected agent names.
-declare -A expected_set
-for agent in "${EXPECTED_AGENTS[@]}"; do
-  expected_set["${agent}"]=1
-done
+# Compare the expected list with the agent files on disk.
+# (Sorted lists and comm rather than associative arrays, so this runs on macOS's stock bash 3.2 too.)
+expected_sorted="$(printf '%s\n' "${EXPECTED_AGENTS[@]}" | sort -u)"
+discovered_sorted="$(find "${AGENTS_DIR}" -maxdepth 1 -name '*.md' -exec basename {} .md \; | sort -u)"
 
-# Discover agent names from the directory (basename minus .md extension).
-declare -A discovered_set
-while IFS= read -r filepath; do
-  basename_no_ext="$(basename "${filepath}" .md)"
-  discovered_set["${basename_no_ext}"]=1
-done < <(find "${AGENTS_DIR}" -maxdepth 1 -name '*.md' | sort)
-
-# Compute missing agents (in expected but not discovered).
 missing=()
-for agent in "${!expected_set[@]}"; do
-  if [[ -z "${discovered_set[${agent}]+_}" ]]; then
-    missing+=("${agent}")
-  fi
-done
+while IFS= read -r agent; do
+  [[ -n "${agent}" ]] && missing+=("${agent}")
+done < <(comm -23 <(printf '%s\n' "${expected_sorted}") <(printf '%s\n' "${discovered_sorted}"))
 
-# Compute extra agents (discovered but not in expected).
 extra=()
-for agent in "${!discovered_set[@]}"; do
-  if [[ -z "${expected_set[${agent}]+_}" ]]; then
-    extra+=("${agent}")
-  fi
-done
-
-# Sort for stable, readable output.
-IFS=$'\n' missing=($(sort <<<"${missing[*]+"${missing[*]}"}")); unset IFS
-IFS=$'\n' extra=($(sort <<<"${extra[*]+"${extra[*]}"}")); unset IFS
+while IFS= read -r agent; do
+  [[ -n "${agent}" ]] && extra+=("${agent}")
+done < <(comm -13 <(printf '%s\n' "${expected_sorted}") <(printf '%s\n' "${discovered_sorted}"))
 
 fail=0
 
@@ -79,4 +61,4 @@ if [[ ${fail} -ne 0 ]]; then
   exit 1
 fi
 
-echo "OK: agent roster matches expected set (${#expected_set[@]} agents)."
+echo "OK: agent roster matches expected set (${#EXPECTED_AGENTS[@]} agents)."

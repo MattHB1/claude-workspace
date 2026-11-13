@@ -76,7 +76,7 @@ Here the Python-version fact is scoped to `acme/service-a`, not `global` — so 
 
 Knowledge enters the shared tier **only by an explicit promotion decision made by you, the orchestrator** — on the user's instruction or on a read-only agent's surfaced candidate. There is **no automatic / on-recurrence promotion** mechanism of any kind.
 
-Read-only agents (`research-harvester`, `task-checker`, `implementation-verifier`, `context-recovery`, `archivist`) may **read** the shared tier and **surface a "this looks reusable" candidate by returning it as content** — they **never write** the tier. **You** decide and persist.
+Read-only agents (`research-harvester`, `task-checker`, `implementation-verifier`, `context-recovery`, `archivist`, `judge`) may **read** the shared tier and **surface a "this looks reusable" candidate by returning it as content** — they **never write** the tier. **You** decide and persist.
 
 **Dedup-on-promotion (pre-write):** before writing, check for an existing claim with the **same or overlapping scope, keyed on namespace/scope + `type`**. If one exists, **update or supersede** it (set the supersedes marker, archive the old) rather than appending a parallel duplicate. A new claim must never create a scope-overlapping duplicate.
 
@@ -113,7 +113,7 @@ No instruction permits silently adopting or merging an unverified shared claim.
 
 ## Ownership — you (the orchestrator) are the sole writer of the shared tier
 
-This tier adds **no new agent**: the agent set is still the **eight** roles of the routing table in SKILL.md. Each shared-tier artefact has **exactly one** content writer — **you**. Read-only agents may read the tier and surface candidates as returned content, but **never write** it.
+This tier adds **no new agent**: the agent set is still the **nine** roles of the routing table in SKILL.md. Each shared-tier artefact has **exactly one** content writer — **you**. Read-only agents may read the tier and surface candidates as returned content, but **never write** it.
 
 | Shared-tier artefact | Single writer (content) | Notes |
 |---|---|---|

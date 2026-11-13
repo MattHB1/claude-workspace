@@ -42,7 +42,7 @@ must be non-empty.
 
 ### `.agents[]`
 
-Array of namespaced strings. Must contain all 8 agents:
+Array of namespaced strings. Must contain all 9 agents:
 
 - `claude-workspace:archivist`
 - `claude-workspace:context-recovery`

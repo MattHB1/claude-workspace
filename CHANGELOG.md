@@ -5,6 +5,14 @@ All notable changes to the claude-workspace plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.25.0] - 2026-11-13
+
+### Added
+- **`judge` agent.** A read-only agent (model `claude-sonnet-5-5`, effort medium) that rules on a question before it reaches you. It decides anything that the ticket, proposal, tasks or code can answer. It returns DECIDED or ASK_USER for each question. It escalates only irreversible or destructive actions, security or secrets, money or external communication, unwritten product intent, and scope change beyond the ticket.
+
+### Changed
+- The agent count is nine in the README files, manifests and docs. The `judge` agent is in each agent table and read-only list.
+
 ## [1.24.0] - 2026-11-13
 
 ### Changed

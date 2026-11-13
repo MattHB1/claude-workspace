@@ -7,7 +7,7 @@
     {
       "name": "claude-workspace",
       "source": "./plugins/claude-workspace",
-      "description": "Deterministic agentic workspace: an orchestrator skill plus 8 single-responsibility subagents for initiative-scoped planning, implementation, and verification."
+      "description": "Deterministic agentic workspace: an orchestrator skill plus 9 single-responsibility subagents for initiative-scoped planning, implementation, and verification."
     }
   ]
 }

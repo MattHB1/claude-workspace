@@ -79,6 +79,10 @@ git -C "<path>" status --porcelain --ignored --untracked-files=normal | awk '/^!
 
 When that prints anything, first say `<path>` has git-ignored files that the removal deletes, then print the lines. When it prints nothing, print only the prompt. The prompt is `remove worktree <path>? y/n`, and it comes last. On "y": `git -C "<root>" worktree remove "<path>"`. Any other answer: do nothing. If git refuses, stop that removal and report git's message. Never `--force`.
 
+## PR body decisions
+
+When you open a PR, ask `open PR? y/n` and write only on "y". If `.workspace/<slug>/decisions.md` exists, the PR body has a `## Decisions` section. Write one line for each ruling in `decisions.md`. Put each low-confidence DECIDED item first, under "Worth a glance".
+
 ## Tracker write-back
 
 Two moments, and no more: **work started**, and **PR opened**. Each is one line, `move <slug> to <mapped state>? y/n`, and writes only on "y". No close and no Done. The plugin hardcodes no state name. Read the tracker's states at mapping time.

@@ -1,6 +1,6 @@
 # CI smoke-test machinery
 
-This `.github/ci/` directory holds the CI smoke-test machinery for the claude-workspace plugin. There are two tiers: a free, no-secret structural gate (Tier 1) that runs on every push and pull request to `main`, and an auth-gated real-load gate (Tier 2) that runs only on release tags. Tier 1 performs offline structural checks — manifest validity, agent set, frontmatter, skill files, namespacing, PII, and exact-tree integrity — using no secrets and no `claude` CLI. Tier 2 installs the CLI, runs a headless invocation against the plugin, and asserts the pinned init-event shape to confirm the plugin loads clean and all eight namespaced agents register.
+This `.github/ci/` directory holds the CI smoke-test machinery for the claude-workspace plugin. There are two tiers: a free, no-secret structural gate (Tier 1) that runs on every push and pull request to `main`, and an auth-gated real-load gate (Tier 2) that runs only on release tags. Tier 1 performs offline structural checks — manifest validity, agent set, frontmatter, skill files, namespacing, PII, and exact-tree integrity — using no secrets and no `claude` CLI. Tier 2 installs the CLI, runs a headless invocation against the plugin, and asserts the pinned init-event shape to confirm the plugin loads clean and all nine namespaced agents register.
 
 ## Secrets
 
@@ -23,6 +23,7 @@ Tier 2 triggers only on release tags. The load-check job is additionally guarded
 - `README.md` — this file.
 - `check-agents.sh` — Tier 1: the agent files equal the expected set.
 - `check-frontmatter.sh` — Tier 1: each agent file has valid frontmatter.
+- `check-judge.sh` — Tier 1: the judge agent file (tools, effort, size, required words), the agent-count text, and the `SKILL.md` judge references.
 - `check-load.sh` — Tier 2: the headless load assertions.
 - `check-manifests.sh` — Tier 1: `plugin.json` and `marketplace.json` are valid, and the version badges match.
 - `check-multi-live.sh` — checks the per-session picks and worktrees. You run it by hand. No workflow runs it.

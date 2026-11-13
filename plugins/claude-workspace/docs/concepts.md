@@ -65,11 +65,11 @@ See [workflow.md](./workflow.md) for the table that maps each intent to an agent
 
 ---
 
-## The eight agents
+## The nine agents
 
-Eight subagents do the work. Each has one job. Each runs in a **fresh, isolated context** for each dispatch. Each acts only on the paths that the orchestrator gives it. The set is fixed. The registry and the memory tiers add no new agent.
+Nine subagents do the work. Each has one job. Each runs in a **fresh, isolated context** for each dispatch. Each acts only on the paths that the orchestrator gives it. The set is fixed. The registry and the memory tiers add no new agent.
 
-Five of the agents are **read-only**. They cannot write project artefacts. The orchestrator saves their returned output. Three are **generators or executors**. They write their own outputs.
+Six of the agents are **read-only**. They cannot write project artefacts. The orchestrator saves their returned output. Three are **generators or executors**. They write their own outputs.
 
 | Agent | Role |
 |---|---|
@@ -81,6 +81,7 @@ Five of the agents are **read-only**. They cannot write project artefacts. The o
 | `implementation-verifier` | Checks an implementation against its task spec with an adversarial view. It can read files and run tests. It detects deviations and never fixes them. |
 | `context-recovery` | Rebuilds the project state when context is lost or drifts. It is read-only. It reports only what IS. |
 | `archivist` | Keeps the file tree clean and predictable. It moves and renames files and creates directories. It **never edits file content**. |
+| `judge` | Read-only. Rules on a question before it reaches you. It returns DECIDED or ASK_USER for each question. |
 
 Each agent has its own model. For override steps, fallback rules, and advanced settings, see the section "Per-agent models / cost" in [install.md](./install.md#per-agent-models--cost).
 

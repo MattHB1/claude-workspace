@@ -90,4 +90,4 @@ The full install, auth, and update detail (including the exact install commands)
 
 **Cause.** The plugin name namespaces plugin-provided skills and agents. This is normal Claude Code behaviour for any installed plugin. The prefix lets many plugins ship skills or agents with the same short name without a collision.
 
-**Fix.** Nothing to fix. Use the namespaced names: `/claude-workspace:workspace` for the orchestrator, and the `claude-workspace:` prefix for the eight subagents when you dispatch. You may have hand-placed copies under bare names (`/workspace`). Those are the old un-namespaced mirrors. Once you use the plugin, the namespaced names are canonical.
+**Fix.** Nothing to fix. Use the namespaced names: `/claude-workspace:workspace` for the orchestrator, and the `claude-workspace:` prefix for the nine subagents when you dispatch. You may have hand-placed copies under bare names (`/workspace`). Those are the old un-namespaced mirrors. Once you use the plugin, the namespaced names are canonical.

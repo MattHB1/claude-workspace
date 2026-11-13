@@ -20,7 +20,7 @@ rules that make the routing trustworthy.
 
 ## Intent to agent (you say X, the orchestrator dispatches `claude-workspace:<agent>`)
 
-There are exactly eight agents. Each does one thing. The trigger phrases below
+There are exactly nine agents. Each does one thing. The trigger phrases below
 match the orchestrator's routing table.
 
 | You say... | Orchestrator dispatches | Which... |
@@ -33,11 +33,12 @@ match the orchestrator's routing table.
 | "verify / does it match the task" | `claude-workspace:implementation-verifier` | read and run-tests only; checks the build against the task as an adversary; the orchestrator saves its report into `verification/` |
 | "where are we / I've lost the thread / re-sync" | `claude-workspace:context-recovery` | read-only; rebuilds state from the artefacts and memory; the orchestrator saves the result to the picked initiative's memory |
 | "tidy / organise / move these files" | `claude-workspace:archivist` | moves and organises files (never edits content); the orchestrator records its map in the project-level `file-structure.md` |
+| "decide this for me" (a question that a file can answer) | `claude-workspace:judge` | read-only; rules on a question before it reaches you; returns DECIDED or ASK_USER; the orchestrator relays the ruling |
 
 Each agent has its own model. For the models, the override steps, the fallback rule and the advanced settings, see [install.md](install.md#per-agent-models--cost).
 
-The five read-only agents (`research-harvester`, `task-checker`,
-`implementation-verifier`, `context-recovery`, `archivist`) cannot write the
+The six read-only agents (`research-harvester`, `task-checker`,
+`implementation-verifier`, `context-recovery`, `archivist`, `judge`) cannot write the
 canonical artefacts. This is by design. When they return, the orchestrator
 saves their output to the right path. The three generators
 (`proposal-writer`, `task-planner`, `implementer`) write their own outputs to the

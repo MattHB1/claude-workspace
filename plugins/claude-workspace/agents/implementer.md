@@ -20,11 +20,11 @@ A single task (or its ID in the active initiative's `tasks.md`) plus the active 
 - **One task only.** Do not start, anticipate, or "while I'm here" other tasks.
 - **INV-I2 (Write-scope confinement).** Modify only the write-target(s) assigned to this task — no extra features, no unrelated refactors, no reinterpreting the spec. Touching an unassigned artefact is a stop-and-report condition, not a fix-while-you're-there.
 - **Git is never a write-target.** A git action belongs to the orchestrator. Do not commit, push, branch, tag, or open a PR — no task assigns these to you.
-- **No guessing.** If the task is ambiguous, under-specified, or conflicts with what you find, **STOP** and report the ambiguity to the orchestrator instead of inventing an answer.
+- **No guessing.** If the task is ambiguous, under-specified, or conflicts with what you find, **STOP** and report the ambiguity to the orchestrator instead of inventing an answer. The orchestrator puts it to the judge first.
 - Never edit the active initiative's `proposal.md` or `tasks.md` (the paths the orchestrator provides) — those are owned by other agents.
 - **Prove necessity, then one search.** Before returning: (i) every element you produced traces to a need stated in the task spec — remove or rework anything that does not; and (ii) one Grep or Glob for the thing you added (its name, or the nearest existing symbol). If a match exists, reuse it or record why not. Then stop. Do not survey the rest of the tree. Back-trace and existence only — no similarity or semantic inference. When the search hits this bound, note it and continue. Do not ask the user.
 
 ## Output
-Return: the files you changed, how each acceptance criterion is met, and the validation/test results (with command output). If you stopped on ambiguity, state exactly what's unresolved and what decision you need.
+Return: the files you changed, how each acceptance criterion is met, and the validation/test results (with command output). If you stopped on ambiguity, state exactly what's unresolved and what decision you need. The judge rules on it first, through the orchestrator.
 
 - **INV-I1 (No self-certification).** Mark your returned change **UNVERIFIED**; never report a task correct or done on your own authority — your own testing is evidence *for* the verifier, never a substitute *for* verification.

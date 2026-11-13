@@ -1,6 +1,6 @@
 # Claude Workspace
 
-![version](https://img.shields.io/badge/version-1.24.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.25.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it
 in plain language. It researches your idea, turns it into a spec, plans the work, and builds
@@ -89,7 +89,7 @@ the private marketplace add, sign-in, manual and background updates, and the `Wr
 ## The agents
 
 You drive one orchestrator skill (`/claude-workspace:workspace`) in plain language. It routes
-your requests and keeps the artefacts as the source of truth. Behind it are eight
+your requests and keeps the artefacts as the source of truth. Behind it are nine
 subagents, and each has one job. The skills table in
 [`plugins/claude-workspace/README.md`](plugins/claude-workspace/README.md) lists the skills.
 
@@ -103,8 +103,9 @@ subagents, and each has one job. The skills table in
 | Implementation Verifier | Read-only. Checks the build against the task definition after implementation. A FAIL goes back to the Implementer. |
 | Context Recovery | Rebuilds project state when context is lost or drifting. It is read-only and reports only what exists. |
 | Archivist | Keeps the file tree clean and predictable. It moves and renames files and creates directories. It never edits file content. |
+| Judge | Read-only. Rules on a question before it reaches you. It returns DECIDED or ASK_USER for each question. |
 
-Read-only agents (Task Checker, Implementation Verifier) have no tool to write to your codebase.
+Read-only agents (Task Checker, Implementation Verifier, Judge) have no tool to write to your codebase.
 This is the one mechanical guardrail. For the agent contract, see
 [why it refuses](plugins/claude-workspace/docs/why-it-refuses.md) and
 [design principles](plugins/claude-workspace/docs/design-principles.md).
@@ -150,7 +151,7 @@ plugin that it ships (`claude-workspace`). The full documentation is inside the 
     `-- claude-workspace/           # the plugin
         |-- .claude-plugin/plugin.json
         |-- skills/                 # all 10 skills
-        |-- agents/                 # the 8 subagents
+        |-- agents/                 # the 9 subagents
         |-- hooks/                  # hook scripts and hooks.json
         |-- scripts/                # statusline scripts
         |-- docs/                   # the docs set

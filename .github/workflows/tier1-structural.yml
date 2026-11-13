@@ -18,7 +18,7 @@ jobs:
       - name: Check manifests (plugin.json + marketplace.json)
         run: bash .github/ci/check-manifests.sh
 
-      - name: Check agents (exactly the 8 expected agents present)
+      - name: Check agents (exactly the 9 expected agents present)
         run: bash .github/ci/check-agents.sh
 
       - name: Check agent frontmatter (required keys in every agent)
@@ -29,6 +29,9 @@ jobs:
 
       - name: Check namespacing tokens (claude-workspace:<agent> in SKILL.md)
         run: bash .github/ci/check-namespacing.sh
+
+      - name: Check judge agent (file limits, agent-count text, SKILL.md references)
+        run: bash .github/ci/check-judge.sh
 
       - name: Check releasing gates (PII / UESA / no-build-machinery / exact-tree)
         run: bash .github/ci/check-releasing-gates.sh

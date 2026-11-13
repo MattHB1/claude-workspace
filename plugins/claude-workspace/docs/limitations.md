@@ -15,7 +15,7 @@ make the system strict on purpose.
 
 ## It is a prompt / markdown system, not a runtime
 
-The workspace is a skill plus eight agent definitions written in markdown. The
+The workspace is a skill plus nine agent definitions written in markdown. The
 "determinism" it promises is **convention-backed discipline**. It is not a
 sandbox that blocks every misstep.
 

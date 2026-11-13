@@ -1,6 +1,6 @@
 # claude-workspace
 
-![version](https://img.shields.io/badge/version-1.24.0-brightgreen)
+![version](https://img.shields.io/badge/version-1.25.0-brightgreen)
 
 Claude Workspace turns any folder into a place where ideas get built right. You talk to it in plain language. It researches your idea and turns it into a spec. It plans the work and builds it. Independent, adversarial checks catch a plan or build that drifts from what you agreed, before you ship. Every decision lands in a plain file that you can read, search and revert. The work stays traceable and does not drift. Even a multi-day project picks up where you left off.
 
@@ -85,9 +85,10 @@ Each agent has a single job. The read-only agents have tool locks, so they canno
 | `task-planner` | Breaks the proposal into a traceable task list. Each task maps back to an acceptance criterion in the proposal. |
 | `task-checker` | Read-only tools. Checks the proposal before planning starts. A failure goes to the `proposal-writer`. |
 | `implementer` | Builds to spec, one task at a time. The proposal and the task definition are the only authorities. |
-| `implementation-verifier` | Read-only tools. Checks the build against the task definition after implementation. A failure goes back to the implementer. A "spec requires break" finding goes to you. |
+| `implementation-verifier` | Read-only tools. Checks the build against the task definition after implementation. A failure goes back to the implementer. The judge rules on a "spec requires break" finding first. It reaches you only if the judge returns ASK_USER. |
 | `context-recovery` | Rebuilds project state when context is lost or drifting. It is read-only and reports only what exists. |
 | `archivist` | Keeps the file tree clean and predictable. It moves and renames files and creates directories. It never edits file content. |
+| `judge` | Read-only. Rules on a question before it reaches you. It returns DECIDED or ASK_USER for each question. |
 
 ---
 

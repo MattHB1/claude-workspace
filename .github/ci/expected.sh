@@ -8,7 +8,7 @@
 # Consumed by: Tier-1 checks for agent roster, exact-tree, and build-machinery exclusion.
 
 # -------------------------------------------------------------------
-# 1. Expected agent names (8) — AC15(b) / AC4
+# 1. Expected agent names (9) — AC15(b) / AC4
 #    Basename of each agents/*.md file (without the .md extension).
 # -------------------------------------------------------------------
 EXPECTED_AGENTS=(
@@ -16,6 +16,7 @@ EXPECTED_AGENTS=(
   context-recovery
   implementation-verifier
   implementer
+  judge
   proposal-writer
   research-harvester
   task-checker
@@ -33,6 +34,7 @@ EXPECTED_TREE=(
   plugins/claude-workspace/agents/context-recovery.md
   plugins/claude-workspace/agents/implementation-verifier.md
   plugins/claude-workspace/agents/implementer.md
+  plugins/claude-workspace/agents/judge.md
   plugins/claude-workspace/agents/proposal-writer.md
   plugins/claude-workspace/agents/research-harvester.md
   plugins/claude-workspace/agents/task-checker.md

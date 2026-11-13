@@ -10,7 +10,7 @@ Every entry has `timestamp` (ISO-8601), `role`, and `trust` (`verified` or `asse
 
 `outcome` (`pass`, `fail`, or `retry`) is mandatory on every `implementation-verifier` and `task-checker` entry, including a caught error. On any other entry it is optional. An old entry without it stays valid.
 
-`refs` holds paths and anchors, including a PR URL. Do not add a frontmatter field for a PR. Do not copy the artefact into the entry. Do not write `tier`. An old `tier` line stays. Leave it.
+`refs` holds paths and anchors, including a PR URL. Add `.workspace/<slug>/decisions.md` to `refs` at teardown when the file exists. Do not add a frontmatter field for a PR. Do not copy the artefact into the entry. Do not write `tier`. An old `tier` line stays. Leave it.
 
 ```markdown
 ---
@@ -24,7 +24,7 @@ refs:
 T4 passed verification.
 ```
 
-`index.md` is overwritten, not appended. Pointers and short summaries only. It is not a database. Rebuild it from `journal.md` (entries and `refs`) plus `proposal.md`, `tasks.md`, and `verification/`. Where those disagree with memory, the artefact wins.
+`index.md` is overwritten, not appended. Pointers and short summaries only. It is not a database. Rebuild it from `journal.md` (entries and `refs`) plus `proposal.md`, `tasks.md`, `decisions.md`, and `verification/`. Where those disagree with memory, the artefact wins.
 
 Retrieval is by path, filename, or `grep`/`glob`. No similarity search.
 
